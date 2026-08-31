@@ -1,0 +1,37 @@
+name: portable agent layer
+
+# The layer guards failures that are silent: the repository looks fine, agents behave
+# differently, and nothing raises an error. That is why this belongs in CI rather than in an
+# instruction telling an agent to remember — a check binds regardless of which agent, or
+# which human, made the change.
+#
+# Two gates, and they catch different things:
+#   check.py            the layer is intact       (runs in any repository)
+#   install.py --check  installed copies match their source (drift; needs this repo's templates)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # No dependencies: both scripts are standard library only, on purpose. A check that
+      # needs an install step is a check that gets skipped.
+      - name: Layer is intact
+        run: python check.py
+
+      - name: No drift between templates and installed copies
+        run: python install.py --check

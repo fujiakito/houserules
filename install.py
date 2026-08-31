@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Install portable agent instructions and skills into a repository.
 
-The SKILL.md format is portable across agents. The path is not: seven agents surveyed use
-four different locations (research/MATRIX.md section 2). This copies one source of truth
-into each agent's own path, which is what the ecosystem's own skill collections do.
+The SKILL.md format is portable across agents; the path is not. As of 2026-09-01,
+`.agents/skills/` covers six of the eight surveyed agents and a three-directory set covers
+all of them - but this script still writes five, including two now-redundant ones
+(.cursor, .opencode). See the open item in research/MATRIX.md section 2.
 
 It also writes the CLAUDE.md import line, which is a correctness requirement rather than a
 convenience: with AGENTS.md present and no import, Claude Code ignores it and raises no
@@ -27,7 +28,7 @@ repository that already has its own skills must not cost the user one of them.
 This script writes; check.py only reads. Keeping them apart is deliberate - a check that
 can repair what it is checking is not a check.
 
-Paths verified 2026-08-31. Re-check them when an agent releases; see the recheck policy in
+Paths verified 2026-09-01. Re-check them when an agent releases; see the recheck policy in
 research/MATRIX.md.
 """
 from __future__ import annotations
@@ -42,7 +43,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SKILL_SRC = HERE / "templates" / "skills"
 
-# Where each agent looks for project-scoped skills. Verified 2026-08-31.
+# Where each agent looks for project-scoped skills. Verified 2026-09-01.
+# Cursor and OpenCode also read .agents/skills, so their entries here are redundant; kept
+# until the topology change is decided (research/MATRIX.md section 2, open items).
 AGENT_SKILL_PATHS: dict[str, str] = {
     "claude": ".claude/skills",
     "codex": ".agents/skills",      # also read by Goose and Antigravity
@@ -78,7 +81,10 @@ def same_tree(src: Path, dst: Path) -> bool:
     if not dst.is_dir():
         return False
     cmp = filecmp.dircmp(src, dst)
-    if cmp.left_only or cmp.diff_files or cmp.funny_files:
+    # right_only matters as much as left_only: a file present only in the destination means
+    # the installed copy has diverged from its source, which is exactly the drift --check
+    # exists to report. Without it, adding a file to an installed skill read as "unchanged".
+    if cmp.left_only or cmp.right_only or cmp.diff_files or cmp.funny_files:
         return False
     return all(same_tree(src / d, dst / d) for d in cmp.common_dirs)
 
@@ -145,11 +151,19 @@ def seed_file(src: Path, dst: Path, check: bool) -> str:
     return "created from the template"
 
 
-def ensure_claude_import(repo: Path, check: bool) -> str:
-    """CLAUDE.md must import AGENTS.md or Claude Code silently ignores it."""
-    if not (repo / "AGENTS.md").is_file():
+def ensure_claude_import(repo: Path, check: bool, agents_pending: bool = False) -> str:
+    """CLAUDE.md must import AGENTS.md or Claude Code silently ignores it.
+
+    `agents_pending` says AGENTS.md does not exist yet but this same run would create it.
+    Without that, --check on an empty repository reports the import as skipped while a real
+    run creates both files - a preview that contradicts the outcome it is previewing.
+    """
+    if not (repo / "AGENTS.md").is_file() and not agents_pending:
         return "skipped - no AGENTS.md in this repository"
-    path = repo / "CLAUDE.md"
+    # Both ./CLAUDE.md and ./.claude/CLAUDE.md are documented project locations. Prefer an
+    # existing one over creating a second, competing instruction file.
+    path = next((p for p in (repo / "CLAUDE.md", repo / ".claude" / "CLAUDE.md")
+                 if p.is_file()), repo / "CLAUDE.md")
     if not path.is_file():
         if check:
             return "would create CLAUDE.md with the import"
@@ -212,14 +226,18 @@ def main() -> int:
     # Repository root. AGENTS.md must land before ensure_claude_import runs, because that
     # step is a no-op when there is no AGENTS.md to import.
     print("repository root")
-    print(f"    {'AGENTS.md':<28} "
-          f"{seed_file(HERE / 'templates' / 'AGENTS.md', repo / 'AGENTS.md', a.check)}")
+    agents_pending = not (repo / "AGENTS.md").is_file()
+    outcome = seed_file(HERE / 'templates' / 'AGENTS.md', repo / 'AGENTS.md', a.check)
+    results.append(outcome)
+    print(f"    {'AGENTS.md':<28} {outcome}")
     outcome = place_file(HERE / "check.py", repo / "check.py", a.check, a.force)
     results.append(outcome)
     print(f"    {'check.py':<28} {outcome}")
     print()
 
-    print(f"CLAUDE.md import : {ensure_claude_import(repo, a.check)}")
+    outcome = ensure_claude_import(repo, a.check, agents_pending)
+    results.append(outcome)
+    print(f"CLAUDE.md import : {outcome}")
 
     conflicts = [r for r in results if r.startswith("CONFLICT")]
     if conflicts:
@@ -234,10 +252,13 @@ def main() -> int:
           " afterwards - size, collisions with\nbuilt-in names, missing skill descriptions,"
           " drift - run check.py. It is read-only by design, which is\nwhat makes it safe"
           " in CI: a check that can repair what it is checking is not a check.")
-    # --check exits non-zero on a conflict too. A conflict is exactly how drift surfaces —
-    # an installed copy that no longer matches its source reads as "a different file is
-    # already here" — so without this, CI has no way to catch it from the exit code.
-    return 1 if conflicts else 0
+    # Exit non-zero for ANY pending change, not conflicts alone. A location that was never
+    # installed reports "would create", which is not a conflict but still means the layer is
+    # incomplete — and reporting success there let a repository missing a whole skill
+    # directory pass both gates. "Nothing to do" is the only green state.
+    pending = [r for r in results
+               if r.lower().startswith("would") or r.startswith("CONFLICT")]
+    return 1 if pending else 0
 
 
 if __name__ == "__main__":

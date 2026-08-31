@@ -11,10 +11,14 @@
   context files do not generally improve task success rates, and cost over 20% more
   inference unconditionally. Instructions in them are well followed.
 
-  SUGGESTIVE, NOT ISOLATED (same paper, section 4.2): a context file did not reduce
-  the steps an agent took before reaching the files it needed to change - which is
-  the job an overview is supposed to do. This is correlational; no ablation removed
-  the overview section to test it directly.
+ISOLATED BUT NULL (same paper, Table 7, Appendix B): ablating the overview category
+  moved accuracy 68.12%->62.32% (p=0.15) on CTXBench and 54.36%->54.20% (p=0.73) on
+  SWE-bench. Not significant either way. One model, LLM-generated files only - and a
+  null result is not proof overviews are useless.
+
+  THE CONDITION THAT MATTERS: the same paper finds context files DO act as effective
+  overviews when the repository has NO documentation. Omitting one is advice for a
+  DOCUMENTED repo. If yours is not, an overview may well earn its place.
 
   Note that overviews are the default: 8 of 12 developer-written files in that study
   carried a codebase overview, and 95-100% of LLM-generated ones did. Omitting one
@@ -30,9 +34,15 @@
   If a line fails any of them, delete it. If it can become a lint rule, a test or a CI
   check, do that instead and delete it — the knowledge then costs nothing per session.
 
-  Hard limit: 32 KiB. Codex truncates beyond it (project_doc_max_bytes). Aim far under.
+  Budget: 32 KiB (Codex project_doc_max_bytes). A configurable DEFAULT, not a hard
+  ceiling - and two official pages disagree on whether it bounds each file or the whole
+  root-to-cwd AGENTS.md chain. check.py enforces the stricter chain reading. Aim far under
+  either way: every byte bills on every session.
 
-  DELETE THIS COMMENT BLOCK once the file is filled.
+  DELETE THIS COMMENT BLOCK once the file is filled. Not just for tidiness: Claude Code
+  STRIPS block-level HTML comments before injecting CLAUDE.md, but Codex does NOT strip
+  them from AGENTS.md. Left in place, this block is free on one agent and billed on the
+  other, every session. See research/MATRIX.md section 2.
 -->
 
 # AGENTS.md

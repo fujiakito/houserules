@@ -18,9 +18,13 @@ description: >-
 overview fails the third condition of the inclusion test below: the agent can read the directory tree
 itself. Writing down what the code already says is a recurring bill for no return — carrying a context
 file costs over 20% more inference unconditionally, and context files do not generally improve success
-rates (arXiv:2602.11988, established). The same paper reports, more weakly, that a context file did
-not reduce the steps an agent took to reach the files it needed; that is suggestive of overviews being
-the dead weight, but no ablation isolated them.
+rates (arXiv:2602.11988, established). Ablating the overview category directly (Table 7, Appendix B)
+moved accuracy 68.12%->62.32% (p=0.15) on CTXBench and 54.36%->54.20% (p=0.73) on SWE-bench -
+**not significant either way**, on one model and LLM-generated files only.
+
+**This holds for a documented repository.** The same paper finds context files *do* act as effective
+overviews when the repo has no documentation. If this repo is thinly documented, an overview may
+earn its place - judge it, do not assume.
 
 It also does not duplicate `/init`. If the host agent has an init command, that is a fine way to get
 a starting `CLAUDE.md`. This procedure produces something different: the **non-discoverable**
@@ -87,14 +91,14 @@ Keep this short. A long interview produces a long file, and length is the failur
 
 ## Step 4 — write, applying the test to each line
 
-Fill `templates/AGENTS.md` — **only the sections that have content.** Delete the rest, including the
+Fill `AGENTS.md` at the repository root — **only the sections that have content.** Delete the rest, including the
 comment block. Empty sections are cost with no return.
 
 Order does not matter as much as brevity. Before writing each line, state which of the three test
 conditions it satisfies. If you cannot state all three, do not write it.
 
 **Prefer a check over a sentence.** If a rule can be enforced by CI, a lint rule or a test, write
-that instead and leave the file shorter. See `hr-check`.
+that instead and leave the file shorter. `check.py` in this repository is where such checks go.
 
 ## Step 5 — derive the host files
 

@@ -21,7 +21,8 @@ worse, so this ships a **contract**, not a document set.
 
 `requirements.md` → `design.md` → `tasks.md` is one methodology's set. Adoption of every such
 methodology measured at essentially zero across 2,424 repositories, and methodology migration
-happened zero times in 91 repositories selected to be the most likely to show it.
+happened zero times in 91 repositories selected to be the most likely to show it. *(Unpublished
+prior scan — `(unverified)`; see `research/PORTABILITY.md` §0.)*
 
 **Name the stages your pipeline actually has.** The `stage` field in `handoff.md` is free text
 for that reason. If your pipeline is plan → review-plan → implement → review-code → commit,

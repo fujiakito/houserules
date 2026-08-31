@@ -20,26 +20,80 @@ import re
 import sys
 from pathlib import Path
 
-# Codex truncates instruction files beyond this. The tightest documented limit found,
-# so it is the one to design against. research/MATRIX.md section 1.
+# Codex's `project_doc_max_bytes` DEFAULT — configurable, not a hard ceiling.
+#
+# Two official pages disagree on what it bounds: the AGENTS.md discovery page says the
+# COMBINED size of the concatenated chain, the configuration reference reads as per-file.
+# This measures the chain total, the stricter reading — conservative rather than wrong if the
+# other one is right. Both retrieved 2026-09-01. research/MATRIX.md section 2.
 MAX_INSTRUCTION_BYTES = 32 * 1024
-WARN_AT = 8 * 1024  # long before the hard limit, brevity is the point
+WARN_AT = 8 * 1024  # long before the budget bites, brevity is the point
 
 IMPORT_LINE = "@AGENTS.md"
+
+# Per-directory precedence, highest first. Codex: "In each directory along the path, it checks
+# for AGENTS.override.md, then AGENTS.md." The override replaces the plain file at its own
+# level only — the chain continues through the directories above and below it.
+#
+# LIMIT: these two default names only. Codex also honours `project_doc_fallback_filenames`
+# ("additional filenames to try when AGENTS.md is missing"), which can be set in
+# ~/.codex/config.toml — outside the repository, so unknowable from here. A repo relying on
+# that setting has instruction content this check does not see. research/MATRIX.md section 2.
+INSTRUCTION_FILENAMES = ("AGENTS.override.md", "AGENTS.md")
 
 # Skill directory names that collide with a built-in. A collision is silent: Claude Code
 # replaces the bundled skill and never warns. research/MATRIX.md section 9.
 # Lower bound — it grows with each release, which is why the rule is "prefix", not "blocklist".
-RESERVED = {
+#
+# Bare-named BUNDLED skills only. Claude Code addresses plugin skills as `plugin:skill`
+# (`anthropic-skills:pdf`), so a project skill named `pdf` cannot shadow one — which is why
+# docx/xlsx/pptx are deliberately absent here. docs/agents/claude-code.md.
+RESERVED_CLAUDE = {
     "code-review", "review", "security-review", "simplify", "init", "run", "verify",
     "run-skill-generator", "doctor", "checkup", "debug", "batch", "loop", "proactive",
     "schedule", "deep-research", "claude-api", "update-config", "keybindings-help",
     "fewer-permission-prompts", "workflow-authoring", "design", "dataviz",
-    "artifact-design", "artifact-diagramming", "artifact-capabilities",
+    "artifact-design", "artifact-diagramming", "artifact-capabilities", "agents",
     "plan", "memory", "clear", "reset", "new", "resume", "branch", "fork", "context",
     "compact", "model", "effort", "advisor", "tasks", "background", "bg", "subtask",
     "permissions", "allowed-tools", "mcp", "config", "settings", "usage", "cost",
     "status", "copy", "export", "rewind", "diff", "feedback", "bug", "help", "goal", "exec",
+}
+
+# Codex names, measured 2026-08-31 against codex-cli 0.151.0-alpha.7.2: bundled and curated
+# plugin skills, the vendored openai/skills catalogue, and the documented slash commands.
+# research/MATRIX.md section 9.
+#
+# The failure differs from Claude Code's and is why these are a separate set. Codex does not
+# replace a bundled skill: a duplicate name produces BOTH entries in the selector, unmerged.
+# Nothing is lost, so this is a warning — but `$pdf` matching two different skills is still a
+# coin flip over which one runs, and `.agents/skills/` is shared by Codex, Goose and
+# Antigravity, so a name chosen for one of them lands in all three.
+RESERVED_CODEX = {
+    # ~/.codex/skills/.system — the true built-ins, confirmed loaded via
+    # `codex debug prompt-input` (docs/agents/codex.md)
+    "imagegen", "openai-docs", "plugin-creator", "skill-creator", "skill-installer",
+    "review-agent",
+    # bundled + primary-runtime plugin skills
+    "documents", "pdf", "presentations", "spreadsheets", "excel-live-control",
+    "template-creator", "visualize", "control-chrome", "control-in-app-browser",
+    "plugin-management", "computer-use", "latex", "browser", "chrome",
+    # codex-security plugin — a gated add-on, so these only collide where it is provisioned.
+    # Kept because this set is a lower bound and a prefix costs nothing.
+    "security-scan", "deep-security-scan", "security-diff-scan", "threat-model",
+    "finding-discovery", "attack-path-analysis", "validation", "triage-finding",
+    "fix-finding", "track-findings",
+    # vendored openai/skills catalogue
+    "define-goal", "migrate-to-codex", "hatch-pet", "yeet", "screenshot", "speech",
+    "transcribe", "playwright", "playwright-interactive", "cli-creator",
+    "jupyter-notebook", "figma", "figma-use", "linear", "sentry", "aspnet-core",
+    "chatgpt-apps", "winui-app", "gh-fix-ci", "gh-address-comments",
+    "security-best-practices", "security-ownership-map", "security-threat-model",
+    "vercel-deploy", "netlify-deploy", "render-deploy", "cloudflare-deploy",
+    # slash commands — official reference plus the desktop app's own menu, 2026-08-31
+    "ide", "keymap", "vim", "agent", "subagents", "apps", "plugins", "hooks",
+    "rename", "archive", "delete", "title", "stop", "approvals", "undo",
+    "goal", "init", "pet", "plan", "review", "chat", "reasoning", "worktree",
 }
 
 SKILL_DIRS = [".claude/skills", ".agents/skills", ".cursor/skills",
@@ -67,43 +121,97 @@ class Report:
 
 
 def check_import(repo: Path, r: Report, fix: bool) -> None:
-    """CLAUDE.md must import AGENTS.md, or Claude Code ignores it and says nothing."""
-    agents, claude = repo / "AGENTS.md", repo / "CLAUDE.md"
+    """CLAUDE.md must import AGENTS.md, or Claude Code ignores it and says nothing.
+
+    Both `./CLAUDE.md` and `./.claude/CLAUDE.md` are documented project locations, so either
+    satisfies this. Creating a second one when the other already exists would give the repo
+    two competing project instruction files.
+    """
+    agents = repo / "AGENTS.md"
     if not agents.is_file():
         r.add(WARN, "AGENTS.md", "absent — nothing portable to carry")
         return
-    if not claude.is_file():
+
+    candidates = [repo / "CLAUDE.md", repo / ".claude" / "CLAUDE.md"]
+    existing = [p for p in candidates if p.is_file()]
+
+    if not existing:
         if fix:
-            claude.write_text(IMPORT_LINE + "\n", encoding="utf-8")
+            candidates[0].write_text(IMPORT_LINE + "\n", encoding="utf-8")
             r.add(OK, "CLAUDE.md import", "created")
         else:
             r.add(FAIL, "CLAUDE.md import",
-                  "CLAUDE.md missing — Claude Code reads nothing here (--fix creates it)")
+                  "no CLAUDE.md or .claude/CLAUDE.md — Claude Code reads nothing here"
+                  " (--fix creates it)")
         return
-    if IMPORT_LINE in claude.read_text(encoding="utf-8"):
-        r.add(OK, "CLAUDE.md import", "present")
+
+    importing = [p for p in existing
+                 if IMPORT_LINE in p.read_text(encoding="utf-8")]
+    if importing:
+        where = ", ".join(p.relative_to(repo).as_posix() for p in importing)
+        r.add(OK, "CLAUDE.md import", f"present in {where}")
     elif fix:
-        claude.write_text(IMPORT_LINE + "\n\n" + claude.read_text(encoding="utf-8"),
+        target = existing[0]
+        target.write_text(IMPORT_LINE + "\n\n" + target.read_text(encoding="utf-8"),
                           encoding="utf-8")
-        r.add(OK, "CLAUDE.md import", "prepended")
+        r.add(OK, "CLAUDE.md import", f"prepended to {target.relative_to(repo).as_posix()}")
     else:
+        where = ", ".join(p.relative_to(repo).as_posix() for p in existing)
         r.add(FAIL, "CLAUDE.md import",
-              f"'{IMPORT_LINE}' missing — Claude Code is SILENTLY ignoring AGENTS.md")
+              f"'{IMPORT_LINE}' missing from {where}"
+              " — Claude Code is SILENTLY ignoring AGENTS.md")
 
 
 def check_size(repo: Path, r: Report) -> None:
-    f = repo / "AGENTS.md"
-    if not f.is_file():
+    """Measure the AGENTS.md chain, not one file and not the whole repository.
+
+    Codex concatenates one applicable file per directory from the repo root down to the working
+    directory. Measuring only the root file passes a repository whose nested files push the
+    chain over the budget; summing every file in the repository invents a total no session ever
+    sees, because sibling directories are never in the same chain.
+
+    What `project_doc_max_bytes` bounds is disputed: the discovery page says the combined chain,
+    the configuration reference reads as per-file (both retrieved 2026-09-01, MATRIX.md section
+    2). **This deliberately enforces the combined-chain reading** — the stricter one, so it is
+    conservative rather than wrong if the other turns out to be correct.
+    """
+    # "In each directory along the path, it checks for AGENTS.override.md, then AGENTS.md."
+    # The override replaces the plain file at ITS OWN level only; the chain continues past it.
+    # Scanning only AGENTS.md makes a repository built on overrides look empty.
+    dirs = {p.parent for name in INSTRUCTION_FILENAMES for p in repo.rglob(name)
+            if ".git" not in p.parts and "templates" not in p.relative_to(repo).parts}
+    if not dirs:
         return
-    n = f.stat().st_size
-    if n > MAX_INSTRUCTION_BYTES:
+
+    def applicable(d: Path) -> Path | None:
+        return next((d / n for n in INSTRUCTION_FILENAMES if (d / n).is_file()), None)
+
+    # A chain is one applicable file per directory level along a single root-to-cwd path.
+    # Sibling directories are never in the same chain, so summing every file in the
+    # repository invents a total no session ever sees. Measure the worst real path instead.
+    sizes = {d: f.stat().st_size for d in dirs if (f := applicable(d)) is not None}
+    worst, chain = 0, []
+    for d in sizes:
+        path = [a for a in (d, *d.parents)
+                if a in sizes and (a == repo or repo in a.parents)]
+        total = sum(sizes[a] for a in path)
+        if total > worst:
+            worst, chain = total, sorted(path, key=lambda a: len(a.parts))
+
+    detail = f"{worst:,} B"
+    if len(chain) > 1:
+        detail += (" — deepest chain: "
+                   + " + ".join(applicable(a).relative_to(repo).as_posix() for a in chain))
+
+    if worst > MAX_INSTRUCTION_BYTES:
         r.add(FAIL, "AGENTS.md size",
-              f"{n:,} B exceeds the {MAX_INSTRUCTION_BYTES:,} B limit — Codex truncates it")
-    elif n > WARN_AT:
+              f"{detail} exceeds the {MAX_INSTRUCTION_BYTES:,} B default chain budget"
+              " — Codex stops adding files at that point, so content is dropped")
+    elif worst > WARN_AT:
         r.add(WARN, "AGENTS.md size",
-              f"{n:,} B — every byte bills on every session; consider promoting rules to checks")
+              f"{detail} — every byte bills on every session; consider promoting rules to checks")
     else:
-        r.add(OK, "AGENTS.md size", f"{n:,} B")
+        r.add(OK, "AGENTS.md size", detail)
 
 
 def check_empty_sections(repo: Path, r: Report) -> None:
@@ -111,11 +219,15 @@ def check_empty_sections(repo: Path, r: Report) -> None:
     f = repo / "AGENTS.md"
     if not f.is_file():
         return
-    lines = f.read_text(encoding="utf-8").splitlines()
+    # Strip HTML comments first. Checking only for a leading "<!--" catches the opening line
+    # of a block and counts its body as content — which let the shipped scaffold, with every
+    # section still empty, pass as "none empty".
+    text = re.sub(r"<!--.*?-->", "", f.read_text(encoding="utf-8"), flags=re.S)
+    lines = text.splitlines()
     heads = [i for i, l in enumerate(lines) if l.startswith("## ")]
     empty = [
         lines[i][3:].strip() for n, i in enumerate(heads)
-        if not any(l.strip() and not l.strip().startswith("<!--")
+        if not any(l.strip()
                    for l in lines[i + 1:heads[n + 1] if n + 1 < len(heads) else len(lines)])
     ]
     if empty:
@@ -125,18 +237,37 @@ def check_empty_sections(repo: Path, r: Report) -> None:
 
 
 def check_names(repo: Path, r: Report) -> None:
-    """A skill named like a built-in silently replaces it."""
-    hits: set[str] = set()
+    """A skill named like a built-in collides with it. Two vendors, two behaviours:
+    Claude Code replaces the bundled skill silently, Codex shows both entries unmerged.
+    Neither raises an error, and one project prefix prevents both."""
+    names: set[str] = set()
     for d in SKILL_DIRS:
         p = repo / d
         if p.is_dir():
-            hits |= {s.name for s in p.iterdir()
-                     if s.is_dir() and s.name.lower() in RESERVED}
-    if hits:
+            names |= {s.name.lower() for s in p.iterdir() if s.is_dir()}
+
+    # Claude Code writes these itself: `/verify` records what worked to
+    # `.claude/skills/verify/`, and `/run-skill-generator` writes `run-<name>/`. In both cases
+    # replacing the bundled skill is the documented, intended outcome. Failing them would fail
+    # the vendor's own workflow — and GUIDE.md stage 4 tells people to run it.
+    generated = sorted(n for n in names
+                       if n == "verify" or n.startswith("run-"))
+    claude = sorted(names & RESERVED_CLAUDE - set(generated))
+    codex = sorted((names & RESERVED_CODEX) - RESERVED_CLAUDE - set(generated))
+
+    if claude:
         r.add(FAIL, "skill names",
-              f"collide with built-ins and SILENTLY replace them: {', '.join(sorted(hits))}"
-              " — add a project prefix")
-    else:
+              f"collide with Claude Code built-ins and SILENTLY replace them: "
+              f"{', '.join(claude)} — add a project prefix")
+    if generated:
+        r.add(OK, "generated skills",
+              f"{', '.join(generated)} — replaces a bundled skill by design"
+              " (written by /verify or /run-skill-generator)")
+    if codex:
+        r.add(WARN, "skill names",
+              f"collide with Codex built-ins: {', '.join(codex)}"
+              " — Codex shows both entries unmerged, so which one runs is a coin flip")
+    if not claude and not codex:
         r.add(OK, "skill names", "no collisions with known built-ins")
 
 
@@ -208,7 +339,8 @@ def check_frontmatter(repo: Path, r: Report) -> None:
         r.add(FAIL, "skill frontmatter",
               f"no description field: {', '.join(bad)} — the agent cannot know when to use it")
     elif seen:
-        r.add(OK, "skill frontmatter", f"{len(seen)} skill file(s) carry a description")
+        r.add(OK, "skill frontmatter",
+              f"{len(seen)} file(s) carry a description")
     else:
         r.add(OK, "skill frontmatter", "no skills present")
 
