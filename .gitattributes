@@ -1,0 +1,4 @@
+# Normalize line endings to LF, in the repository and in every working tree.
+# Without this, core.autocrlf checks these files out as CRLF on Windows, and a
+# contributor on another platform then sees the entire tree as modified.
+* text=auto eol=lf

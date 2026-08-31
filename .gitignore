@@ -1,0 +1,17 @@
+# Python — check.py and install.py are run often enough that this appears on its own.
+__pycache__/
+*.py[cod]
+
+# Work artifacts: the cross-session, cross-agent handoff channel.
+#
+# The leading slash matters. It anchors this to the repository root, so `templates/work/`
+# — which is the template and MUST stay tracked — is not caught by it.
+#
+# Ignored by default, per templates/work/README.md. Delete this line if you want the trail
+# in history: findings.md entries about rejected approaches keep their value long after the
+# work is done, and that is exactly the knowledge that is expensive to rediscover.
+/work/
+
+# OS
+Thumbs.db
+.DS_Store
