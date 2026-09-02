@@ -27,8 +27,8 @@ This matters because teams do switch.
 | **`AGENTS.md`** | ✅ **universal except Claude Code** — and that is a one-line fix | ❌ text only | **the carrier** |
 | **MCP** | ✅ every vendor surveyed | ✅ callable tools | **the only portable capability** |
 | **CI / git hooks** | ✅ agent-agnostic by construction | ✅ enforcement | **the only portable guarantee** |
-| `SKILL.md` | ⚠️ **format yes, path mostly** — `.agents/skills/` covers 6 of 8 surveyed agents as of 2026-09-01; Claude Code and Kiro need their own. Three directories cover all | ✅ procedures | portable content, still needs an installer |
-| Agent hooks | ⚠️ **schema and repo-level location both shared by Claude Code and Codex** — `.claude/settings.json` vs `<repo>/.codex/hooks.json`, ~10 event names in common including a blocking `PreToolUse`. `MATRIX.md` section 5, docs retrieved 2026-09-01; Goose untested | ✅ | vendor-local |
+| `SKILL.md` | ⚠️ **format yes, path mostly** — `.agents/skills/` covers 6 of 8 surveyed agents as of 2026-09-01; Claude Code and Kiro need their own. Three directories cover all. **Also read by Anthropic Managed Agents**, which is not a coding agent at all (`MATRIX.md` §2, 2026-09-02) | ✅ procedures | portable content, still needs an installer |
+| Agent hooks | ⚠️ **schema and repo-level location both shared by Claude Code and Codex** — `.claude/settings.json` vs `<repo>/.codex/hooks.json`, ~10 event names in common. **Both can block, and more widely than this file once said: 11 of Claude Code's 33 events and 7 of Codex's 11.** `MATRIX.md` section 5, blocking sets re-read 2026-09-02; Goose untested | ✅ | vendor-local |
 | Subagents | ❌ | ✅ | vendor-local |
 | Plugins / recipes / bundles | ❌ | ✅ | vendor-local |
 | Built-in commands | ❌ each vendor's own set | ✅ | vendor-local |
@@ -72,7 +72,15 @@ only the agent that reads it. **Revised 2026-08-31:** Claude Code and Codex turn
 hook schema closely enough that one file can often serve both (`MATRIX.md` section 5), so this is no
 longer the *least* portable mechanism on the list. It is still not a guarantee: the file location
 differs, Goose is untested, Codex documents 11 events against Claude Code's 33, and nothing
-holds the overlapping ten together across releases. The resolution is unchanged:
+holds the overlapping ten together across releases.
+
+**Revised again 2026-09-02, and in the same direction as every previous revision of this row:** the
+blocking surface is wider on both sides than this file assumed. **7 of Codex's 11 events can halt a
+turn**, not just `PreToolUse` — `PermissionRequest` approves or denies outright, and
+`UserPromptSubmit`, `PreCompact`, `PostCompact`, `SubagentStop` and `Stop` can return
+`continue: false`. That makes a hook a *more* capable gate than this section credited it with, on
+both agents. It does not change the verdict, because capability was never the problem — **binding
+only the agent that reads the file is.** The resolution is unchanged:
 
 > **The portable expression is the contract; the vendor-local one is an accelerator.**
 
@@ -164,3 +172,8 @@ row. Do not cite the overview row as if it were settled.
 - Goose and `AGENTS.md` — undocumented, needs a local test
 - Whether Goose has a standalone hook mechanism at all (Codex: resolved, it does)
 - Tier 2/3 rows are documentation-sourced and untested
+- **Managed Agents reads `.claude/skills/` from a mounted repository** (`MATRIX.md` §2). Two
+  consequences are unresolved: whether the survey's frame should be "coding agents" at all rather
+  than "anything that mounts the repo", and whether the portable layer should say anything about
+  the trust boundary that creates — a skill committed here is loaded by a cloud agent **without a
+  review step**. Documentation-sourced, never run.

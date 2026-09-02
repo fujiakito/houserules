@@ -45,19 +45,47 @@ INSTRUCTION_FILENAMES = ("AGENTS.override.md", "AGENTS.md")
 # replaces the bundled skill and never warns. research/MATRIX.md section 9.
 # Lower bound — it grows with each release, which is why the rule is "prefix", not "blocklist".
 #
-# Bare-named BUNDLED skills only. Claude Code addresses plugin skills as `plugin:skill`
-# (`anthropic-skills:pdf`), so a project skill named `pdf` cannot shadow one — which is why
-# docx/xlsx/pptx are deliberately absent here. docs/agents/claude-code.md.
+# Sourced from the published commands reference, retrieved 2026-09-02 — NOT from enumerating a
+# session. A live session cannot tell a bundled skill from one the user installed, so it is the
+# wrong evidence for this set. See docs/agents/claude-code.md section 3.
+#
+# Bare-named BUNDLED skills and built-in commands only. Claude Code addresses plugin skills as
+# `plugin:skill` (`anthropic-skills:pdf`), so a project skill named `pdf` cannot shadow one —
+# which is why docx/xlsx/pptx are deliberately absent here.
 RESERVED_CLAUDE = {
-    "code-review", "review", "security-review", "simplify", "init", "run", "verify",
-    "run-skill-generator", "doctor", "checkup", "debug", "batch", "loop", "proactive",
-    "schedule", "deep-research", "claude-api", "update-config", "keybindings-help",
-    "fewer-permission-prompts", "workflow-authoring", "design", "dataviz",
-    "artifact-design", "artifact-diagramming", "artifact-capabilities", "agents",
-    "plan", "memory", "clear", "reset", "new", "resume", "branch", "fork", "context",
-    "compact", "model", "effort", "advisor", "tasks", "background", "bg", "subtask",
-    "permissions", "allowed-tools", "mcp", "config", "settings", "usage", "cost",
-    "status", "copy", "export", "rewind", "diff", "feedback", "bug", "help", "goal", "exec",
+    # bundled skills — rows marked `Skill` in the commands reference
+    "batch", "claude-api", "code-review", "dataviz", "debug", "design", "design-sync",
+    "doctor", "fewer-permission-prompts", "loop", "run", "run-skill-generator", "sandbox",
+    "schedule", "security-review", "simplify", "verify",
+    # bundled workflow, and the skill that is present only when workflows are enabled
+    "deep-research", "workflow-authoring",
+    # documented aliases — an alias never reaches a project skill, so a name that only
+    # matches an alias still costs you the bundled one
+    "review", "checkup", "routines", "proactive", "peers", "bg", "reset", "new",
+    "settings", "allowed-tools", "plugins",
+    # built-in commands
+    "add-dir", "advisor", "agents", "artifacts", "auto-mode-setup", "autocompact",
+    "autofix-pr", "background", "branch", "btw", "bug", "cd", "chrome", "clear", "color",
+    "compact", "config", "context", "copy", "cost", "design-login", "desktop", "diff",
+    "effort", "exit", "export", "fast", "feedback", "focus", "fork", "goal", "heapdump",
+    "help", "hooks", "ide", "import", "init", "insights", "install-github-app",
+    "install-slack-app", "keybindings", "list-agents", "login", "logout", "mcp", "memory",
+    "mobile", "model", "passes", "permissions", "plan", "plugin", "powerup", "pr-comments",
+    "privacy-settings", "radio", "reload-plugins", "reload-skills", "remote-control",
+    "resume", "rewind", "slash-commands", "status", "statusline", "subtask", "tasks",
+    "usage", "vim", "voice", "web-setup", "workflows", "worktree",
+    # documented in the commands reference and on the sessions page. An earlier revision wrongly
+    # recorded it as absent after searching only the former: the commands reference is the biggest
+    # enumerable list, not the whole surface.
+    "rename",
+    # observed in a session but absent from the commands reference; kept because this set is a
+    # lower bound and reserving a name costs nothing
+    "update-config", "keybindings-help", "artifact-design", "artifact-diagramming",
+    "artifact-capabilities", "exec",
+    # Reserved defensively, no source found on any page. Kept because this set's failure modes are
+    # asymmetric: a MISSING name is a silent collision, while an EXTRA name only tells you to add
+    # a prefix — which AGENTS.md requires regardless. Not claimed as a Claude Code command.
+    "archive",
 }
 
 # Codex names, measured 2026-08-31 against codex-cli 0.151.0-alpha.7.2: bundled and curated
@@ -345,6 +373,50 @@ def check_frontmatter(repo: Path, r: Report) -> None:
         r.add(OK, "skill frontmatter", "no skills present")
 
 
+def check_reserved_drift(repo: Path, r: Report) -> None:
+    """Guard the reserved-name sets against drifting from this repo's own inventories.
+
+    RESERVED_CLAUDE is a lower bound transcribed by hand from the published commands reference,
+    plus names found on other documentation pages. Two failure modes follow, and a review caught
+    both: a name documented in `docs/agents/claude-code.md` can be missing from the set, and a name
+    in the inventory can lack a source.
+
+    `/rename` is the cautionary case. It is documented on the sessions page, and a first pass that
+    searched only the commands reference concluded it did not exist. **The commands reference is
+    the biggest enumerable list, not the whole surface** — a command lives wherever its feature is
+    documented, and re-running the same search does not widen its scope.
+
+    So this compares the two and WARNS rather than failing. A warning is correct here because the
+    inventory is prose: it quotes other agents' commands, MCP prompt forms and shell examples, and
+    a mismatch means "one of these two needs a look", not "the repository is broken".
+
+    KNOWN LIMIT, and it is inherent rather than an oversight: this is a ONE-WAY check. It catches
+    inventory names missing from the set. It cannot catch a command missing from BOTH, because
+    nothing local knows the vendor's full list — and check.py is deliberately offline, standard
+    library only, and shipped into other repositories. Closing that direction needs a fetch, which
+    would make the check unrunnable in CI without network and is the wrong trade. Re-read the
+    commands reference on the `recheck_by` date instead; research/MATRIX.md carries it.
+
+    Skipped entirely outside this repository — check.py ships into repos that have no docs/agents/.
+    """
+    inventory = repo / "docs" / "agents" / "claude-code.md"
+    if not inventory.is_file():
+        return
+    text = inventory.read_text(encoding="utf-8")
+    # Only backticked `/name` tokens: prose mentions and MCP prompt forms (`/mcp__x__y`) are noise.
+    found = {m.lower() for m in re.findall(r"`/([a-z][a-z0-9-]{1,30})`", text)}
+    missing = sorted(found - RESERVED_CLAUDE)
+    if missing:
+        r.add(WARN, "reserved-name drift",
+              f"documented in docs/agents/claude-code.md but not in RESERVED_CLAUDE: "
+              f"{', '.join(missing)} — add them, or fix the inventory if the name is not "
+              f"Claude Code's")
+    else:
+        r.add(OK, "reserved-name drift",
+              f"{len(found)} command-shaped name(s) in the inventory, all reserved"
+              " (one-way check — see the docstring)")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -364,6 +436,7 @@ def main() -> int:
     check_names(repo, r)
     check_sync(repo, r)
     check_frontmatter(repo, r)
+    check_reserved_drift(repo, r)
 
     print(f"portable agent layer — {repo}\n")
     r.render()

@@ -97,7 +97,10 @@ made: measured adoption of every AI-native SDLC framework checked was essentiall
 
 ```
 docs/GUIDE.md              the AI-native SDLC: 7 stages, every agent, which to use — for you
-docs/agents/               one inventory per agent: what ships vs what you install
+docs/agents/claude-code.md the full Claude Code inventory: surfaces, bundled skills, subagents,
+                           hooks, permission modes, artifacts, scheduling, plugins, limits
+docs/agents/codex.md       the full Codex inventory: surfaces, commands, built-in skills,
+                           marketplaces, AGENTS.md rules, hooks, config defaults, traps
 research/MATRIX.md         8 agents x 6 extension mechanisms, with check dates and a revision log
 research/PORTABILITY.md    what dies on a switch, and what the portable layer must therefore carry
 templates/AGENTS.md        mostly empty, with the inclusion test that keeps it that way

@@ -115,6 +115,14 @@ other agent has nothing at all.
 **Portable expression** — the command is not portable; **the recorded recipe is.** It lands in the
 repository as a skill. This is the highest-value pairing on the page.
 
+> ⚠️ **Where the recipe lands is disputed between two official pages.** The skills page says
+> `/verify` writes to `.claude/skills/verify/SKILL.md` and `/run-skill-generator` to
+> `.claude/skills/run-<name>/`; the commands reference says `/verify`'s script comes from
+> `CLAUDE.md` or `.claude/verify`. The two pages also describe `/run` as two different features.
+> **Which path it is decides whether another agent finds the recipe**, which is this stage's whole
+> claim — so confirm it by running `/verify` once before relying on the pairing. See
+> [`agents/claude-code.md`](agents/claude-code.md) section 3.
+
 > \* **Availability varies by feature flag and settings.** `/verify`, `/doctor`, `/debug`, `/batch`,
 > `/deep-research` and `/run-skill-generator` are in the published reference but did not all appear
 > in the session used to build `agents/claude-code.md`. **This stage's verdict rests on `/verify`

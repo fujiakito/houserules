@@ -19,9 +19,19 @@ whole reason for this directory.
 
 | | |
 |---|---|
-| [`claude-code.md`](claude-code.md) | Claude Code |
-| [`codex.md`](codex.md) | Codex — CLI, desktop app and IDE extension |
+| [`claude-code.md`](claude-code.md) | Claude Code — CLI, desktop, mobile, IDE, web, SDK, Chrome |
+| [`codex.md`](codex.md) | Codex — CLI, desktop app, IDE extension, cloud, mobile/Remote |
 | [`_TEMPLATE.md`](_TEMPLATE.md) | copy this to add an agent |
+
+**These two are the canonical inventories for this project.** Everything verified about either
+agent lives in its file — surfaces, built-ins, installables, extension points, limits, and the
+traps. Nothing else in the repository duplicates them; `../GUIDE.md` links into them per stage and
+`../../research/MATRIX.md` compares one mechanism at a time across all eight agents.
+
+**Both carry an evidence grade per claim** — `tested`, `documented` with a retrieval date, ⚠️
+`disputed` where two official pages conflict, or `(unverified)`. The grades are not decoration: on
+Codex, three enumerations that were `documented` turned out to disagree with the running build, and
+the ⚠️ rows are cases nobody has settled yet.
 
 Not yet written: Cursor, Copilot, Kiro, Antigravity, Goose, OpenCode. They are surveyed from
 documentation only in `../../research/MATRIX.md`, where they are graded **`documented`** — sourced

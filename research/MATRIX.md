@@ -20,7 +20,9 @@ official pages disagree with each other.
 best. That distinction is load-bearing: this project has twice been wrong about a vendor whose
 documentation it had read correctly, because reading is not running.
 
-**Checked: 2026-08-31. `recheck_by: 2026-11-30.`** Platform surfaces in this field change monthly —
+**Checked: 2026-08-31. `recheck_by: 2026-11-30.`** **Claude Code and Codex rows re-read 2026-09-02**
+against seventeen official pages; see the revision log and the two inventories in `docs/agents/`.
+That pass was documentation-only — it changed no evidence grade, because reading is not running. Platform surfaces in this field change monthly —
 Amazon Q Developer is being wound down — new signups blocked 2026-05-15, full end of support
 2027-04-30, with AWS directing users to **Kiro**, which is in this table — Gemini CLI is being
 replaced by Antigravity CLI, Cursor was acquired
@@ -92,6 +94,33 @@ The location is not.**
 > `.cursor/skills/` and `.opencode/skills/` are **redundant** — both agents read `.agents/skills/`.
 > `install.py` still writes all five; see the open item below.
 >
+> ### A ninth consumer, and not a coding agent
+>
+> **Anthropic Managed Agents reads `.claude/skills/` too** — the same directory, with no installer,
+> no configuration and no entry in the agent's `skills` array. When a session mounts a repository
+> through the `github_repository` resource, the repo's root `.claude/skills` is scanned at session
+> start and every skill found becomes available. `documented`, retrieved 2026-09-02.
+>
+> It is stricter than any coding agent's discovery, and the constraints are worth knowing because
+> `install.py` already satisfies them:
+>
+> | Rule | Effect |
+> |---|---|
+> | Exactly `.claude/skills/<name>/SKILL.md`, **one level deep at the repo root** | A bare `SKILL.md`, anything deeper, or a `skills/` outside `.claude` is not discovered |
+> | Scanned **once, at session start** | Mid-session commits are not picked up |
+> | Requires the toolset's **`read`** tool | An agent with `read` disabled loads no repository skills |
+> | **Cloud sandboxes only** | Self-hosted sandboxes do not support GitHub repository resources |
+>
+> This matters to the portability argument in `PORTABILITY.md`: the layer reaches a surface that is
+> not a coding agent at all, which is the strongest available evidence that **a checked-in
+> `SKILL.md` is the durable artifact** and the vendor path is the accident.
+>
+> ⚠️ **It also widens the trust boundary, and Anthropic says so directly:** repository skills are
+> agent instructions, loaded **without a review step**, and session tools such as `bash` and
+> `web_fetch` give them real reach. Anyone who can commit to the repository — including through a
+> merged external pull request — can add one. Review `.claude/skills` before mounting a repository
+> that accepts outside contributions.
+>
 > **This is the second reversal of this row**, which is the point: an earlier draft called
 > `.agents/skills/` the emerging standard, a later one called that wrong, and the vendors have now
 > moved to make the first reading correct. *(See the revision log.)*
@@ -131,6 +160,31 @@ Also unmodelled: **`project_doc_fallback_filenames`** — "additional filenames 
 the checker cannot see, because the setting can live in `~/.codex/config.toml`, outside the
 repository entirely. `check.py` covers the two default names only and says so.
 
+### A gitignored `AGENTS.override.md` is loaded instruction content that never reaches review
+
+Codex's worktree documentation, retrieved 2026-09-02:
+
+> "Codex automatically copies an ignored `AGENTS.override.md` into local managed worktrees, so you
+> don't need to list it in `.worktreeinclude`."
+
+Stated as a property rather than a convenience: an `AGENTS.override.md` that is in `.gitignore`
+**replaces the committed `AGENTS.md` at its level, is loaded into every session, and follows the
+developer into every Codex-managed worktree — while being invisible to anyone auditing the
+repository's agent instructions, because it is not in the repository.**
+
+Two consequences for this project:
+
+- **`check.py` sees it and should.** It scans `AGENTS.override.md` on disk, so it measures the chain
+  a session actually gets rather than the chain that is committed. That is the correct behaviour and
+  is now deliberate rather than incidental.
+- **"Read the repo to see what the agent was told" is not sound on Codex.** The equivalent of
+  Claude Code's `/context` is `codex debug prompt-input`, which renders what the model actually
+  receives. Reading files is not the same check.
+
+Ordinary Git worktrees created from the command line do **not** get this copy; the behaviour is
+specific to worktrees the desktop app manages. `documented`, retrieved 2026-09-02 —
+`docs/agents/codex.md` section 7.
+
 **The `description` field is a trigger, not a title.** Codex's documentation is explicit: it
 determines whether the model selects the skill for a task. Write it as *use when…*, not as a label.
 
@@ -160,8 +214,8 @@ Not portable. Every vendor has its own format.
 
 | Agent | Mechanism |
 |---|---|
-| **Claude Code** | `.claude/settings.json`. **33 documented events**, including `SessionStart`/`SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`/`StopFailure`, `SubagentStart`/`Stop`, `PreCompact`/`PostCompact`, `FileChanged`, `InstructionsLoaded`, `Setup`. **Around 10 can block**, not just `PreToolUse`. **5 handler types**: `command`, `http`, `mcp_tool`, `prompt` (decided by a model), `agent` |
-| **Codex** | **`<repo>/.codex/hooks.json` and `~/.codex/hooks.json`**, plus plugin-bundled `hooks.json`. All layers load cumulatively; none replaces another. `/hooks` manages them. **11 events**: `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse` (**can block**), `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SubagentStart`, `SubagentStop`, `Stop`. Handlers `command` and `mcp_tool`; `prompt` and `agent` are parsed but skipped. Official docs retrieved 2026-09-01 |
+| **Claude Code** | `.claude/settings.json`. **33 documented events**, including `SessionStart`/`SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`/`StopFailure`, `SubagentStart`/`Stop`, `PreCompact`/`PostCompact`, `FileChanged`, `InstructionsLoaded`, `Setup`. **11 can block**, not just `PreToolUse` — `PreToolUse`, `UserPromptSubmit`, `UserPromptExpansion`, `Stop`, `SubagentStop`, `TeammateIdle`, `TaskCreated`, `TaskCompleted`, `ConfigChange`, `PostToolBatch`, `PreModelSwitch`. **5 handler types**: `command`, `http`, `mcp_tool`, `prompt` (decided by a model), `agent`. Event list and blocking set re-read verbatim 2026-09-02 |
+| **Codex** | **`<repo>/.codex/hooks.json` and `~/.codex/hooks.json`**, plus inline `[hooks]` in either `config.toml`, plus plugin-bundled hooks at **`hooks/hooks.json` inside the plugin root** (manifest-overridable via a `hooks` entry in `.codex-plugin/plugin.json`; paths resolve relative to the plugin root and must stay inside it). All layers load cumulatively; none replaces another. `/hooks` manages them. **11 events**: `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SubagentStart`, `SubagentStop`, `Stop`. **7 of them can halt the turn** — `PreToolUse` denies a tool call, `PermissionRequest` approves or denies one, and `UserPromptSubmit`, `PreCompact`, `PostCompact`, `SubagentStop` and `Stop` can return `continue: false`. Handlers `command` and `mcp_tool`; `prompt` and `agent` are parsed but skipped. Blocking set re-read verbatim 2026-09-02; rest retrieved 2026-09-01 |
 | **Goose** | **(unverified)** |
 
 **Codex has hooks, and the schema shape is close to Claude Code's.** *(Revised — see the revision
@@ -364,6 +418,14 @@ revision history. Each entry is a claim this file once made and no longer does.
 | 2026-09-01 | "Hard limit: 32 KiB. Codex truncates beyond it" in `templates/AGENTS.md` | Corrected everywhere else first. **The sweep searched `research/`, `docs/` and `check.py` and never included `templates/`** — the one directory whose contents ship into adopters' repositories |
 | 2026-09-01 | "all 16 rows carry a grade and a date" | **False, and produced by a bad measurement.** The count matched `| **` and swept up the evidence-grade legend's own rows. The two agent tables held 15 rows, six carried no grade, and OpenCode was missing from the instruction table entirely |
 | 2026-08-31 | "no ablation isolated the overview result; the paper's one ablation (Figure 5) strips documentation files" | **Wrong, and more specifically wrong than the vaguer claim it replaced.** Table 7 (Appendix B) ablates the overview category directly: p = 0.15 / p = 0.73, null either way. Figure 5 is a tool-use chart, not an ablation. The overview paragraph is §4.3, not §4.2. Corrected in `PORTABILITY.md`, `AGENTS.md`, `templates/AGENTS.md` and the six `SKILL.md` copies |
+| 2026-09-02 | Section 5: Claude Code hooks "**around 10** can block" | **11**, now named. The hedge survived from the 2026-08-31 correction because nobody counted the list |
+| 2026-09-02 | `check.py`'s `RESERVED_CLAUDE` was assembled from a **session enumeration** | Rebuilt from the published commands reference. **A session cannot tell a bundled skill from one the user installed**, so it was the wrong evidence for a reserved-name set — the same class of error as reading the Codex plugin cache and calling it loaded. `/sandbox`, `/design`, `/security-review`, `/simplify`, `/workflows`, `/worktree` and ~40 built-in command names were missing, every one of them a plausible project skill name |
+| 2026-09-02 | `docs/agents/claude-code.md` described `/verify` and `/run` as settled | **Two official pages disagree** about both, including where `/verify` writes its recorded recipe. Recorded as ⚠️ `disputed` in three files rather than resolved by picking one. This is the second such case in this project, after `project_doc_max_bytes` in section 2 |
+| 2026-09-02 | Section 2 listed **eight** consumers of a checked-in `SKILL.md`, all of them coding agents | **Nine.** Anthropic **Managed Agents** scans a mounted repository's root `.claude/skills/` at session start — no installer, no configuration, no `skills`-array entry. The survey's frame was "coding agents" when the actual boundary is "anything that mounts the repo", and the miss came from never looking outside `code.claude.com` |
+| 2026-09-02 | The `ide` MCP server was attributed to VS Code alone | **JetBrains runs the same server**, with a smaller model-visible tool surface. Both are hidden from `/mcp`, which matters for anyone allowlisting MCP tools with a `PreToolUse` hook. **Claims about a vendor were sourced to that vendor's general pages rather than its own** — the JetBrains page had never been cited |
+| 2026-09-02 | Section 5: Codex hooks — only `PreToolUse` marked **can block** | **7 of the 11 can halt a turn.** `PermissionRequest` approves or denies outright; `UserPromptSubmit`, `PreCompact`, `PostCompact`, `SubagentStop` and `Stop` can return `continue: false`. **This is the fourth revision of the Codex hooks row and the fourth in the same direction** — every one has found the mechanism more capable than the previous draft assumed. The correction came from checking a research file *against* this one, not from re-reading the vendor page |
+| 2026-09-02 | Section 1 treated the `AGENTS.md` chain as fully visible in the repository | **A gitignored `AGENTS.override.md` is loaded, overrides the committed file at its level, and is auto-copied into every Codex-managed worktree** — instruction content that never reaches code review. "Read the repo to see what the agent was told" is not a sound check on Codex; `codex debug prompt-input` is |
+| 2026-09-02 | `docs/agents/codex.md` filed `hatch-pet` under curated skills | **Bundled.** The Pets page: creating a custom pet *"installs the bundled `hatch-pet` skill"*. A minor row, but it came from the same error as the big ones — **a name seen in the curated catalogue was assumed to be only there** |
 
 **The pattern worth noticing:** most of these were an enumeration mistaken for an inventory, or a
 local artefact mistaken for a loaded capability. The overview-ablation entry is a third kind, and
