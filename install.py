@@ -25,8 +25,8 @@ artifact* meant to be identical everywhere, so a byte difference is a conflict.
 An existing skill directory is never replaced without --force. Adopting this layer into a
 repository that already has its own skills must not cost the user one of them.
 
-This script writes; check.py only reads. Keeping them apart is deliberate - a check that
-can repair what it is checking is not a check.
+This script installs the complete layer. The default `python check.py` path only reads;
+`check.py --fix` is an explicit local repair mode and must not be used as a CI gate.
 
 Paths verified 2026-09-01. Re-check them when an agent releases; see the recheck policy in
 research/MATRIX.md.
@@ -250,8 +250,8 @@ def main() -> int:
     print()
     print("This reports what INSTALLING would change. To verify the layer is intact"
           " afterwards - size, collisions with\nbuilt-in names, missing skill descriptions,"
-          " drift - run check.py. It is read-only by design, which is\nwhat makes it safe"
-          " in CI: a check that can repair what it is checking is not a check.")
+          " drift - run check.py. Its default path is read-only; in CI, run it without"
+          " --fix so the gate reports drift instead of repairing it.")
     # Exit non-zero for ANY pending change, not conflicts alone. A location that was never
     # installed reports "would create", which is not a conflict but still means the layer is
     # incomplete — and reporting success there let a repository missing a whole skill

@@ -28,7 +28,7 @@ This matters because teams do switch.
 | **MCP** | ✅ every vendor surveyed | ✅ callable tools | **the only portable capability** |
 | **CI / git hooks** | ✅ agent-agnostic by construction | ✅ enforcement | **the only portable guarantee** |
 | `SKILL.md` | ⚠️ **format yes, path mostly** — `.agents/skills/` covers 6 of 8 surveyed agents as of 2026-09-01; Claude Code and Kiro need their own. Three directories cover all. **Also read by Anthropic Managed Agents**, which is not a coding agent at all (`MATRIX.md` §2, 2026-09-02) | ✅ procedures | portable content, still needs an installer |
-| Agent hooks | ⚠️ **schema and repo-level location both shared by Claude Code and Codex** — `.claude/settings.json` vs `<repo>/.codex/hooks.json`, ~10 event names in common. **Both can block, and more widely than this file once said: 11 of Claude Code's 33 events and 7 of Codex's 11.** `MATRIX.md` section 5, blocking sets re-read 2026-09-02; Goose untested | ✅ | vendor-local |
+| Agent hooks | ⚠️ **schema and repo-level location both shared by Claude Code and Codex** — `.claude/settings.json` vs `<repo>/.codex/hooks.json`, ~10 event names in common. **Both can block.** Current event sets, blocking contracts, counts, and fail-open behaviour are owned by the canonical [Claude Code](../docs/agents/claude-code.md#7-hooks) and [Codex](../docs/agents/codex.md#8-hooks) inventories; Goose untested | ✅ | vendor-local |
 | Subagents | ❌ | ✅ | vendor-local |
 | Plugins / recipes / bundles | ❌ | ✅ | vendor-local |
 | Built-in commands | ❌ each vendor's own set | ✅ | vendor-local |
@@ -67,20 +67,24 @@ for someone arriving with a different agent.
 
 ### The corollary that resolves the hook question
 
-A deterministic gate is genuinely valuable and hooks are the natural place for it — but a hook binds
-only the agent that reads it. **Revised 2026-08-31:** Claude Code and Codex turned out to share a
-hook schema closely enough that one file can often serve both (`MATRIX.md` section 5), so this is no
-longer the *least* portable mechanism on the list. It is still not a guarantee: the file location
-differs, Goose is untested, Codex documents 11 events against Claude Code's 33, and nothing
-holds the overlapping ten together across releases.
+A deterministic gate is genuinely valuable. Hooks are a useful place for fast local feedback, but
+not the home of a hard guarantee: a hook binds only the agent that reads it, and configuration,
+executability, timeout, or trust can fail open. **Revised 2026-08-31:** Claude Code and Codex turned
+out to share a hook schema closely enough that one file can often serve both (`MATRIX.md` section
+5), so this is no longer the *least* portable mechanism on the list. It is still not a guarantee:
+the file locations, event sets, decision contracts, and failure behavior differ across agents and
+releases. Current mechanics are owned by the two canonical inventories linked from `MATRIX.md`.
 
 **Revised again 2026-09-02, and in the same direction as every previous revision of this row:** the
-blocking surface is wider on both sides than this file assumed. **7 of Codex's 11 events can halt a
-turn**, not just `PreToolUse` — `PermissionRequest` approves or denies outright, and
-`UserPromptSubmit`, `PreCompact`, `PostCompact`, `SubagentStop` and `Stop` can return
-`continue: false`. That makes a hook a *more* capable gate than this section credited it with, on
-both agents. It does not change the verdict, because capability was never the problem — **binding
-only the agent that reads the file is.** The resolution is unchanged:
+blocking surface is wider on both sides than this file assumed. That makes a hook a *more* capable
+guardrail than this section credited it with. It does not change the verdict, because capability
+was never the problem — **binding only the agent that reads the file is.**
+
+**Revised 2026-09-03:** Claude Code's current hook contract makes the other missing dimension
+explicit: several setup and runtime failures proceed without the intended block. Permission policy
+and the OS sandbox provide different boundaries, while CI is the portable gate. A guarantee exists
+only when the acting agent cannot modify, disable, or bypass the enforcing control. The resolution
+is unchanged:
 
 > **The portable expression is the contract; the vendor-local one is an accelerator.**
 
@@ -91,6 +95,9 @@ see.
 
 This also inherits a principle worth keeping from a surveyed project: **validate evidence and
 execution state; never trust an agent's claim that a check has run.**
+
+A green check proves only the assertions encoded in that check. It does not prove that those
+assertions are sufficient, and it does not replace independent review.
 
 ## 4. What the boilerplate therefore ships
 

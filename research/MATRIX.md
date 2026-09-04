@@ -12,7 +12,7 @@ official pages disagree with each other.
 
 | Grade | Means |
 |---|---|
-| **tested** | run on a real installation on this machine, with the version recorded |
+| **tested** | run on a real installation on this machine, with the surface and version recorded |
 | **documented** | official vendor documentation, with a retrieval date. Not run |
 | `(unverified)` | neither — a claim carried forward without a source |
 
@@ -20,9 +20,13 @@ official pages disagree with each other.
 best. That distinction is load-bearing: this project has twice been wrong about a vendor whose
 documentation it had read correctly, because reading is not running.
 
-**Checked: 2026-08-31. `recheck_by: 2026-11-30.`** **Claude Code and Codex rows re-read 2026-09-02**
-against seventeen official pages; see the revision log and the two inventories in `docs/agents/`.
-That pass was documentation-only — it changed no evidence grade, because reading is not running. Platform surfaces in this field change monthly —
+**Checked baseline: 2026-08-31. `recheck_by: 2026-11-30.`** Claude Code and Codex rows were re-read
+2026-09-02 against seventeen official pages; that pass was documentation-only and changed no
+evidence grade, because reading is not running. Follow-up documentation and local verification
+through **2026-09-04** did change the evidence set: Codex `--search` became `documented`,
+project-scoped `.agents/skills` became `tested` in the Desktop app and a sandbox-launched CLI child,
+repository `hr-onboard` became `tested` for both agents, and `tested` now requires a named surface
+and version. See the revision log and the canonical inventories in `docs/agents/`. Platform surfaces in this field change monthly —
 Amazon Q Developer is being wound down — new signups blocked 2026-05-15, full end of support
 2027-04-30, with AWS directing users to **Kiro**, which is in this table — Gemini CLI is being
 replaced by Antigravity CLI, Cursor was acquired
@@ -30,7 +34,8 @@ and shipped a git forge, all within twelve months. **Every row below is a claim 
 permanent fact.** Re-run the local tests on each recheck; they take minutes and settle what
 documentation disputes.
 
-Status: **Claude Code and Codex are `tested`** — real installations, versions recorded, and the
+Status: **Claude Code and Codex are `tested`** — real installations, surfaces and versions recorded
+(with any historical environment gap explicit), and the
 only two this project should be described as supporting. **Goose, Cursor, Copilot, OpenCode,
 Antigravity and Kiro are `documented`**: their rows cite official pages with retrieval dates, and
 none has been run. Windsurf is backlog.
@@ -41,8 +46,8 @@ none has been run. Windsurf is backlog.
 
 | Agent | Reads | Path / discovery | Notes |
 |---|---|---|---|
-| **Claude Code** | `CLAUDE.md` only | `./CLAUDE.md` **or `./.claude/CLAUDE.md`**; up the tree; `~/.claude/CLAUDE.md` personal; managed-policy path or the `claudeMd` settings key | **`tested`** — v2.1.251, 2026-08-29. **Does not read `AGENTS.md` natively.** `@AGENTS.md` import from `CLAUDE.md` works. With both files present and no import, `AGENTS.md` is ignored **and nothing says so** |
-| **Codex** | `AGENTS.md` | every directory level from repo root to cwd; `~/.codex/AGENTS.md` global | Files **concatenate**, they do not override — a subdirectory adds to the root. `AGENTS.override.md` replaces its `AGENTS.md` at that level. `project_doc_max_bytes` = **32 KiB by default — configurable, not a hard ceiling**. What it bounds is disputed between two official pages; see section 2. **Mixed grade:** that Codex reads `AGENTS.md` is **`tested`** (0.151.0-alpha.7.2, 2026-08-31); the precedence and byte-budget rules are `documented`, retrieved 2026-09-01 |
+| **Claude Code** | `CLAUDE.md` only | `./CLAUDE.md` **or `./.claude/CLAUDE.md`**; up the tree; `~/.claude/CLAUDE.md` personal; managed-policy path or the `claudeMd` settings key | **`tested`** — Claude Code CLI/Desktop session v2.1.251, 2026-08-29. **Does not read `AGENTS.md` natively.** `@AGENTS.md` import from `CLAUDE.md` works. With both files present and no import, `AGENTS.md` is ignored **and nothing says so** |
+| **Codex** | `AGENTS.md` | every directory level from repo root to cwd; `~/.codex/AGENTS.md` global | Files **concatenate**, they do not override — a subdirectory adds to the root. `AGENTS.override.md` replaces its `AGENTS.md` at that level. `project_doc_max_bytes` = **32 KiB by default — configurable, not a hard ceiling**. What it bounds is disputed between two official pages; see section 2. **Mixed grade:** reading `AGENTS.md` was `tested` on the CLI 0.151.0-alpha.7.2 baseline (process environment not recorded), 2026-08-31, and reconfirmed in the Desktop Codex-mode task and its sandbox-launched CLI 0.153.0 child, 2026-09-04; the precedence and byte-budget rules are `documented`, retrieved 2026-09-01 |
 | **Goose** | **`AGENTS.md`**, then `.goosehints` | project directories; `~/.config/goose/` global | Default is `["AGENTS.md", ".goosehints"]`, overridable with the `CONTEXT_FILE_NAMES` env var. All found files are combined. `documented`, retrieved 2026-08-31 |
 | **Cursor** | **`AGENTS.md`** | project root **and any subdirectory, no configuration** | Also `.cursor/rules/*.mdc`, and the Cursor CLI reads `CLAUDE.md` too. **No global `~/.cursor/AGENTS.md`** — cross-project instructions go to User Rules or Team Rules. `documented`, retrieved 2026-09-01 |
 | **Copilot** | **`AGENTS.md`** | repo root, plus nested per-subtree | Also reads `.github/copilot-instructions.md`, `.github/instructions/**`, **and `CLAUDE.md` and `GEMINI.md`**. Note the precedence: `.github/copilot-instructions.md` **outranks** `AGENTS.md`. `documented`, retrieved 2026-09-01 |
@@ -66,9 +71,9 @@ The location is not.**
 
 | Agent | Project path | User path | Other |
 |---|---|---|---|
-| **Claude Code** | `.claude/skills/<name>/SKILL.md` | `~/.claude/skills/` | `.claude/commands/*.md` still works (merged into skills). **`tested`** — v2.1.251, 2026-08-31 |
+| **Claude Code** | `.claude/skills/<name>/SKILL.md` | `~/.claude/skills/` | `.claude/commands/*.md` still works (merged into skills). **`tested`** — Claude Code CLI/Desktop session v2.1.251, 2026-08-31 |
 | **Copilot** | **`.agents/skills`**, `.claude/skills`, `.github/skills` | `~/.copilot/skills`, **`~/.agents/skills`** | `documented`, retrieved 2026-09-01 |
-| **Codex** | **`.agents/skills/`** — searched from cwd up to repo root | **`~/.agents/skills/`** | `/etc/codex/skills` admin, plus plugin `skills/` and the vendored catalogue. **Invoked with `$<name>`, not `/`**. **`tested`** — 0.151.0-alpha.7.2, 2026-08-31 |
+| **Codex** | **`.agents/skills/`** — searched from cwd up to repo root | **`~/.agents/skills/`** | `/etc/codex/skills` admin, plus plugin `skills/` and the vendored catalogue. **Invoked with `$<name>`, not `/`**. Project path `tested`: CLI 0.151.0-alpha.7.2 baseline (process environment not recorded), 2026-08-31; reconfirmed in the Desktop Codex-mode task and its sandbox-launched CLI 0.153.0 child, 2026-09-04. Other locations `documented`, [official Build skills](https://learn.chatgpt.com/docs/build-skills), retrieved 2026-09-04 |
 | **Goose** | **`.agents/skills/`** | **`~/.agents/skills/`** | `~/.agents/plugins/<name>/`; legacy `.goose/skills/` still read but **deprecated in favour of `.agents/skills/`**. `documented`, retrieved 2026-09-01 |
 | **Antigravity** | **`<project-root>/.agents/skills/`** | **`~/.agents/skills`** (2.0 global default) | Google's Antigravity Skills codelab documents the project path. `documented`, retrieved 2026-09-01 |
 | **Cursor** | **`.agents/skills/`** and `.cursor/skills/` | **`~/.agents/skills/`**, `~/.cursor/skills/` | Also loads `.claude/skills/` and `.codex/skills/` for compatibility. Not copied to Cloud Agents — use project skills there. `documented`, retrieved 2026-09-01 |
@@ -214,9 +219,13 @@ Not portable. Every vendor has its own format.
 
 | Agent | Mechanism |
 |---|---|
-| **Claude Code** | `.claude/settings.json`. **33 documented events**, including `SessionStart`/`SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`/`StopFailure`, `SubagentStart`/`Stop`, `PreCompact`/`PostCompact`, `FileChanged`, `InstructionsLoaded`, `Setup`. **11 can block**, not just `PreToolUse` — `PreToolUse`, `UserPromptSubmit`, `UserPromptExpansion`, `Stop`, `SubagentStop`, `TeammateIdle`, `TaskCreated`, `TaskCompleted`, `ConfigChange`, `PostToolBatch`, `PreModelSwitch`. **5 handler types**: `command`, `http`, `mcp_tool`, `prompt` (decided by a model), `agent`. Event list and blocking set re-read verbatim 2026-09-02 |
-| **Codex** | **`<repo>/.codex/hooks.json` and `~/.codex/hooks.json`**, plus inline `[hooks]` in either `config.toml`, plus plugin-bundled hooks at **`hooks/hooks.json` inside the plugin root** (manifest-overridable via a `hooks` entry in `.codex-plugin/plugin.json`; paths resolve relative to the plugin root and must stay inside it). All layers load cumulatively; none replaces another. `/hooks` manages them. **11 events**: `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SubagentStart`, `SubagentStop`, `Stop`. **7 of them can halt the turn** — `PreToolUse` denies a tool call, `PermissionRequest` approves or denies one, and `UserPromptSubmit`, `PreCompact`, `PostCompact`, `SubagentStop` and `Stop` can return `continue: false`. Handlers `command` and `mcp_tool`; `prompt` and `agent` are parsed but skipped. Blocking set re-read verbatim 2026-09-02; rest retrieved 2026-09-01 |
+| **Claude Code** | `.claude/settings.json`. Supports `command`, `http`, `mcp_tool`, `prompt` and `agent` handlers. The event list, decision contracts, blocking mechanisms and fail-open behavior are owned by the [Claude Code inventory](../docs/agents/claude-code.md#7-hooks), rechecked 2026-09-03. |
+| **Codex** | **`<repo>/.codex/hooks.json` and `~/.codex/hooks.json`**, inline `[hooks]` in either `config.toml`, and plugin-bundled hooks. All layers load cumulatively; none replaces another. `/hooks` manages them. `command` and `mcp_tool` handlers run; `prompt` and `agent` are parsed but skipped. The event list, decision contracts, blocking mechanisms and trust behavior are owned by the [Codex inventory](../docs/agents/codex.md#8-hooks), rechecked 2026-09-03. |
 | **Goose** | **(unverified)** |
+
+**Neither hook system is a hard guarantee.** Use hooks as vendor-local guardrails and fast feedback;
+put the binding, agent-independent gate in CI. Exact failure contracts stay in the canonical
+inventories so this comparison does not drift from them.
 
 **Codex has hooks, and the schema shape is close to Claude Code's.** *(Revised — see the revision
 log.)* Read from `figma/hooks.json` in the `openai-curated` marketplace, 2026-08-31:
@@ -229,13 +238,11 @@ log.)* Read from `figma/hooks.json` in the `openai-curated` marketplace, 2026-08
 `replayio/hooks.json` adds a `Stop` event of the same shape, matching on `Bash`.
 
 **The event names, the `matcher` key, the nested `hooks` array and `type: "command"` all match
-Claude Code.** Note what these two samples do and do not show: between them they exercise **2 of
-Codex's 11 documented events** and **1 of its 2 supported handler types**. They were enough to
-establish that the schema shape matches; they say nothing about the breadth of either set. The
-documented comparison — 11 events against 33, roughly ten names shared — is below. So do the matcher values, because they are tool names and the two agents name their
-tools alike. What differs is *where the file lives* — `<repo>/.codex/hooks.json` for Codex versus
-`.claude/settings.json` for Claude Code — and the size of the event set: **11 for Codex against 33
-for Claude Code**, with roughly ten names shared, including a blocking `PreToolUse` on both.
+Claude Code.** The samples establish that the schema shape matches; they do not establish the
+breadth of either event or handler set. The canonical inventories own that comparison. Matcher
+values can also transfer where the two agents use the same tool name. What differs immediately is
+*where the file lives* — `<repo>/.codex/hooks.json` for Codex versus `.claude/settings.json` for
+Claude Code — while the inventories document the current event and decision differences.
 
 The two files above were read from plugins because that is where this survey first looked. **Codex
 also supports repository- and user-level hooks**, which is the layer that actually matters for a
@@ -301,7 +308,7 @@ Two results from those files that this comparison depends on:
 | ~~Goose and `AGENTS.md`~~ | **resolved 2026-08-31** — Goose defaults to `["AGENTS.md", ".goosehints"]`. Section 1 |
 | ~~Codex hook schema~~ | **resolved 2026-09-01** — `<repo>/.codex/hooks.json`, `~/.codex/hooks.json` and plugin-bundled files, all loading cumulatively. Section 5 |
 | Goose hook schema | still **(unverified)** |
-| ~~Codex hook event set~~ | **resolved 2026-09-01** — 11 documented events **including a blocking `PreToolUse`**, which is the one that matters for a gate. Not yet exercised locally |
+| ~~Codex hook event set~~ | **resolved 2026-09-01** — the documented event set includes a blocking `PreToolUse`, which is the one that matters for a gate. See the canonical [Codex inventory](../docs/agents/codex.md#8-hooks). Not yet exercised locally |
 | Codex skill precedence | when a plugin skill, a vendored catalogue skill and a project `.agents/skills/` skill share a name, which wins is untested. Section 9 assumes "both appear"; that is documented for duplicates but the three-way case is **(unverified)** |
 | **install.py writes 5 skill directories; 3 would cover every surveyed agent** | `.cursor/skills/` and `.opencode/skills/` are redundant as of 2026-09-01. Reducing them changes what lands in adopters' repositories and leaves orphans in existing installs, so it is a decision, not a cleanup. Section 2 |
 | Claim-level sourcing | This file carries a document-level "checked" date. Volatile rows should each carry their own official link and retrieval date; several now do, most do not |
@@ -426,6 +433,9 @@ revision history. Each entry is a claim this file once made and no longer does.
 | 2026-09-02 | Section 5: Codex hooks — only `PreToolUse` marked **can block** | **7 of the 11 can halt a turn.** `PermissionRequest` approves or denies outright; `UserPromptSubmit`, `PreCompact`, `PostCompact`, `SubagentStop` and `Stop` can return `continue: false`. **This is the fourth revision of the Codex hooks row and the fourth in the same direction** — every one has found the mechanism more capable than the previous draft assumed. The correction came from checking a research file *against* this one, not from re-reading the vendor page |
 | 2026-09-02 | Section 1 treated the `AGENTS.md` chain as fully visible in the repository | **A gitignored `AGENTS.override.md` is loaded, overrides the committed file at its level, and is auto-copied into every Codex-managed worktree** — instruction content that never reaches code review. "Read the repo to see what the agent was told" is not a sound check on Codex; `codex debug prompt-input` is |
 | 2026-09-02 | `docs/agents/codex.md` filed `hatch-pet` under curated skills | **Bundled.** The Pets page: creating a custom pet *"installs the bundled `hatch-pet` skill"*. A minor row, but it came from the same error as the big ones — **a name seen in the curated catalogue was assumed to be only there** |
+| 2026-09-03 | Section 5 repeated Claude Code's blocking set as **11**, one day after the canonical inventory changed | The duplicated event lists and counts were removed. Section 5 now links to the two canonical hook inventories; the Claude inventory records 15 exit-status-blocking events plus `PermissionRequest`'s structured decision and the fail-open contracts. |
+| 2026-09-04 | `tested` meant only "run on this machine, with the version recorded"; the file-level status stopped at the 2026-09-02 documentation-only pass | `tested` now requires the **surface and version**, every local Claude Code/Codex row carries that stamp or an explicit historical gap, and the status separates the 2026-08-31 baseline, 2026-09-02 documentation pass, and evidence changes verified through 2026-09-04 |
+| 2026-09-04 | The Codex instruction and skills rows carried a flat `tested` stamp from CLI 0.151.0-alpha.7.2, with no process-environment qualifier; the skills stamp read as covering every location | The baseline process environment is explicitly **not recorded**. Reading `AGENTS.md` and the repository `.agents/skills/` path were reconfirmed in the Desktop Codex-mode task and its sandbox-launched CLI 0.153.0 child; non-project skill locations are separately `documented` rather than inheriting the project path's `tested` grade |
 
 **The pattern worth noticing:** most of these were an enumeration mistaken for an inventory, or a
 local artefact mistaken for a loaded capability. The overview-ablation entry is a third kind, and

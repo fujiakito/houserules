@@ -1,17 +1,20 @@
 # Codex
 
-**Measured:** `codex-cli 0.151.0-alpha.7.2`, 2026-08-31, on **CLI** (`codex --help`,
-`codex plugin list`, `codex debug prompt-input`, `ls $CODEX_HOME/skills/.system/`) and the
-**desktop app** (its own `/` and `$` pickers). **IDE extension: not checked.**
+**Measured baseline:** `codex-cli 0.151.0-alpha.7.2`, 2026-08-31, on **CLI** (`codex --help`,
+`codex plugin list`, `codex debug prompt-input`, `ls $CODEX_HOME/skills/.system/`) and separately
+the **desktop app** (its own `/` and `$` pickers). The baseline CLI process environment was not
+recorded beyond its reported counts. Targeted **sandbox-launched child CLI 0.153.0**
+recheck on 2026-09-04: `codex --version`, `codex debug prompt-input`, and `codex plugin list`.
+**IDE extension: not checked.**
 **Documentation:** `learn.chatgpt.com/docs`, `help.openai.com`, `developers.openai.com`,
-`github.com/openai/plugins`. Pages read for this file were retrieved **2026-08-31 to 2026-09-02**;
+`github.com/openai/plugins`. Pages read for this file were retrieved **2026-08-31 to 2026-09-04**;
 each section names its date where it matters.
 
 ## Evidence grades used in this file
 
 | Grade | Means |
 |---|---|
-| **`tested`** | Run on the installation above, version recorded |
+| **`tested`** | Run on a real installation here, surface and version recorded |
 | **`documented`** | Official vendor page, retrieval date recorded. **Not run** |
 | ⚠️ **`disputed`** | Two official pages disagree. Both readings kept, neither picked silently |
 | `(unverified)` | Carried forward without a source |
@@ -20,7 +23,7 @@ each section names its date where it matters.
 > [README](README.md).
 >
 > **The binary is versioned.** `bin/codex.exe` reported `0.130.0-alpha.5` on this machine while the
-> live one under `bin/<hash>/codex.exe` was `0.151.0-alpha.7.2`. Check the hashed path.
+> live one under `bin/<hash>/codex.exe` reported `0.153.0` on 2026-09-04. Check the hashed path.
 >
 > **Reading is not running, and here it mattered three times.** `codex review`, `codex apply` and
 > `codex debug prompt-input` are **not on the official CLI page**; the `.system/` skill set and the
@@ -99,7 +102,8 @@ these commands but does not describe them. `tested` unless noted.
 | `/resume`, `/title`, `/copy`, `/stop`, `/status`, `/feedback`, `/help` | Session utilities |
 
 **Skills are invoked with `$`, session commands with `/`.** `$skill-installer`, not
-`/skill-installer`. In ChatGPT Work the same skill is `@skill-creator`.
+`/skill-installer`. In ChatGPT Work the same skill is `@skill-creator`. Source: [official skills
+and plugins documentation](https://learn.chatgpt.com/docs/skills-and-plugins), retrieved 2026-09-03.
 
 ### CLI subcommands
 
@@ -161,6 +165,12 @@ Also bundled, installed on demand: **`hatch-pet`** — creating a custom Pet *"i
 appear in the docs as *examples of what a Skills page can contain*, not as defaults. Curated ones
 install via `$skill-installer`; others arrive through plugins or a hand-written `SKILL.md`.
 
+**Repository-supplied, not built in:** `$hr-onboard` is installed by this repository at
+`.agents/skills/hr-onboard/SKILL.md`. It discovers non-obvious operating knowledge by attempting
+real work; its own `SKILL.md` is the canonical procedure. `tested` in the current Desktop Codex-mode
+task and in its sandbox-launched Codex CLI 0.153.0 child: both prompts loaded it from this checkout's
+`.agents/skills` root, 2026-09-04.
+
 ---
 
 ## 4. Tools
@@ -184,10 +194,15 @@ marks all of it `Personal`, as opposed to `System`.
 
 | Marketplace | Plugins | Default state |
 |---|---|---|
-| `openai-primary-runtime` | `documents` (Word/Google Docs), `pdf`, `spreadsheets` (Excel/Sheets, plus `excel-live-control` for a live workbook), `presentations` (PowerPoint/Slides), `template-creator` | **Ship enabled on a normal install** — but still *installed*, not built in |
+| `openai-primary-runtime` | `documents` (Word/Google Docs), `pdf`, `spreadsheets` (Excel/Sheets, plus `excel-live-control` for a live workbook), `presentations` (PowerPoint/Slides), `template-creator` | **Ship enabled on a normal install** — but still *installed*, not built in. Confirmed model-visible in this Desktop task; absent from its offline-sandbox child CLI, which reported no marketplace plugins. See section 13 |
 | `openai-bundled` | `browser` (in-app browser), `chrome` (your real Chrome, with its logged-in state), `visualize` (charts, maps, diagrams, 3D, UI previews), `codex-app-tools`, `computer-use`, `latex` (Tectonic + TeX Live) | Shipped, **not automatically active**. `computer-use` and `latex` were **not installed** on this machine |
 | `openai-curated` | ~45 third-party: `linear`, `github`, `slack`, `figma`, `stripe`, `vercel`, `netlify`, `sentry`, `notion`, `posthog`, `shopify`, `glean`, `atlassian-rovo`, `expo`, `zoom`, `box`, `digitalocean`, `hugging-face` … | Mostly MCP wrappers; manual install |
 | `openai-curated` | **`codex-security`** | ⚠️ **gated** — see below |
+
+**Names identify a delivery mechanism, not a unique capability.** `linear` and `sentry` in this
+table are plugins. Distinct standalone skills with the same names also appear in the curated-skills
+catalogue below; invoke those as `$linear` and `$sentry`. A plugin can bundle skills, connectors,
+MCP servers, or a mixture, so do not infer the installed or model-visible component from its name.
 
 **Three states, not two.** A plugin can be *shipped in the package*, *installed*, and *enabled*, and
 only the last means its skills reach the model.
@@ -239,6 +254,10 @@ the catalogue, including:
 | `vercel-deploy`, `netlify-deploy`, `render-deploy`, `cloudflare-deploy` | Deployment |
 | `figma-*` (8), `notion-*` (4), `linear`, `sentry` | Integrations |
 
+The table contains skill names, not plugin names. Explicit invocation adds `$`; in particular,
+`$linear` and `$sentry` refer to the standalone skills, while bare `linear` and `sentry` in the
+Plugins table refer to plugin packages.
+
 > **The catalogue repository is deprecated.** `github.com/openai/skills` now directs users to
 > [`openai/plugins`](https://github.com/openai/plugins). A vendored clone (this machine had one at
 > `~/.codex/vendor_imports/skills/`, commit `49f948f`, 2026-06-23) may be stale by design.
@@ -279,9 +298,10 @@ Write it as *use when…*.
 
 ### Configuration precedence, and the trust boundary that overrides it
 
-CLI flags and `--config` → profile → project `.codex/config.toml` root-to-cwd → user →
+CLI flags and `--config` → project `.codex/config.toml` root-to-cwd → selected profile → user →
 `/etc/codex/config.toml` → defaults. Profiles live at `$CODEX_HOME/profile-name.config.toml`,
-selected with `--profile`.
+selected with `--profile`. `documented`, [official basic
+configuration](https://learn.chatgpt.com/docs/config-file/config-basic), retrieved 2026-09-03.
 
 > **A project marked untrusted skips every project-scoped `.codex/` layer** — config, hooks,
 > subagents, all of it. **Claude Code has no equivalent boundary**, and it means a `trust_level`
@@ -344,7 +364,8 @@ comment block.
 ## 8. Hooks
 
 `features.hooks` is **on by default** (`features.codex_hooks` is a deprecated alias). `documented`,
-event list and blocking set re-read verbatim 2026-09-02.
+event list and blocking set re-read from the [official hooks
+reference](https://learn.chatgpt.com/docs/hooks), retrieved 2026-09-03.
 
 **11 events:** `SessionStart` · `SessionEnd` · `UserPromptSubmit` · `PreToolUse` ·
 `PermissionRequest` · `PostToolUse` · `PreCompact` · `PostCompact` · `SubagentStart` ·
@@ -430,8 +451,8 @@ Accepted values `disabled | cached | indexed | live`, default **`cached`**:
 > unrestricted outbound retrieval. **The permission decision and the network-egress decision are
 > coupled**, and nothing warns you.
 
-`codex --search` is described elsewhere as selecting live search; **no `--search` flag appears in
-the configuration reference** — `(unverified)`, confirm with `codex --help`.
+`codex --search` is documented as equivalent to `web_search = "live"`. Source: [official basic
+configuration](https://learn.chatgpt.com/docs/config-file/config-basic), retrieved 2026-09-03.
 
 ### Permissions and sandboxing
 
@@ -440,6 +461,8 @@ the configuration reference** — `(unverified)`, confirm with `codex --help`.
 `[permissions.<name>]`. Do not combine `default_permissions` with `sandbox_mode` or
 `[sandbox_workspace_write]`. On Windows set the native sandbox mode to `elevated` in the `windows`
 table. **Windows sandboxing is native** — restricted tokens and ACLs, no WSL or VM required.
+Source: [official Windows sandbox documentation](https://learn.chatgpt.com/docs/windows/windows-sandbox),
+retrieved 2026-09-03.
 
 **`approval_policy`:** `untrusted | on-request | never | { granular = { … } }`. `on-failure` is
 deprecated. The **granular** form keeps some categories interactive while auto-deciding others:
@@ -510,7 +533,7 @@ recurring job.
 
 **This is a real asymmetry with Claude Code**, which has three scheduling runtimes including a
 cloud one (`docs/agents/claude-code.md` §8). On Codex the equivalent of a durable cloud schedule is
-CI: a `schedule:` trigger running `codex exec`. `docs/GUIDE.md` stage 7 covers which to reach for.
+CI: a `schedule:` trigger running `codex exec`. `docs/GUIDE.md` stage 10 covers which to reach for.
 
 ---
 
@@ -564,12 +587,22 @@ desktop, and mobile."
 
 - The app's picker showed `Plugin Management` (from `openai-curated-remote`); the CLI's
   `prompt-input` list did **not** contain it.
-- `codex debug prompt-input` on the CLI listed **16** skills from 6 roots, and `openai-curated` was
-  **not among the roots**.
+- The current **Desktop Codex-mode task** exposed 8 skill roots on 2026-09-04: user, system,
+  repository, and five plugin/cache roots. Running `codex debug prompt-input` as a child process
+  inside that task's offline sandbox exposed only 2 roots: a substituted
+  `C:/Users/CodexSandboxOffline/.codex/skills/.system` and this repository's `.agents/skills`.
+  `codex plugin list` in the same child returned `No marketplace plugins found`. The absent roots
+  were the user root plus `openai-bundled/sites`, `openai-bundled`, `openai-curated-remote`,
+  `openai-primary-runtime`, and its `spreadsheets` skill root. This is an execution-environment
+  difference, **not evidence of a 0.151.0 → 0.153.0 regression**. The earlier CLI
+  0.151.0-alpha.7.2 baseline listed 16 skills from 6 roots, but whether that process was host,
+  sandboxed, or otherwise isolated was not recorded. The 6-root and 8-root results therefore cannot
+  establish a version or installation delta either.
 - Known open issue: [openai/codex#28505](https://github.com/openai/codex/issues/28505) — *"Codex app
-  does not index personal skills from `~/.agents/skills` for `$` invocation."* Project-scoped
-  `.agents/skills` in the app is **`(unverified)`**, and it matters here because that is where
-  `install.py` writes. It was confirmed loaded on the **CLI**.
+  does not index personal skills from `~/.agents/skills` for `$` invocation."* That concerns the
+  personal root. Project-scoped `.agents/skills` was confirmed model-visible in the current Desktop
+  Codex-mode task and its sandbox-launched CLI 0.153.0 child on 2026-09-04; that is where
+  `install.py` writes.
 - **Plugins do not work in the IDE extension at all** (section 5).
 - `/pet`, `/goal` and `/init` descriptions exist in the app menu but not in the official command
   reference.
@@ -581,7 +614,9 @@ desktop, and mobile."
 ## 14. Known traps
 
 1. **Bundled does not mean available**, and **installed does not mean loaded.** Three separate
-   states; `codex debug prompt-input` is the only reliable test.
+   states; `codex debug prompt-input` is the reliable test for the exact process environment being
+   diagnosed, not a proxy for another surface or sandbox. Section 13 records a Desktop task with
+   plugin roots whose offline-sandbox child CLI had none.
 2. **Hooks are on by default but untrusted hooks do not run** (section 8).
 3. **A full-access sandbox flips `web_search` to `live`** (section 9).
 4. **A gitignored `AGENTS.override.md` is loaded instruction content that never reaches review**

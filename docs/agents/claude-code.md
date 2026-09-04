@@ -3,7 +3,7 @@
 **Measured:** `v2.1.251`, 2026-08-31, by asking a session to enumerate its own skills and reading its
 `/` picker — **CLI/desktop session only**.
 **Documentation:** `code.claude.com/docs`, `claude.com/docs`, `support.claude.com`. Pages read for
-this file were retrieved **2026-08-29 to 2026-09-02**; each section names its date where it matters.
+this file were retrieved **2026-08-29 to 2026-09-04**; each section names its date where it matters.
 **Surfaces:** CLI, desktop app, mobile, IDE extensions (VS Code, JetBrains), web (`claude.ai/code`),
 Agent SDK, Chrome extension.
 
@@ -11,7 +11,7 @@ Agent SDK, Chrome extension.
 
 | Grade | Means |
 |---|---|
-| **`tested`** | Run on a real installation here, version recorded |
+| **`tested`** | Run on a real installation here, surface and version recorded |
 | **`documented`** | Official vendor page, retrieval date recorded. **Not run** |
 | ⚠️ **`disputed`** | Two official pages disagree. Both readings kept, neither picked silently |
 | `(unverified)` | Carried forward without a source |
@@ -165,7 +165,7 @@ conflict.**
 
 Both agree `/verify` is a bundled skill and runs only when invoked (before v2.1.215 Claude could
 also run it on its own). They disagree on **where the recorded recipe lives** — which decides
-whether another session or another agent finds it. `docs/GUIDE.md` stage 4 depends on that answer.
+whether another session or another agent finds it. `docs/GUIDE.md` stage 6 depends on that answer.
 **Settling it needs a run, not a re-read.**
 
 ### Turning bundled skills off
@@ -173,6 +173,12 @@ whether another session or another agent finds it. `docs/GUIDE.md` stage 4 depen
 `disableBundledSkills` disables every bundled skill **except `/doctor`** (v2.1.205+; before that
 `/doctor` was a built-in command). To hide `/doctor` too: `DISABLE_DOCTOR_COMMAND`, or
 `skillOverrides: {"doctor": "off"}`.
+
+**Repository-supplied, not bundled:** the `hr-onboard` skill is installed by this repository at
+`.claude/skills/hr-onboard/SKILL.md`. It discovers non-obvious operating knowledge by attempting
+real work; invoke it as `/hr-onboard`. Its own `SKILL.md` is the canonical procedure. `tested`,
+Claude Code Desktop Code-tab session using bundled CLI 2.1.251, enumerated in the current checkout,
+2026-09-03.
 
 ---
 
@@ -270,7 +276,8 @@ Not loaded into subagents except a fork.
 ## 7. Hooks
 
 **Nothing is preconfigured — every hook is manual.** `documented`, event list and blocking set
-re-read verbatim 2026-09-02.
+re-read from the [official hooks reference](https://code.claude.com/docs/en/hooks), retrieved
+2026-09-03.
 
 **33 events:** `SessionStart` · `Setup` · `UserPromptSubmit` · `UserPromptExpansion` · `PreToolUse`
 · `PermissionRequest` · `PermissionDenied` · `PostToolUse` · `PostToolUseFailure` · `PostToolBatch`
@@ -280,9 +287,18 @@ re-read verbatim 2026-09-02.
 · `PostCompact` · `PreModelSwitch` · `PostModelSwitch` · `Elicitation` · `ElicitationResult` ·
 `SessionEnd`
 
-**11 can block** (exit code 2): `PreToolUse`, `UserPromptSubmit`, `UserPromptExpansion`, `Stop`,
-`SubagentStop`, `TeammateIdle`, `TaskCreated`, `TaskCompleted`, `ConfigChange`, `PostToolBatch`,
-`PreModelSwitch`. On the other 22, exit code 2 is ignored or the output discarded.
+**15 can block through process exit status:** `PreToolUse`, `UserPromptSubmit`,
+`UserPromptExpansion`, `Stop`, `SubagentStop`, `TeammateIdle`, `TaskCreated`, `TaskCompleted`,
+`ConfigChange`, `PostToolBatch`, `PreCompact`, `PreModelSwitch`, `Elicitation`,
+`ElicitationResult`, and `WorktreeCreate`. The first 14 use exit code 2; `WorktreeCreate` aborts on
+any non-zero exit. `PermissionRequest` does not honor exit code 2, but can deny through its
+structured JSON decision.
+
+**Command-hook failures are fail-open for most events.** Exit codes other than 0 or 2 (including a
+missing or non-executable command, commonly 127) do not block unless valid structured JSON carries
+a decision. A timed-out `command`, `http`, or `mcp_tool` `PreToolUse` hook also does not block; the
+normal permission flow continues. Treat hook availability, executability, timeout, and output
+parsing as part of the control, not as incidental diagnostics.
 
 **5 handler types:**
 
@@ -385,7 +401,11 @@ disappear, the keyword stops triggering, and `ultracode` leaves the `/effort` me
 
 ## 10. Permission modes
 
-`documented`, 2026-09-02. **This is the most load-bearing default in this file** — in auto mode a
+`documented`, [permissions](https://code.claude.com/docs/en/permissions),
+[sandboxing](https://code.claude.com/docs/en/sandboxing), [permission
+modes](https://code.claude.com/docs/en/permission-modes), and [Desktop managed
+settings](https://code.claude.com/docs/en/desktop), retrieved 2026-09-04. **This is the most
+load-bearing default in this file** — in auto mode a
 classifier reviews actions instead of you, so an artifact can publish and a workflow can launch
 without a prompt you see.
 
@@ -398,16 +418,31 @@ without a prompt you see.
 | `dontAsk` | Only pre-approved tools |
 | `bypassPermissions` | Everything |
 
-**The starting mode is `auto` on Pro, Max and Team** — requiring **v2.1.228+** on macOS/Linux/WSL
-and **v2.1.233+ on native Windows**; earlier versions start in Manual. It falls back to `default`
-when any settings file sets `disableAutoMode`, and when feature-flag fetching is off. On Bedrock,
-Agent Platform and Foundry the starting mode is Manual and auto mode supports only Sonnet 5,
-Opus 4.7+ and the Fable models.
+**The starting mode is `auto` on Pro, Max and Team in the terminal and VS Code** — requiring
+**v2.1.228+** on macOS/Linux/WSL and **v2.1.233+ on native Windows**; earlier versions start in
+Manual. Enterprise, API/third-party providers, headless SDK use, disabled feature-flag fetching,
+first-run cases, and explicit settings fall back to or retain `default`/Manual. Managed
+`disableAutoMode` removes Auto mode from the selector. On Bedrock, Agent Platform and Foundry the
+starting mode is Manual and auto mode supports only Sonnet 5, Opus 4.7+ and the Fable models.
 
 **No mode auto-approves** explicit ask rules, org-`ask` connector tools, `AskUserQuestion` and MCP
 tools marked `requiresUserInteraction`, `rm`/`rmdir` against a critical path, or the cross-session
 messaging safeguards. Writes to protected paths are never auto-approved outside
 `bypassPermissions`.
+
+### Enforcement boundary
+
+Treat guidance, permission rules, and the OS sandbox as three different layers. `CLAUDE.md` and
+skills are advisory. Permission `deny`/`ask` rules govern Claude Code tools, and hook `allow`
+decisions cannot override them. The OS sandbox applies to Bash and its child processes; this
+matters because Read/Edit deny rules do **not** stop a Python, Node, or other subprocess from opening
+the same file.
+
+Sandbox filesystem isolation protects Claude configuration, skills, agents, commands, hooks,
+`.mcp.json`, workflow and scheduled-task definitions, and Git hooks/config as protected paths.
+Command sandboxing supports macOS, Linux, and WSL2, **not native Windows**. Because sandbox startup
+can otherwise fall back to an unsandboxed command, managed deployments that require the boundary
+should set `failIfUnavailable: true` and `allowUnsandboxedCommands: false`.
 
 > **A silently-denied shell call reads as a passing verification.** A mode that blocks Bash stops
 > the agent running your tests, and it will "verify" by reading code instead. Nothing raises an

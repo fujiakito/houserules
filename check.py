@@ -8,6 +8,9 @@ in an instruction telling an agent to remember.
     python check.py            run every check
     python check.py --fix      repair what is safely repairable, then re-check
 
+CI must use the first form. The explicit --fix path mutates the repository and is a local repair
+command, not a valid gate.
+
 Run it in CI. A hook is a fine accelerator, but the check is the contract: it binds
 regardless of which agent — or which human — made the change, and it validates state
 rather than trusting anyone's claim that something was done.
@@ -277,7 +280,7 @@ def check_names(repo: Path, r: Report) -> None:
     # Claude Code writes these itself: `/verify` records what worked to
     # `.claude/skills/verify/`, and `/run-skill-generator` writes `run-<name>/`. In both cases
     # replacing the bundled skill is the documented, intended outcome. Failing them would fail
-    # the vendor's own workflow — and GUIDE.md stage 4 tells people to run it.
+    # the vendor's own workflow — and GUIDE.md stage 6 tells people to run it.
     generated = sorted(n for n in names
                        if n == "verify" or n.startswith("run-"))
     claude = sorted(names & RESERVED_CLAUDE - set(generated))
@@ -404,7 +407,9 @@ def check_reserved_drift(repo: Path, r: Report) -> None:
         return
     text = inventory.read_text(encoding="utf-8")
     # Only backticked `/name` tokens: prose mentions and MCP prompt forms (`/mcp__x__y`) are noise.
-    found = {m.lower() for m in re.findall(r"`/([a-z][a-z0-9-]{1,30})`", text)}
+    # `hr-` is this repository's mandatory prefix for project-supplied skills, not a vendor command.
+    found = {m.lower() for m in re.findall(r"`/([a-z][a-z0-9-]{1,30})`", text)
+             if not m.lower().startswith("hr-")}
     missing = sorted(found - RESERVED_CLAUDE)
     if missing:
         r.add(WARN, "reserved-name drift",

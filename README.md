@@ -96,7 +96,7 @@ made: measured adoption of every AI-native SDLC framework checked was essentiall
 ## Files
 
 ```
-docs/GUIDE.md              the AI-native SDLC: 7 stages, every agent, which to use — for you
+docs/GUIDE.md              the AI-native SDLC: 12 stages + 3 cross-cutting concerns — for you
 docs/agents/claude-code.md the full Claude Code inventory: surfaces, bundled skills, subagents,
                            hooks, permission modes, artifacts, scheduling, plugins, limits
 docs/agents/codex.md       the full Codex inventory: surfaces, commands, built-in skills,
