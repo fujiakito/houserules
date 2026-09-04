@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Install portable agent instructions and skills into a repository.
 
-The SKILL.md format is portable across agents; the path is not. As of 2026-09-01,
-`.agents/skills/` covers six of the eight surveyed agents and a three-directory set covers
-all of them - but this script still writes five, including two now-redundant ones
-(.cursor, .opencode). See the open item in research/MATRIX.md section 2.
+The SKILL.md format is broadly portable across agents; paths and some surface-specific layouts are
+not. The current coverage table lives only in research/MATRIX.md section 2. In particular,
+Antigravity 2.0/IDE document nested `<name>/SKILL.md`, while Antigravity CLI documents flat `.md`
+Skills. This installer does not synthesize the untested CLI variant.
 
 It also writes the CLAUDE.md import line, which is a correctness requirement rather than a
 convenience: with AGENTS.md present and no import, Claude Code ignores it and raises no
@@ -43,12 +43,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SKILL_SRC = HERE / "templates" / "skills"
 
-# Where each agent looks for project-scoped skills. Verified 2026-09-01.
+# Where each agent looks for project-scoped nested SKILL.md skills. Rechecked through 2026-09-04.
 # Cursor and OpenCode also read .agents/skills, so their entries here are redundant; kept
 # until the topology change is decided (research/MATRIX.md section 2, open items).
 AGENT_SKILL_PATHS: dict[str, str] = {
     "claude": ".claude/skills",
-    "codex": ".agents/skills",      # also read by Goose and Antigravity
+    "codex": ".agents/skills",      # also read by Goose and Antigravity 2.0/IDE
     "goose": ".agents/skills",
     "antigravity": ".agents/skills",
     "cursor": ".cursor/skills",
@@ -216,7 +216,11 @@ def main() -> int:
         for n in names:
             by_dest.setdefault(AGENT_SKILL_PATHS[n], []).append(n)
         for rel, agents in sorted(by_dest.items()):
-            print(f"{rel}  ({', '.join(agents)})")
+            labels = ["antigravity 2.0/IDE" if n == "antigravity" else n for n in agents]
+            print(f"{rel}  ({', '.join(labels)})")
+            if rel == ".agents/skills" and "antigravity" in agents:
+                print("    note: nested SKILL.md covers documented Antigravity 2.0/IDE;"
+                      " CLI flat .md is not installed")
             for s in skills:
                 outcome = place(s, repo / rel / s.name, a.link, a.check, a.force)
                 results.append(outcome)

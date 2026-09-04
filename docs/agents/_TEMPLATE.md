@@ -2,13 +2,15 @@
   Copy to <agent-name>.md. Keep the section order — it is what makes two files comparable.
   Delete any section that genuinely does not apply, and say why rather than leaving it blank.
 
-  Fill this in from a real installation. A file written from documentation alone looks complete
-  and was never checked; see README.md.
+  Prefer a real installation. If the requested pass is documentation-only, say that at the top,
+  name every documented surface/version, and include the exact local enumeration still required.
+  A documentation inventory must never be described as tested or supported; see README.md.
 -->
 
 # <Agent>
 
-**Measured:** `<version>` on `<surface>`, `<YYYY-MM-DD>`.
+**Evidence status:** `tested` or `documented, not tested`.
+**Measured:** `<version>` on `<surface>`, `<YYYY-MM-DD>`, or `not run`.
 **Surfaces:** which exist, and whether they were each checked or not.
 **Docs:** `<url>`, retrieved `<YYYY-MM-DD>`.
 

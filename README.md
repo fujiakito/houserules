@@ -15,10 +15,9 @@ carries only the two things a vendor cannot give you:
 The name is what an entry has to answer before it goes in: **does this earn its place?**
 
 > **Supported today: Claude Code and Codex.** Those are the two run against real installations,
-> with versions recorded. Six more agents — Cursor, Copilot, Kiro, Antigravity, Goose, OpenCode —
-> are covered from **official documentation only** and have never been executed here. `install.py`
-> writes their skill directories, and that placement is unverified in practice. See the evidence
-> grades in `research/MATRIX.md`.
+> with versions recorded. Google Antigravity now has a full inventory derived from **official
+> documentation only**; it is deliberately marked `documented`, not `tested`. Cursor, Copilot,
+> Kiro, Goose and OpenCode remain matrix-only. See the evidence grades in `research/MATRIX.md`.
 
 ---
 
@@ -46,8 +45,10 @@ python check.py --repo /path/to/your-project
 Omit `--repo` to act on the current directory. **Do not copy these files in by hand** — the
 installer is what avoids overwriting an `AGENTS.md`, a `CLAUDE.md` or a skill you already have.
 
-Then, inside your agent — `/hr-onboard` on Claude Code, **`$hr-onboard` on Codex**, which uses `$`
-for skills and `/` for session commands.
+Then, inside your agent — `/hr-onboard` on Claude Code; **`$hr-onboard` on Codex**, which uses `$`
+for skills and `/` for session commands; or mention `hr-onboard` by name on Antigravity 2.0/IDE
+so progressive disclosure can load it. The installer does not create Antigravity CLI's flat-`.md`
+slash-command variant; see the [Antigravity inventory §9](docs/agents/antigravity.md#9-skills).
 
 <details>
 <summary><b>If <code>python</code> is not found</b></summary>
@@ -76,7 +77,7 @@ Everything this installs is a plain file.
 |---|---|
 | `AGENTS.md` | read natively by every surveyed agent **except Claude Code**. Verified by running Codex and Claude Code; the rest from official documentation, retrieved 2026-09-01 |
 | `CLAUDE.md` containing `@AGENTS.md` | **required, not an adapter.** Without it Claude Code ignores `AGENTS.md` and raises no error |
-| `hr-onboard` skill, in every agent's path | the `SKILL.md` format is portable; the location is not. **`.agents/skills/` is now the majority path** — six of eight vendors document support; only Claude Code and Kiro need their own. Three directories cover all eight on paper |
+| `hr-onboard` skill, in documented nested-Skill paths | one source is copied to each configured path. Antigravity CLI's documented flat `.md` variant is not synthesized; the current coverage and open test live in [`research/MATRIX.md` §2](research/MATRIX.md#2-skills--the-same-standard-three-different-paths) |
 | `check.py` | the only portable enforcement: a script with an exit code binds regardless of which agent, or human, made the change |
 
 ## What it deliberately does not install
@@ -101,6 +102,8 @@ docs/agents/claude-code.md the full Claude Code inventory: surfaces, bundled ski
                            hooks, permission modes, artifacts, scheduling, plugins, limits
 docs/agents/codex.md       the full Codex inventory: surfaces, commands, built-in skills,
                            marketplaces, AGENTS.md rules, hooks, config defaults, traps
+docs/agents/antigravity.md the full documentation inventory: 2.0, CLI, SDK, IDE family,
+                           Remote Control, managed API, Enterprise, extensions and conflicts
 research/MATRIX.md         8 agents x 6 extension mechanisms, with check dates and a revision log
 research/PORTABILITY.md    what dies on a switch, and what the portable layer must therefore carry
 templates/AGENTS.md        mostly empty, with the inclusion test that keeps it that way

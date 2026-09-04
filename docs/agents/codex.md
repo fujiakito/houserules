@@ -282,8 +282,9 @@ Plugins table refer to plugin packages.
 `$CWD/.agents/skills` → parent folders → `$REPO_ROOT/.agents/skills` → `$HOME/.agents/skills` →
 `/etc/codex/skills` → built-in.
 
-**`.agents/skills/` is the vendor-neutral path**, and Codex authored the convention — six of eight
-agents surveyed in `research/MATRIX.md` §2 now read it.
+**`.agents/skills/` is the vendor-neutral path**, and Codex authored the convention. Current
+cross-vendor coverage, including Antigravity's surface-specific layout caveat, is owned by
+`research/MATRIX.md` §2 rather than repeated here.
 
 > **Same-named skills are not merged. Both appear in the selector.** This is the opposite of Claude
 > Code, where a project skill silently *replaces* a bundled one. Nothing is lost on Codex, but which

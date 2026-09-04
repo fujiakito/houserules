@@ -29,6 +29,10 @@ from pathlib import Path
 # COMBINED size of the concatenated chain, the configuration reference reads as per-file.
 # This measures the chain total, the stricter reading — conservative rather than wrong if the
 # other one is right. Both retrieved 2026-09-01. research/MATRIX.md section 2.
+#
+# Antigravity separately documents a 12,000-character limit for `.agents/rules/*.md`. Its current
+# scope does not establish a limit for `AGENTS.md` or `GEMINI.md`, so it is recorded in MATRIX.md
+# as a test item and deliberately does not change this Codex instruction-chain check.
 MAX_INSTRUCTION_BYTES = 32 * 1024
 WARN_AT = 8 * 1024  # long before the budget bites, brevity is the point
 
@@ -125,6 +129,32 @@ RESERVED_CODEX = {
     "ide", "keymap", "vim", "agent", "subagents", "apps", "plugins", "hooks",
     "rename", "archive", "delete", "title", "stop", "approvals", "undo",
     "goal", "init", "pet", "plan", "review", "chat", "reasoning", "worktree",
+}
+
+# Antigravity public slash commands and documented aliases. Official shared command page and CLI
+# reference retrieved 2026-09-04; docs/agents/antigravity.md.
+RESERVED_ANTIGRAVITY_COMMANDS = {
+    "add-dir", "agents", "artifact", "boost", "browser", "btw", "clear", "codesearch",
+    "config", "context", "copy", "credits", "diff", "exit", "fast", "feedback", "fork",
+    "goal", "grill-me", "help", "hooks", "keybindings", "learn", "logout", "mcp", "model",
+    "open", "permissions", "plan", "planning", "rename", "resume", "rewind", "schedule",
+    "skills",
+    "statusline", "tasks", "teamwork-preview", "title", "usage", "voice",
+    # aliases in the official CLI reference
+    "new", "settings", "quit", "branch", "switch", "conversation", "undo", "teamwork",
+    "quota", "record",
+}
+
+# Confirmed built-in Skill names are a different namespace in the source material even though the
+# CLI turns registered Skills into slash commands. Same-name resolution remains undocumented, so
+# collisions warn rather than fail. Official changelog retrieved 2026-09-04.
+RESERVED_ANTIGRAVITY_SKILLS = {"antigravity_guide", "migrate-workflows"}
+RESERVED_ANTIGRAVITY = RESERVED_ANTIGRAVITY_COMMANDS | RESERVED_ANTIGRAVITY_SKILLS
+
+# The canonical built-in-Skills table also contains a 2.0 display name that is not documented as
+# a CLI invocation identifier. Track catalogue drift without claiming it is a collision name.
+DOCUMENTED_ANTIGRAVITY_BUILTIN_SKILLS = {
+    "antigravity guide", "antigravity_guide", "migrate-workflows",
 }
 
 SKILL_DIRS = [".claude/skills", ".agents/skills", ".cursor/skills",
@@ -268,9 +298,10 @@ def check_empty_sections(repo: Path, r: Report) -> None:
 
 
 def check_names(repo: Path, r: Report) -> None:
-    """A skill named like a built-in collides with it. Two vendors, two behaviours:
-    Claude Code replaces the bundled skill silently, Codex shows both entries unmerged.
-    Neither raises an error, and one project prefix prevents both."""
+    """A skill named like a built-in collides with it. Three vendors, three states:
+    Claude Code replaces the bundled skill silently, Codex shows both entries unmerged, and
+    Antigravity documents the shared slash namespace without documenting resolution. One project
+    prefix prevents all three."""
     names: set[str] = set()
     for d in SKILL_DIRS:
         p = repo / d
@@ -285,6 +316,9 @@ def check_names(repo: Path, r: Report) -> None:
                        if n == "verify" or n.startswith("run-"))
     claude = sorted(names & RESERVED_CLAUDE - set(generated))
     codex = sorted((names & RESERVED_CODEX) - RESERVED_CLAUDE - set(generated))
+    antigravity = sorted(
+        (names & RESERVED_ANTIGRAVITY) - RESERVED_CLAUDE - RESERVED_CODEX - set(generated)
+    )
 
     if claude:
         r.add(FAIL, "skill names",
@@ -298,8 +332,12 @@ def check_names(repo: Path, r: Report) -> None:
         r.add(WARN, "skill names",
               f"collide with Codex built-ins: {', '.join(codex)}"
               " — Codex shows both entries unmerged, so which one runs is a coin flip")
-    if not claude and not codex:
-        r.add(OK, "skill names", "no collisions with known built-ins")
+    if antigravity:
+        r.add(WARN, "skill names",
+              f"collide with Antigravity commands or built-in Skills: {', '.join(antigravity)}"
+              " — same-name resolution is undocumented; add a project prefix")
+    if not claude and not codex and not antigravity:
+        r.add(OK, "skill names", "no collisions with known built-in or public command names")
 
 
 def tree_hash(root: Path) -> str:
@@ -400,26 +438,88 @@ def check_reserved_drift(repo: Path, r: Report) -> None:
     would make the check unrunnable in CI without network and is the wrong trade. Re-read the
     commands reference on the `recheck_by` date instead; research/MATRIX.md carries it.
 
+    Antigravity uses independent one-way comparisons for public commands and confirmed built-in
+    Skills. They cannot promote that inventory from documented to tested; they only prevent the
+    offline sets from omitting names the checked-in inventory already records.
+
     Skipped entirely outside this repository — check.py ships into repos that have no docs/agents/.
     """
     inventory = repo / "docs" / "agents" / "claude-code.md"
-    if not inventory.is_file():
+    if inventory.is_file():
+        text = inventory.read_text(encoding="utf-8")
+        # Only backticked `/name` tokens: prose mentions and MCP prompt forms are noise.
+        # `hr-` is the mandatory prefix for project-supplied skills, not a vendor command.
+        found = {m.lower() for m in re.findall(r"`/([a-z][a-z0-9-]{1,30})`", text)
+                 if not m.lower().startswith("hr-")}
+        missing = sorted(found - RESERVED_CLAUDE)
+        if missing:
+            r.add(WARN, "reserved-name drift",
+                  f"documented in docs/agents/claude-code.md but not in RESERVED_CLAUDE: "
+                  f"{', '.join(missing)} — add them, or fix the inventory if the name is not "
+                  f"Claude Code's")
+        else:
+            r.add(OK, "reserved-name drift",
+                  f"{len(found)} command-shaped name(s) in the inventory, all reserved"
+                  " (one-way check — see the docstring)")
+
+    antigravity_inventory = repo / "docs" / "agents" / "antigravity.md"
+    if not antigravity_inventory.is_file():
         return
-    text = inventory.read_text(encoding="utf-8")
-    # Only backticked `/name` tokens: prose mentions and MCP prompt forms (`/mcp__x__y`) are noise.
-    # `hr-` is this repository's mandatory prefix for project-supplied skills, not a vendor command.
-    found = {m.lower() for m in re.findall(r"`/([a-z][a-z0-9-]{1,30})`", text)
-             if not m.lower().startswith("hr-")}
-    missing = sorted(found - RESERVED_CLAUDE)
-    if missing:
-        r.add(WARN, "reserved-name drift",
-              f"documented in docs/agents/claude-code.md but not in RESERVED_CLAUDE: "
-              f"{', '.join(missing)} — add them, or fix the inventory if the name is not "
-              f"Claude Code's")
+    antigravity_text = antigravity_inventory.read_text(encoding="utf-8")
+    antigravity_commands = {
+        m.lower()
+        for m in re.findall(r"`/([a-z][a-z0-9-]{1,30})`", antigravity_text)
+        if not m.lower().startswith("hr-")
+    }
+    missing_commands = sorted(antigravity_commands - RESERVED_ANTIGRAVITY_COMMANDS)
+    if missing_commands:
+        r.add(WARN, "Antigravity command drift",
+              "documented in docs/agents/antigravity.md but not reserved as commands: "
+              f"{', '.join(missing_commands)} — add them, or fix the inventory")
     else:
-        r.add(OK, "reserved-name drift",
-              f"{len(found)} command-shaped name(s) in the inventory, all reserved"
-              " (one-way check — see the docstring)")
+        r.add(OK, "Antigravity command drift",
+              f"{len(antigravity_commands)} command-shaped name(s), all reserved"
+              " (documentation-only, one-way check)")
+
+    marker = "### Built-in skills"
+    if marker not in antigravity_text:
+        r.add(WARN, "Antigravity built-in-skill drift",
+              f"missing inventory heading: {marker}")
+        return
+
+    skill_section = antigravity_text.split(marker, 1)[1].split("\n## ", 1)[0]
+    documented_skills: set[str] = set()
+    for line in skill_section.splitlines():
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) != 2 or cells[0] in {"Surface", "---"}:
+            continue
+        skill_cell = cells[1]
+        identifiers = re.findall(r"`([^`]+)`", skill_cell)
+        if identifiers:
+            documented_skills.update(name.casefold() for name in identifiers)
+        else:
+            display_name = skill_cell.strip("* ").casefold()
+            if display_name:
+                documented_skills.add(display_name)
+
+    if not documented_skills:
+        r.add(WARN, "Antigravity built-in-skill drift",
+              "built-in Skills heading exists but its table has no parsable Skill rows")
+        return
+
+    untracked_skills = sorted(
+        documented_skills - DOCUMENTED_ANTIGRAVITY_BUILTIN_SKILLS
+    )
+    if untracked_skills:
+        r.add(WARN, "Antigravity built-in-skill drift",
+              "documented in the built-in Skills table but not catalogued: "
+              f"{', '.join(untracked_skills)}")
+    else:
+        r.add(OK, "Antigravity built-in-skill drift",
+              f"{len(documented_skills)} table Skill name(s), all catalogued"
+              " (documentation-only, one-way check)")
 
 
 def main() -> int:

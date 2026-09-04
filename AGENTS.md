@@ -15,7 +15,8 @@
   across them. Files on disk are not evidence of a loaded capability — a cache is not an install.
 - Do not repeat content that another file here holds. Cross-reference it. The inclusion test this
   project applies to `AGENTS.md` applies to these documents too.
-- Skills ship with the `hr-` prefix. An unprefixed name can silently replace a bundled skill.
+- Skills ship with the `hr-` prefix. An unprefixed name can collide silently or ambiguously with
+  vendor built-ins.
 
 ## Do not
 

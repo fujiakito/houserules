@@ -26,7 +26,9 @@ evidence grade, because reading is not running. Follow-up documentation and loca
 through **2026-09-04** did change the evidence set: Codex `--search` became `documented`,
 project-scoped `.agents/skills` became `tested` in the Desktop app and a sandbox-launched CLI child,
 repository `hr-onboard` became `tested` for both agents, and `tested` now requires a named surface
-and version. See the revision log and the canonical inventories in `docs/agents/`. Platform surfaces in this field change monthly —
+and version. A 2026-09-04 official-documentation pass added a full Antigravity inventory spanning
+2.0 v2.12.2, CLI v1.1.25, SDK v0.1.16 and IDE v2.5.5; it remains `documented`, not `tested`. See the
+revision log and the canonical inventories in `docs/agents/`. Platform surfaces in this field change monthly —
 Amazon Q Developer is being wound down — new signups blocked 2026-05-15, full end of support
 2027-04-30, with AWS directing users to **Kiro**, which is in this table — Gemini CLI is being
 replaced by Antigravity CLI, Cursor was acquired
@@ -52,7 +54,7 @@ none has been run. Windsurf is backlog.
 | **Cursor** | **`AGENTS.md`** | project root **and any subdirectory, no configuration** | Also `.cursor/rules/*.mdc`, and the Cursor CLI reads `CLAUDE.md` too. **No global `~/.cursor/AGENTS.md`** — cross-project instructions go to User Rules or Team Rules. `documented`, retrieved 2026-09-01 |
 | **Copilot** | **`AGENTS.md`** | repo root, plus nested per-subtree | Also reads `.github/copilot-instructions.md`, `.github/instructions/**`, **and `CLAUDE.md` and `GEMINI.md`**. Note the precedence: `.github/copilot-instructions.md` **outranks** `AGENTS.md`. `documented`, retrieved 2026-09-01 |
 | **Kiro** | **`AGENTS.md`** | loads as steering context from anywhere in the workspace tree | Plus `.kiro/steering/`. `documented`, retrieved 2026-08-31 — **not re-checked on 2026-09-01** |
-| **Antigravity** | **`AGENTS.md`** | — | Plus `GEMINI.md`. `documented`, retrieved 2026-08-31; the `GEMINI.md` half is **`(unverified)`** — carried forward without a source |
+| **Antigravity** | **`AGENTS.md`** and `GEMINI.md` | ⚠️ **disputed:** CLI website says workspace root; installed 2.0 v2.11.0 built-in docs say walk from cwd to repository root; `~/.gemini/GEMINI.md` global | Neither discovery contract was exercised. `.agents/rules/*.md` adds Manual, Always On, Model Decision and Glob activation; `.agent/rules` is a legacy fallback. [Best Practices](https://antigravity.google/docs/cli/best-practices/), [Migration](https://antigravity.google/docs/gcli-migration), and [Rules](https://antigravity.google/docs/rules-workflows/), retrieved 2026-09-04; installed built-in `agy-customizations/docs/rules.md` inspected 2026-09-04. Precedence remains `(unverified)` |
 | **OpenCode** | **`AGENTS.md`** | project | Listed in section 2 as an `AGENTS.md` reader but omitted from this table until 2026-09-01. `documented`, retrieved 2026-09-01 |
 
 > **Finding — the cleanest result in this survey.** Every agent surveyed reads `AGENTS.md`
@@ -65,9 +67,11 @@ none has been run. Windsurf is backlog.
 
 ## 2. Skills — the same standard, three different paths
 
-All three implement the [Agent Skills](https://agentskills.io) open standard: a directory containing
-`SKILL.md` with YAML frontmatter (`name`, `description`) and markdown body. **The format is portable.
-The location is not.**
+Most surveyed skill-capable agents implement the [Agent Skills](https://agentskills.io) open
+standard: a directory containing `SKILL.md` with YAML frontmatter and markdown body. Antigravity
+2.0 and IDE document that layout, while Antigravity CLI currently documents flat `.md` skills in
+the same `.agents/skills/` directory. **The format is broadly portable, but not uniform across even
+one vendor's surfaces; the location is not portable either.**
 
 | Agent | Project path | User path | Other |
 |---|---|---|---|
@@ -75,29 +79,32 @@ The location is not.**
 | **Copilot** | **`.agents/skills`**, `.claude/skills`, `.github/skills` | `~/.copilot/skills`, **`~/.agents/skills`** | `documented`, retrieved 2026-09-01 |
 | **Codex** | **`.agents/skills/`** — searched from cwd up to repo root | **`~/.agents/skills/`** | `/etc/codex/skills` admin, plus plugin `skills/` and the vendored catalogue. **Invoked with `$<name>`, not `/`**. Project path `tested`: CLI 0.151.0-alpha.7.2 baseline (process environment not recorded), 2026-08-31; reconfirmed in the Desktop Codex-mode task and its sandbox-launched CLI 0.153.0 child, 2026-09-04. Other locations `documented`, [official Build skills](https://learn.chatgpt.com/docs/build-skills), retrieved 2026-09-04 |
 | **Goose** | **`.agents/skills/`** | **`~/.agents/skills/`** | `~/.agents/plugins/<name>/`; legacy `.goose/skills/` still read but **deprecated in favour of `.agents/skills/`**. `documented`, retrieved 2026-09-01 |
-| **Antigravity** | **`<project-root>/.agents/skills/`** | **`~/.agents/skills`** (2.0 global default) | Google's Antigravity Skills codelab documents the project path. `documented`, retrieved 2026-09-01 |
+| **Antigravity** | **2.0/IDE:** `<project-root>/.agents/skills/<name>/SKILL.md`; **CLI:** `.agents/skills/*.md` | **2.0/general:** `~/.gemini/config/skills/`; **IDE:** `~/.gemini/antigravity/skills/`; **CLI:** `~/.gemini/antigravity-cli/skills/` | `.agent/skills` remains a 2.0/IDE legacy fallback. The shared directory name hides different file-layout and global-path contracts. **`documented`**, [2.0 Skills](https://antigravity.google/docs/skills), [IDE Skills](https://antigravity.google/docs/ide/skills), and [CLI Plugins & Skills](https://antigravity.google/docs/cli/plugins/), retrieved 2026-09-04 |
 | **Cursor** | **`.agents/skills/`** and `.cursor/skills/` | **`~/.agents/skills/`**, `~/.cursor/skills/` | Also loads `.claude/skills/` and `.codex/skills/` for compatibility. Not copied to Cloud Agents — use project skills there. `documented`, retrieved 2026-09-01 |
 | **Kiro** | `.kiro/skills/` | project or global | Default agent loads `.kiro/skills/` and `~/.kiro/skills/`; a custom agent needs a `skill://` resource entry. `documented`, retrieved 2026-09-01 |
 | **OpenCode** | `.opencode/skills/`, `.claude/skills/`, **`.agents/skills/`** | `~/.config/opencode/skills/`, `~/.claude/skills/`, **`~/.agents/skills/`** | Walks up to the git worktree, loading each match along the way. `documented`, retrieved 2026-09-01 |
 
 > **`.agents/skills/` has become the majority path — reversing what this section said before.**
-> Per official documentation retrieved 2026-09-01, it is read by **Codex, Goose, Antigravity,
+> Per official documentation retrieved through 2026-09-04, it is read by **Codex, Goose,
+> Antigravity 2.0/IDE,
 > Cursor, Copilot and OpenCode**; only **Claude Code** and **Kiro** do not.
 >
-> **That aggregate is `documented`, not `tested`.** Six of the eight rows behind it have never been
-> run here — only Codex and Claude Code have. Read it as "six of eight vendors document support",
-> which is a weaker and more accurate claim than "six of eight verified".
+> **That is a vendor-level path count, not end-to-end surface coverage.** Six of the eight rows have
+> never been run here — only Codex and Claude Code have. Antigravity CLI documents the same
+> directory name but a flat `.md` layout, which this repository's nested `SKILL.md` installer does
+> not synthesize.
 >
-> **The minimal covering set is three directories, not five:**
+> **For the documented nested `SKILL.md` surfaces, the minimal covering set is three directories,
+> not five:**
 >
 > | Directory | Covers |
 > |---|---|
-> | `.agents/skills/` | Codex, Goose, Antigravity, Cursor, Copilot, OpenCode |
+> | `.agents/skills/` | Codex, Goose, Antigravity 2.0/IDE, Cursor, Copilot, OpenCode |
 > | `.claude/skills/` | Claude Code (also read by Cursor, Copilot, OpenCode) |
 > | `.kiro/skills/` | Kiro |
 >
 > `.cursor/skills/` and `.opencode/skills/` are **redundant** — both agents read `.agents/skills/`.
-> `install.py` still writes all five; see the open item below.
+> `install.py` still writes all five. Antigravity CLI coverage is a separate open test below.
 >
 > ### A ninth consumer, and not a coding agent
 >
@@ -199,6 +206,7 @@ determines whether the model selects the skill for a task. Write it as *use when
 |---|---|
 | **Claude Code** | `.mcp.json` / settings; `/mcp` command manages servers and OAuth |
 | **Codex** | `config.toml` — `[mcp_servers.<name>]` with `command`, `args`, `env`, `enabled_tools`. Project `.codex/config.toml` or user `~/.codex/config.toml` |
+| **Antigravity** | `.agents/mcp_config.json` workspace; `~/.gemini/config/mcp_config.json` global; `/mcp` manager in CLI. Supports `stdio` `command` or remote `serverUrl`, plus auth and tool-disable fields. **`documented`**, [official MCP docs](https://antigravity.google/docs/mcp), retrieved 2026-09-04 |
 | **Goose** | extensions; documented as connecting to 3,000+ tools via MCP |
 
 > MCP is the **only** extension mechanism that is both cross-vendor and carries executable
@@ -211,6 +219,7 @@ determines whether the model selects the skill for a task. Write it as *use when
 |---|---|
 | **Claude Code** | `.claude/agents/` |
 | **Codex** | `.codex/agents/*.toml` — `name`, `description`, `developer_instructions`, `model`, `sandbox_mode` (`read-only`, `workspace-write`, `danger-full-access`). Built-in types: `default`, `worker`, `explorer`. Concurrency cap in `config.toml`: `agents.max_concurrent_threads_per_session`, legacy alias `agents.max_threads`. Retrieved 2026-09-01 |
+| **Antigravity** | `.agents/agents/<name>.md` or `<name>/agent.md`; global `~/.gemini/config/agents/`; plugin `agents/`. YAML frontmatter scopes tools, primary/subagent role, model, shell policy, MCP, skills and plugins. Built-ins: `research`, `browser`, `self`. **`documented`**, [Subagents](https://antigravity.google/docs/subagents), retrieved 2026-09-04 |
 | **Goose** | subrecipes |
 
 Not portable. Every vendor has its own format.
@@ -221,9 +230,10 @@ Not portable. Every vendor has its own format.
 |---|---|
 | **Claude Code** | `.claude/settings.json`. Supports `command`, `http`, `mcp_tool`, `prompt` and `agent` handlers. The event list, decision contracts, blocking mechanisms and fail-open behavior are owned by the [Claude Code inventory](../docs/agents/claude-code.md#7-hooks), rechecked 2026-09-03. |
 | **Codex** | **`<repo>/.codex/hooks.json` and `~/.codex/hooks.json`**, inline `[hooks]` in either `config.toml`, and plugin-bundled hooks. All layers load cumulatively; none replaces another. `/hooks` manages them. `command` and `mcp_tool` handlers run; `prompt` and `agent` are parsed but skipped. The event list, decision contracts, blocking mechanisms and trust behavior are owned by the [Codex inventory](../docs/agents/codex.md#8-hooks), rechecked 2026-09-03. |
+| **Antigravity** | **`.agents/hooks.json` and `~/.gemini/config/hooks.json`**, plus plugin-bundled hooks; command handlers on `PreToolUse`, `PostToolUse`, `PreInvocation`, `PostInvocation`, and `Stop`. JSON stdin/stdout contracts include pre-tool allow/deny/modify decisions. **`documented`**, [official Hooks docs](https://antigravity.google/docs/hooks), retrieved 2026-09-04; not exercised locally. |
 | **Goose** | **(unverified)** |
 
-**Neither hook system is a hard guarantee.** Use hooks as vendor-local guardrails and fast feedback;
+**No hook system is a hard guarantee.** Use hooks as vendor-local guardrails and fast feedback;
 put the binding, agent-independent gate in CI. Exact failure contracts stay in the canonical
 inventories so this comparison does not drift from them.
 
@@ -240,9 +250,11 @@ log.)* Read from `figma/hooks.json` in the `openai-curated` marketplace, 2026-08
 **The event names, the `matcher` key, the nested `hooks` array and `type: "command"` all match
 Claude Code.** The samples establish that the schema shape matches; they do not establish the
 breadth of either event or handler set. The canonical inventories own that comparison. Matcher
-values can also transfer where the two agents use the same tool name. What differs immediately is
+values can also transfer where two agents use the same tool name. Antigravity now documents the
+same event/matcher/nested-command core, with an additional named-hook wrapper. What differs immediately is
 *where the file lives* — `<repo>/.codex/hooks.json` for Codex versus `.claude/settings.json` for
-Claude Code — while the inventories document the current event and decision differences.
+Claude Code versus `.agents/hooks.json` for Antigravity — while the inventories document the
+current event and decision differences.
 
 The two files above were read from plugins because that is where this survey first looked. **Codex
 also supports repository- and user-level hooks**, which is the layer that actually matters for a
@@ -250,11 +262,12 @@ portable gate: `<repo>/.codex/hooks.json` is committed to the repository the sam
 `.claude/settings.json` is.
 
 **Revised verdict: more portable than this document previously claimed, and still not portable
-enough to depend on.** The shape survives a copy between these two vendors; the location does not,
-Goose is untested, and nothing guarantees the event sets stay aligned across releases. The rule in
+enough to depend on.** A common inner shape exists across three vendors; the wrapper, location,
+tool names and decision contracts do not. Antigravity is documentation-only, Goose is untested,
+and nothing guarantees the event sets stay aligned across releases. The rule in
 `PORTABILITY.md` is unchanged and is what matters: **write the gate as a CI check, mirror it as a
 hook for fast local feedback, and let the check win when they disagree.** What changes is only the
-cost of the mirror — between these two agents it is closer to one file than to two implementations.
+cost of the mirror — it is closer to adapting one schema than inventing three implementations.
 
 ## 6. Bundles
 
@@ -262,6 +275,7 @@ cost of the mirror — between these two agents it is closer to one file than to
 |---|---|
 | **Claude Code** | plugins — package skills, agents, commands, hooks, MCP |
 | **Codex** | plugins — required `.codex-plugin/plugin.json`, plus optional `skills/`, `commands/`, `agents/`, `hooks.json`, `.mcp.json`, `.app.json`, `assets/`. `codex plugin add\|list\|remove`, `codex plugin marketplace …`. **Measured 2026-08-31** — full list in `docs/agents/codex.md` |
+| **Antigravity** | plugins — `plugin.json` plus optional `skills/`, `rules/`, `mcp_config.json`, `hooks.json`; CLI plugins may also package `agents/`. CLI stages them under `~/.gemini/antigravity-cli/plugins/<name>/`. **`documented`**, [Plugins](https://antigravity.google/docs/plugins) and [CLI Plugins](https://antigravity.google/docs/cli/plugins/), retrieved 2026-09-04 |
 | **Goose** | recipes — YAML packaging a goal, required extensions, structured inputs, execution steps. Plus subrecipes |
 
 Not portable.
@@ -275,29 +289,42 @@ built-in defaults. `AGENTS.md` is the exception: concatenated, not overridden.
 **Security boundary worth copying:** untrusted projects skip *all* project-scoped `.codex/` layers
 and fall back to user, system and built-in settings only.
 
+Antigravity documents global versus project settings in 2.0 and a separate CLI profile at
+`~/.gemini/antigravity-cli/settings.json`; permission conflicts resolve `Deny > Ask > Allow`.
+The complete precedence across `AGENTS.md`, `GEMINI.md`, Rules, Plugins, project settings and CLI
+flags is not documented and remains `(unverified)`. See the canonical
+[Antigravity inventory](../docs/agents/antigravity.md), retrieved 2026-09-04.
+
 ## 8. Capability inventories — moved
 
 Per-agent inventories now live in **`docs/agents/`**, one file each:
 
 - [`docs/agents/claude-code.md`](../docs/agents/claude-code.md)
 - [`docs/agents/codex.md`](../docs/agents/codex.md)
+- [`docs/agents/antigravity.md`](../docs/agents/antigravity.md) — official-documentation inventory;
+  no local installation test
 
 **Why they left this file.** They are reference data about *one* agent, and this file is a
 *comparison across* agents. Mixing them pushed it past 400 lines and made both jobs harder. The
 directory also fixes the scaling problem: **adding an agent adds a file, and never widens a table.**
 
-Both inventories are lower bounds, and each was caught missing an entire tier before being moved —
+All inventories are lower bounds. The two locally tested files were each caught missing an entire tier —
 Codex's `.system/` built-ins, and Claude Code's `anthropic-skills:` plugin namespace. That is the
 standing argument for the prefix rule in section 9 over any maintained blocklist: **`check.py`
 cannot be complete, and a prefix does not need it to be.**
 
-Two results from those files that this comparison depends on:
+Three results from those files that this comparison depends on:
 
-- **Both vendors ship the same two tiers**, under different names. Codex labels skills `System` or
+- **The two tested vendors ship the same two tiers**, under different names. Codex labels skills `System` or
   `Personal`; Claude Code distinguishes bare-named bundled skills from `plugin:skill` ones. Only
   five skills genuinely ship with Codex.
 - **Surfaces differ within a vendor.** A CLI check does not describe the desktop app. `codex debug
   prompt-input` is authoritative for a Codex CLI session and nothing else.
+- **Antigravity is four independently versioned core products.** The IDE family separately ships
+  a standalone IDE and editor extensions; Remote Control is a host control channel, the Gemini API
+  agent is a managed runtime, and Enterprise is a deployment mode. The project/workspace
+  `.agents/skills` directory name is shared by 2.0/IDE and CLI, but the documented file layouts,
+  global paths, settings, artifacts and plugin management differ by surface.
 
 ---
 
@@ -310,9 +337,14 @@ Two results from those files that this comparison depends on:
 | Goose hook schema | still **(unverified)** |
 | ~~Codex hook event set~~ | **resolved 2026-09-01** — the documented event set includes a blocking `PreToolUse`, which is the one that matters for a gate. See the canonical [Codex inventory](../docs/agents/codex.md#8-hooks). Not yet exercised locally |
 | Codex skill precedence | when a plugin skill, a vendored catalogue skill and a project `.agents/skills/` skill share a name, which wins is untested. Section 9 assumes "both appear"; that is documented for duplicates but the three-way case is **(unverified)** |
-| **install.py writes 5 skill directories; 3 would cover every surveyed agent** | `.cursor/skills/` and `.opencode/skills/` are redundant as of 2026-09-01. Reducing them changes what lands in adopters' repositories and leaves orphans in existing installs, so it is a decision, not a cleanup. Section 2 |
+| **install.py writes 5 nested-Skill directories; 3 cover the documented nested surfaces** | `.cursor/skills/` and `.opencode/skills/` are redundant as of 2026-09-01. Reducing them changes what lands in adopters' repositories and leaves orphans in existing installs, so it is a decision, not a cleanup. Section 2 |
+| Antigravity CLI Skill installation | CLI docs describe flat `.agents/skills/*.md`; this installer writes `.agents/skills/<name>/SKILL.md` for 2.0/IDE, Codex and Goose. Do not synthesize a flat duplicate until an installed `agy` test settles loading and duplicate-name behaviour |
+| Antigravity Rule limit | Website docs state 12,000 characters per Rule, but do not establish that the bound applies to directory-based `AGENTS.md`/`GEMINI.md`. `check.py` records the distinction and does not change its Codex instruction-chain threshold pending a named-surface test |
+| Antigravity `GEMINI.md` check coverage | `check.py` intentionally measures the Codex `AGENTS.override.md`/`AGENTS.md` chain and does not count `GEMINI.md`. Test Antigravity precedence and size behavior when both context files exist, then decide whether a separate informational divergence/budget check is justified; do not add `GEMINI.md` to the Codex chain |
+| Antigravity IDE global Skill root | Official IDE docs say `~/.gemini/antigravity/skills`; installed IDE 2.5.5 state uses `~/.gemini/antigravity-ide`. This is a test prompt, not a contradiction, until Skill loading is exercised |
 | Claim-level sourcing | This file carries a document-level "checked" date. Volatile rows should each carry their own official link and retrieval date; several now do, most do not |
-| Tier 2/3 | Antigravity, Kiro — Cursor and Copilot now have sourced skill-path rows |
+| Antigravity local verification | Windows presence audit found 2.0 v2.11.0 and IDE v2.5.5 installed; neither was run or capability-enumerated. CLI/SDK were not locally enumerated and `agy` was absent from `PATH`. Test the exact checklist in `docs/agents/antigravity.md` section 15 before calling any capability `tested`; treat Remote Control and the managed API separately |
+| Tier 2/3 | Kiro — Cursor and Copilot now have sourced skill-path rows |
 | Windsurf | backlog |
 
 
@@ -390,6 +422,27 @@ Enumerated from `docs/agents/codex.md` — built-in, plugin and curated skills, 
 `help`, `permissions`, `mcp` and `status` collide in *both* agents, with different consequences in
 each. One prefix prevents both, which is why the rule is "prefix", not "consult two blocklists".
 
+### Antigravity reserved names — documented 2026-09-04
+
+Antigravity CLI turns registered skills into slash commands, while the product also owns public
+slash commands. The official docs do not state how a same-named skill and built-in command resolve;
+the consequence is therefore `(unverified)`, not assumed to match Claude Code or Codex.
+
+`check.py` keeps two official lower-bound sets. Public commands and aliases include `add-dir`,
+`agents`, `artifact`, `boost`, `browser`,
+`btw`, `clear`, `codesearch`, `config`, `context`, `copy`, `credits`, `diff`, `exit`, `fast`,
+`feedback`, `fork`, `goal`, `grill-me`, `help`, `hooks`, `keybindings`, `learn`, `logout`, `mcp`,
+`model`, `open`, `permissions`, `planning`, `rename`, `resume`, `rewind`, `schedule`, `skills`,
+`statusline`, `tasks`, `teamwork-preview`, `title`, `usage`, `voice`, and their documented aliases.
+Confirmed built-in Skill names are tracked separately: `antigravity_guide` and
+`migrate-workflows`.
+Source: [official shared commands](https://antigravity.google/docs/slash-commands) and
+[CLI reference](https://antigravity.google/docs/cli/reference), and
+[Changelog](https://antigravity.google/changelog), retrieved 2026-09-04.
+
+**The overlap is now three-way.** A prefix avoids known Claude replacement, Codex ambiguity, and
+Antigravity's untested resolution behavior without depending on any blocklist being complete.
+
 ---
 
 ## Revision log
@@ -436,6 +489,10 @@ revision history. Each entry is a claim this file once made and no longer does.
 | 2026-09-03 | Section 5 repeated Claude Code's blocking set as **11**, one day after the canonical inventory changed | The duplicated event lists and counts were removed. Section 5 now links to the two canonical hook inventories; the Claude inventory records 15 exit-status-blocking events plus `PermissionRequest`'s structured decision and the fail-open contracts. |
 | 2026-09-04 | `tested` meant only "run on this machine, with the version recorded"; the file-level status stopped at the 2026-09-02 documentation-only pass | `tested` now requires the **surface and version**, every local Claude Code/Codex row carries that stamp or an explicit historical gap, and the status separates the 2026-08-31 baseline, 2026-09-02 documentation pass, and evidence changes verified through 2026-09-04 |
 | 2026-09-04 | The Codex instruction and skills rows carried a flat `tested` stamp from CLI 0.151.0-alpha.7.2, with no process-environment qualifier; the skills stamp read as covering every location | The baseline process environment is explicitly **not recorded**. Reading `AGENTS.md` and the repository `.agents/skills/` path were reconfirmed in the Desktop Codex-mode task and its sandbox-launched CLI 0.153.0 child; non-project skill locations are separately `documented` rather than inheriting the project path's `tested` grade |
+| 2026-09-04 | Antigravity was one thin matrix row: `AGENTS.md` had no path, `GEMINI.md` was unverified, global skills were incorrectly flattened to `~/.agents/skills`, and MCP/subagents/hooks/plugins/configuration were absent | Added the official-documentation inventory for 2.0 v2.12.2, CLI v1.1.25, SDK v0.1.16 and IDE v2.5.5; sourced `AGENTS.md`/`GEMINI.md`, split global paths by surface, and added MCP, agents, hooks, plugins, permissions and documented conflicts. Evidence remains `documented`, not `tested` |
+| 2026-09-04 | The first Antigravity inventory treated the IDE family as extensions only, omitted Remote Control, the Gemini API managed agent and Enterprise, and resolved Windows sandbox documentation by choosing the dedicated page | Split standalone IDE from extensions, classified Remote Control/API/Enterprise as adjacent delivery or deployment modes, added their boundaries, and recorded the Windows sandbox and third-party-model plan tables as official disputes instead of selecting one page |
+| 2026-09-04 | Antigravity 2.0 and IDE were flattened to one global Skill path; CLI's `.agents/skills/` directory was treated as proof of the nested `SKILL.md` layout; SDK tools and managed-API limits were only summarized | Split all three Skill path/layout contracts, added confirmed built-in Skills and exact SDK `BuiltinTools`, and recorded the managed API's explicit unsupported tools and structured-output limitation |
+| 2026-09-04 | The Antigravity inventory said no application was installed; instruction discovery was flattened to workspace root; installer output implied nested `SKILL.md` covered CLI; commands and built-in Skills shared one drift set | Recorded installed-but-unrun 2.0/IDE presence, marked root-versus-walk-up discovery disputed, exposed the CLI installer gap, split command/Skill drift checks, and moved unresolved Rule/path questions into named test items |
 
 **The pattern worth noticing:** most of these were an enumeration mistaken for an inventory, or a
 local artefact mistaken for a loaded capability. The overview-ablation entry is a third kind, and

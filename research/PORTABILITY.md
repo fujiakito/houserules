@@ -27,8 +27,8 @@ This matters because teams do switch.
 | **`AGENTS.md`** | ✅ **universal except Claude Code** — and that is a one-line fix | ❌ text only | **the carrier** |
 | **MCP** | ✅ every vendor surveyed | ✅ callable tools | **the only portable capability** |
 | **CI / git hooks** | ✅ agent-agnostic by construction | ✅ enforcement | **the only portable guarantee** |
-| `SKILL.md` | ⚠️ **format yes, path mostly** — `.agents/skills/` covers 6 of 8 surveyed agents as of 2026-09-01; Claude Code and Kiro need their own. Three directories cover all. **Also read by Anthropic Managed Agents**, which is not a coding agent at all (`MATRIX.md` §2, 2026-09-02) | ✅ procedures | portable content, still needs an installer |
-| Agent hooks | ⚠️ **schema and repo-level location both shared by Claude Code and Codex** — `.claude/settings.json` vs `<repo>/.codex/hooks.json`, ~10 event names in common. **Both can block.** Current event sets, blocking contracts, counts, and fail-open behaviour are owned by the canonical [Claude Code](../docs/agents/claude-code.md#7-hooks) and [Codex](../docs/agents/codex.md#8-hooks) inventories; Goose untested | ✅ | vendor-local |
+| `SKILL.md` | ⚠️ **format broadly, paths and surface layouts vary** — the canonical coverage table is [`MATRIX.md` §2](MATRIX.md#2-skills--the-same-standard-three-different-paths). Antigravity CLI documents flat `.md` Skills rather than the nested layout installed here. **Also read by Anthropic Managed Agents**, which is not a coding agent at all (`MATRIX.md` §2, 2026-09-02) | ✅ procedures | portable content, still needs an installer |
+| Agent hooks | ⚠️ **an inner schema is shared by Claude Code, Codex and Antigravity** — event → matcher → command handlers — but wrappers, paths, tool names and decision contracts differ. Antigravity uses `.agents/hooks.json` and documents five events; it has not been run. Current contracts are owned by the canonical [Claude Code](../docs/agents/claude-code.md#7-hooks), [Codex](../docs/agents/codex.md#8-hooks), and [Antigravity](../docs/agents/antigravity.md#11-hooks) inventories; Goose untested | ✅ | vendor-local |
 | Subagents | ❌ | ✅ | vendor-local |
 | Plugins / recipes / bundles | ❌ | ✅ | vendor-local |
 | Built-in commands | ❌ each vendor's own set | ✅ | vendor-local |
@@ -36,14 +36,15 @@ This matters because teams do switch.
 ## 2. What actually dies on a switch
 
 **Every built-in command.** Claude Code's `/verify`, `/code-review`, `/batch`, `/doctor`,
-`/security-review`, `/run-skill-generator` do not exist in Codex, Goose or Cursor. Codex has its own
-`review` and `doctor`; the *capability* may be present but **the invocation, behaviour and depth
-differ**, and nothing in the repository tells the new agent how the old one was being used.
+`/security-review`, `/run-skill-generator` do not survive as contracts in Codex, Antigravity,
+Goose or Cursor. Other agents have overlapping capabilities — Codex has `review` and `doctor`,
+Antigravity has `/boost`, `/plan`, `/goal` and `/learn` — but **the invocation, behaviour, plan gate
+and depth differ**, and nothing in the repository tells the new agent how the old one was used.
 
-**Every hook.** `.claude/settings.json` means nothing to `.cursor/hooks.json`. Codex is the
-partial exception — `<repo>/.codex/hooks.json` shares Claude Code's schema shape and about ten of
-its event names (`MATRIX.md` section 5) — but the filename differs and the event sets are not
-equal: 11 against 33.
+**Every hook.** `.claude/settings.json` means nothing to `.cursor/hooks.json`. Codex and Antigravity
+are partial exceptions: `<repo>/.codex/hooks.json` and `.agents/hooks.json` share Claude Code's
+event/matcher/command core (`MATRIX.md` section 5). The filenames, wrappers, tool names, event sets,
+decision contracts and failure modes still differ.
 
 **Every subagent definition, plugin and recipe.**
 
@@ -70,10 +71,10 @@ for someone arriving with a different agent.
 A deterministic gate is genuinely valuable. Hooks are a useful place for fast local feedback, but
 not the home of a hard guarantee: a hook binds only the agent that reads it, and configuration,
 executability, timeout, or trust can fail open. **Revised 2026-08-31:** Claude Code and Codex turned
-out to share a hook schema closely enough that one file can often serve both (`MATRIX.md` section
-5), so this is no longer the *least* portable mechanism on the list. It is still not a guarantee:
+out to share a hook schema closely enough that one implementation can often serve both (`MATRIX.md`
+section 5), so this is no longer the *least* portable mechanism on the list. It is still not a guarantee:
 the file locations, event sets, decision contracts, and failure behavior differ across agents and
-releases. Current mechanics are owned by the two canonical inventories linked from `MATRIX.md`.
+releases. Current mechanics are owned by the canonical inventories linked from `MATRIX.md`.
 
 **Revised again 2026-09-02, and in the same direction as every previous revision of this row:** the
 blocking surface is wider on both sides than this file assumed. That makes a hook a *more* capable
@@ -87,6 +88,11 @@ only when the acting agent cannot modify, disable, or bypass the enforcing contr
 is unchanged:
 
 > **The portable expression is the contract; the vendor-local one is an accelerator.**
+
+**Revised 2026-09-04:** Antigravity officially documents the same inner hook shape at
+`.agents/hooks.json`, including `PreToolUse` allow/deny/modify output. This is documentation-only
+and adds a third adapter, not a portable file. It strengthens the "shared contract, vendor-local
+accelerator" reading without changing the guarantee boundary.
 
 Write the gate as a CI check first — that is what binds, and it binds regardless of who or what made
 the change. Then optionally mirror it as a vendor hook for fast local feedback. If the hook and the
@@ -176,9 +182,10 @@ row. Do not cite the overview row as if it were settled.
 
 ## Open items
 
-- Goose and `AGENTS.md` — undocumented, needs a local test
-- Whether Goose has a standalone hook mechanism at all (Codex: resolved, it does)
-- Tier 2/3 rows are documentation-sourced and untested
+- Whether Goose has a standalone hook mechanism at all
+- Antigravity has a full official inventory across four core products and its Remote/API/Enterprise
+  modes but no local surface test; Kiro and the remaining
+  Tier 2/3 rows are documentation-sourced and untested
 - **Managed Agents reads `.claude/skills/` from a mounted repository** (`MATRIX.md` §2). Two
   consequences are unresolved: whether the survey's frame should be "coding agents" at all rather
   than "anything that mounts the repo", and whether the portable layer should say anything about
