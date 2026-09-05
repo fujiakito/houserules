@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -159,6 +160,10 @@ DOCUMENTED_ANTIGRAVITY_BUILTIN_SKILLS = {
 
 SKILL_DIRS = [".claude/skills", ".agents/skills", ".cursor/skills",
               ".kiro/skills", ".opencode/skills"]
+MANIFEST = ".houserules/skills.json"
+# Standalone check.py cannot discover templates in adopting repositories. This catalogue
+# detects ambiguous legacy installs, not ownership; tests keep it aligned with shipped sources.
+SHIPPED_SKILL_NAMES = {"hr-onboard"}
 
 FAIL, WARN, OK = "FAIL", "warn", "ok"
 
@@ -341,50 +346,98 @@ def check_names(repo: Path, r: Report) -> None:
 
 
 def tree_hash(root: Path) -> str:
-    """Content hash of a directory — relative paths and file bytes, order-independent.
-    Follows symlinks, so install.py --link and a plain copy hash identically."""
+    """Hash relative paths and content, normalizing CRLF in UTF-8 text only.
+
+    An adopting repo may use core.autocrlf without our .gitattributes. A Git checkout must
+    not invalidate the ownership baseline solely by converting text line endings. Binary
+    content (NUL-containing or non-UTF-8) remains byte-exact. Follows skill symlinks.
+    """
     h = hashlib.sha256()
     for f in sorted(p for p in root.rglob("*") if p.is_file()):
         h.update(f.relative_to(root).as_posix().encode())
         h.update(b"\0")
-        h.update(f.read_bytes())
+        content = f.read_bytes()
+        if b"\0" not in content:
+            try:
+                content.decode("utf-8")
+            except UnicodeDecodeError:
+                pass
+            else:
+                content = content.replace(b"\r\n", b"\n")
+        h.update(content)
         h.update(b"\0")
     return h.hexdigest()
 
 
+def read_manifest(repo: Path) -> dict | None:
+    """Read explicit installer ownership; never infer it from a prefix or a directory union."""
+    path = repo / MANIFEST
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if (not isinstance(data, dict) or data.get("schema_version") != 1
+                or not isinstance(data.get("skills"), dict)):
+            raise ValueError("expected schema_version 1 and a skills object")
+        for name, entry in data["skills"].items():
+            if not re.fullmatch(r"hr-[a-z0-9]+(?:-[a-z0-9]+)*", name):
+                raise ValueError("invalid managed skill name")
+            if not isinstance(entry, dict):
+                raise ValueError(f"invalid entry for {name}")
+            paths = entry.get("paths")
+            if (not isinstance(paths, list) or not paths
+                    or any(not isinstance(p, str) or p not in SKILL_DIRS for p in paths)
+                    or len(paths) != len(set(paths))):
+                raise ValueError(f"invalid paths for {name}")
+            digest = entry.get("sha256")
+            if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+                raise ValueError(f"invalid sha256 for {name}")
+        return data
+    except (OSError, UnicodeError, ValueError) as exc:
+        raise ValueError(f"{MANIFEST}: {exc}") from exc
+
+
 def check_sync(repo: Path, r: Report) -> None:
-    """Skills drift two ways and both are silent: a location is missing a skill entirely,
-    or it holds a *different version* of one. Comparing directory names catches only the
-    first. The second is what a repository gets when it already had a skill of that name:
-    install.py refuses to overwrite it, installs into the other vendor paths, and the repo
-    is left with two different skills under one name — one agent reading each."""
-    present = {d: {s.name for s in (repo / d).iterdir() if s.is_dir()}
-               for d in SKILL_DIRS if (repo / d).is_dir()}
-    if len(present) < 2:
-        r.add(OK, "skill sync", "fewer than two skill locations in use")
+    """Check only recorded installs, including absent roots and equally modified copies.
+
+    Without a manifest ownership is unknown. Do not adopt user skills automatically; require
+    the installer to establish a baseline. Other checks still inspect local names/frontmatter.
+    """
+    try:
+        manifest = read_manifest(repo)
+    except ValueError as exc:
+        r.add(FAIL, "skill sync", str(exc))
         return
-    union = set().union(*present.values())
-
+    if manifest is None:
+        ambiguous = sorted(f"{rel}/{name}" for rel in SKILL_DIRS
+                           for name in SHIPPED_SKILL_NAMES
+                           if (repo / rel / name).exists() or (repo / rel / name).is_symlink())
+        if ambiguous:
+            r.add(FAIL, "skill sync",
+                  "ownership unknown for shipped-name paths: " + ", ".join(ambiguous)
+                  + " — inspect them, then run install.py with the intended --agents selection;"
+                  " this does not claim ownership of user content")
+        else:
+            r.add(WARN, "skill sync",
+                  "ownership unknown; no shipped-name paths found — user skills are not"
+                  " compared across locations")
+        return
     problems: list[str] = []
-    drifted = {d: sorted(union - names) for d, names in present.items() if union - names}
-    if drifted:
-        problems.append("; ".join(f"{d} missing {', '.join(m)}" for d, m in drifted.items()))
-
-    # Group the locations holding each skill by content. More than one group is a version split.
-    for name in sorted(union):
-        by_hash: dict[str, list[str]] = {}
-        for d, names in present.items():
-            if name in names:
-                by_hash.setdefault(tree_hash(repo / d / name), []).append(d)
-        if len(by_hash) > 1:
-            groups = " vs ".join("+".join(v) for v in by_hash.values())
-            problems.append(f"{name} differs between locations: {groups}")
-
+    copies = 0
+    for name, entry in sorted(manifest["skills"].items()):
+        for rel in entry["paths"]:
+            path = repo / rel / name
+            copies += 1
+            if not (path / "SKILL.md").is_file():
+                problems.append(f"{rel}/{name} missing SKILL.md")
+            elif tree_hash(path) != entry["sha256"]:
+                problems.append(f"{rel}/{name} differs from installed source")
     if problems:
-        r.add(FAIL, "skill sync", " / ".join(problems) + " — re-run install.py --force")
+        r.add(FAIL, "skill sync", " / ".join(problems)
+              + " — inspect differences and run install.py --check before repairing")
     else:
         r.add(OK, "skill sync",
-              f"{len(union)} skill(s) identical across {len(present)} location(s)")
+              f"{copies} managed copy/copies match installed source; foreign skills excluded")
 
 
 def check_frontmatter(repo: Path, r: Report) -> None:

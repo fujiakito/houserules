@@ -24,6 +24,9 @@ artifact* meant to be identical everywhere, so a byte difference is a conflict.
 
 An existing skill directory is never replaced without --force. Adopting this layer into a
 repository that already has its own skills must not cost the user one of them.
+Successful installs record owned names, selected paths and source digests in
+.houserules/skills.json. Later agent selections are additive; foreign skills are not enrolled.
+Known conflicts are checked across all selected destinations before any installation write.
 
 This script installs the complete layer. The default `python check.py` path only reads;
 `check.py --fix` is an explicit local repair mode and must not be used as a CI gate.
@@ -34,11 +37,14 @@ research/MATRIX.md.
 from __future__ import annotations
 
 import argparse
-import filecmp
+import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
+
+from check import MANIFEST, read_manifest, tree_hash
 
 HERE = Path(__file__).resolve().parent
 SKILL_SRC = HERE / "templates" / "skills"
@@ -80,13 +86,9 @@ def same_tree(src: Path, dst: Path) -> bool:
     """True when dst already holds an identical copy of src."""
     if not dst.is_dir():
         return False
-    cmp = filecmp.dircmp(src, dst)
-    # right_only matters as much as left_only: a file present only in the destination means
-    # the installed copy has diverged from its source, which is exactly the drift --check
-    # exists to report. Without it, adding a file to an installed skill read as "unchanged".
-    if cmp.left_only or cmp.right_only or cmp.diff_files or cmp.funny_files:
-        return False
-    return all(same_tree(src / d, dst / d) for d in cmp.common_dirs)
+    # Compare bytes even when file size and mtime match. The same digest is recorded for
+    # standalone check.py, so installer preview and later verification agree.
+    return tree_hash(src) == tree_hash(dst)
 
 
 def place(src: Path, dst: Path, link: bool, check: bool, force: bool) -> str:
@@ -98,7 +100,7 @@ def place(src: Path, dst: Path, link: bool, check: bool, force: bool) -> str:
     """
     if same_tree(src, dst) or (link and dst.is_symlink() and dst.resolve() == src):
         return "unchanged"
-    if dst.exists() and not dst.is_symlink() and not force:
+    if (dst.exists() or dst.is_symlink()) and not force:
         return ("CONFLICT - a different skill of this name is already here; "
                 "rename yours or pass --force to overwrite it")
     if check:
@@ -204,10 +206,65 @@ def main() -> int:
         print(f"known: {', '.join(AGENT_SKILL_PATHS)}", file=sys.stderr)
         return 2
 
+    if not names:
+        print("error: select at least one agent", file=sys.stderr)
+        return 2
+    try:
+        previous = read_manifest(repo)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
     skills = discover_skills()
+    # Validate the intended ownership record before touching the target repository.
+    if any(not re.fullmatch(r"hr-[a-z0-9]+(?:-[a-z0-9]+)*", s.name) for s in skills):
+        print("error: shipped skill names must use the hr- prefix", file=sys.stderr)
+        return 2
     mode = "CHECK - nothing will be written" if a.check else "INSTALL"
     print(f"{mode}\n  repository : {repo}\n  skills     : "
           f"{', '.join(p.name for p in skills) if skills else '(none)'}\n")
+
+    # One source digest covers every recorded path. Do not advance it while leaving an
+    # unselected path on an older source, even with --force. Ownership remains additive.
+    selected = {AGENT_SKILL_PATHS[n] for n in names}
+    partial_upgrades = []
+    for skill in skills:
+        entry = (previous or {}).get("skills", {}).get(skill.name)
+        if entry and entry["sha256"] != tree_hash(skill):
+            omitted = sorted(set(entry["paths"]) - selected)
+            if omitted:
+                partial_upgrades.append(f"{skill.name}: include recorded paths {', '.join(omitted)}")
+    if partial_upgrades:
+        print("Installation stopped before writes: partial upgrade would invalidate"
+              " the shared source digest.")
+        print("\n".join(partial_upgrades))
+        print("Select agents covering all recorded paths for each changed skill (or --agents all),"
+              " then inspect and reconcile any content conflicts before retrying.")
+        return 1
+
+    # Both modes preflight the full selection, including the shipped root checker. A preview
+    # must describe the same refusal as installation, not advertise writes that will not run.
+    # This prevents known conflicts; it is not rollback for I/O errors or concurrent edits.
+    conflicts = []
+    for rel in sorted(selected):
+        for skill in skills:
+            outcome = place(skill, repo / rel / skill.name, a.link, True, a.force)
+            if outcome.startswith("CONFLICT"):
+                conflicts.append(f"{rel}/{skill.name}: {outcome}")
+    outcome = place_file(HERE / "check.py", repo / "check.py", True, a.force)
+    root_conflict = outcome.startswith("CONFLICT")
+    if root_conflict:
+        conflicts.append(f"check.py: {outcome}")
+    if conflicts:
+        print("\n".join(conflicts))
+        if root_conflict:
+            print("Installation stopped before writes. Review root check.py and reconcile it"
+                  " with the shipped source before retrying. Changing --agents cannot resolve"
+                  " this root-file conflict.")
+        else:
+            print("Installation stopped before writes. Resolve conflicts or select only"
+                  " the intended non-conflicting agents.")
+        return 1
 
     results: list[str] = []
     if skills:
@@ -247,6 +304,28 @@ def main() -> int:
     if conflicts:
         print()
         print(f"{len(conflicts)} conflict(s) - nothing of yours was overwritten.")
+    # A conflict must never bless a different user's skill. Preflight prevents known
+    # partial writes; this guard also covers preview conflicts and a concurrent change.
+    if not conflicts:
+        manifest = previous or {"schema_version": 1, "skills": {}}
+        for skill in skills:
+            prior_paths = manifest["skills"].get(skill.name, {}).get("paths", [])
+            manifest["skills"][skill.name] = {
+                "paths": sorted(set(prior_paths) | selected),
+                "sha256": tree_hash(skill),
+            }
+        content = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+        path = repo / MANIFEST
+        if path.is_file() and path.read_text(encoding="utf-8") == content:
+            outcome = "unchanged"
+        elif a.check:
+            outcome = "would update ownership record"
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+            outcome = "recorded managed skills"
+        results.append(outcome)
+        print(f"{MANIFEST} : {outcome}")
     if a.check:
         print()
         print("Nothing was written. Re-run without --check to apply.")

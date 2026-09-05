@@ -22,6 +22,7 @@
   DELETE THIS COMMENT when you copy the template.
 -->
 ---
+schema_version: 1 # optional pilot extension; missing means the original minimal handoff
 id:               # short, stable, also the directory name
 title:            # one line
 stage:            # whatever this pipeline's stages are - do not adopt someone else's set
@@ -29,9 +30,16 @@ status:           # ready | in-progress | blocked | done
 owner:            # agent/model + session or task id, e.g. claude-code/sonnet-5#a1b2
                   # a review stage should not carry the same owner as the stage it reviews
 updated:          # YYYY-MM-DD
+action:           # draft | review | implement | fix | verify | decide; independent of stage
 ---
 
 # <title>
+
+## Read first
+
+<!-- Link only the inputs the next action needs. Use artifact path/URL + revision or content
+     digest. For a new checkout, ensure these files are committed or explicitly transferred.
+     List the relevant spec/task/review/finding IDs; do not copy their contents here. -->
 
 ## Where this is
 
@@ -48,3 +56,9 @@ updated:          # YYYY-MM-DD
 ## Blocked on
 
 <!-- Only if status is blocked. Name what would unblock it and who can do that. -->
+
+## Working state and authority
+
+<!-- Branch/worktree and uncommitted changes that the next session must preserve. Name the
+     permitted action and any still-required decision; a previous review is not authorization
+     to commit, publish or deploy. Omit this section when nothing extra must be carried. -->

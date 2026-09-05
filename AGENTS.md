@@ -20,8 +20,9 @@
 
 ## Do not
 
-- Do not add a capability that duplicates an agent built-in (`init`, `verify`, `code-review`,
-  `doctor`). Read `research/PORTABILITY.md` before adding anything that looks like a framework.
+- Do not add a skill merely to fill a stage or mirror a built-in. A fallback needs a demonstrated
+  gap on the target surface and comparative evaluation; a built-in on another surface does not
+  disqualify it. Apply the admission criteria in `research/PORTABILITY.md` section 4.
 - Do not cite the "repository overviews are not helpful" result as settled. Table 7 (Appendix B)
   ablates the overview category and finds **no significant effect either way** — one model,
   LLM-generated files only, and on CTXBench the point estimate moved *against* the "dead weight"
@@ -33,3 +34,4 @@
 
 - `python check.py` must pass, and `python install.py --check` must report no drift, before a change
   is done.
+- Changes to the scripts or tests must also pass `python -m unittest discover -s tests -v`.

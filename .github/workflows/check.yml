@@ -5,7 +5,8 @@ name: portable agent layer
 # instruction telling an agent to remember — a check binds regardless of which agent, or
 # which human, made the change.
 #
-# Two gates, and they catch different things:
+# Three gates, and they catch different things:
+#   unittest            installer/checker behavior and coexistence regressions
 #   check.py            the layer is intact       (runs in any repository)
 #   install.py --check  installed copies match their source (drift; needs this repo's templates)
 
@@ -30,6 +31,9 @@ jobs:
 
       # No dependencies: both scripts are standard library only, on purpose. A check that
       # needs an install step is a check that gets skipped.
+      - name: Installer and checker regressions
+        run: python -m unittest discover -s tests -v
+
       - name: Layer is intact
         run: python check.py
 

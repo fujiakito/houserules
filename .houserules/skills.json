@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "skills": {
+    "hr-onboard": {
+      "paths": [
+        ".agents/skills",
+        ".claude/skills",
+        ".cursor/skills",
+        ".kiro/skills",
+        ".opencode/skills"
+      ],
+      "sha256": "72f481e42ebddab0fedee9359e20d3318dba193131a173365aef421bcd82b1fb"
+    }
+  }
+}

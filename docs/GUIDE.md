@@ -21,6 +21,39 @@ restrictions.
 documentation-only. The inventories retain the surface versions and retrieval date for each claim.
 Recheck policy is in `../research/MATRIX.md`.
 
+## Choose the next action
+
+Start with the stage that matches your **current problem**, then pick one row under **Choose by
+purpose**. The tools in a stage serve different jobs; they are not a checklist to run in full.
+Expand **Tools by agent** only when you need the exact native option and its availability limits.
+
+| I need to… | Start here |
+|---|---|
+| Understand the repo or clarify the request | [Onboard](#1-onboard--context) → [Intent](#2-intent) |
+| Define behavior, architecture or UI | [Spec & Architecture](#3-spec--architecture) |
+| Turn an accepted design into executable work | [Plan](#4-plan) → [Build](#5-build) |
+| Check behavior or critique an artifact/change | [Verify](#6-verify) / [Review](#7-review) |
+| Deliver or operate the system | [Release](#8-release) → [Deploy](#9-deploy) → [Observe](#10-observe) |
+| Fix a failure or recurring friction | [Diagnose](#11-diagnose--remediate) / [Maintain](#12-maintain-the-engineering-system) |
+| Switch agents or resume after feedback | [Work artifacts](../templates/work/README.md) |
+
+A **tool** executes an action; a **skill** supplies a procedure; a **plugin** distributes capabilities;
+a **template** carries output to its next consumer. Choose an implementation already available to
+you that meets the task's needs, including your own or preferred third-party skill. Native tools
+and project procedures below are options with known provenance, not a requirement to replace yours.
+
+These purpose tables describe **jobs to do**, not a recommended third-party skill catalog. Researching
+a skill does not add it to the project's supported or recommended set. Project-owned skills must
+also justify their value and coexist with the user's choices. New research should improve a task
+contract or validate a specific gap; it should not automatically expand this guide's tool list.
+
+The project covers the full SDLC through contracts, with optional fallbacks admitted only for
+[evaluated gaps](../research/PORTABILITY.md#fallback-admission-criteria). A stage does not require
+its own skill, and missing native tooling does not prevent using a direct procedure.
+
+The [work artifact templates](../templates/work/README.md) are optional pilot drafts.
+Use your existing spec, plan or review format when it carries the information the next consumer needs.
+
 ## How to read the tables
 
 | Type | Means |
@@ -41,6 +74,19 @@ rather than marked `N/A`.
 
 ### 1. Onboard & Context
 
+Create useful context and make setup reproducible.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Initialize the repo | Use the active agent’s initializer/context tools below, then the project installer. | Loaded project instructions. |
+| Capture a non-obvious operating rule | Use the existing `hr-onboard` procedure after real work exposes friction. | One scoped instruction or deterministic check. |
+| Complete human-only provisioning | Use an existing setup runbook or have the agent prepare the manual steps a person must perform. | A repeatable manual setup procedure. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
+
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
 | Claude Code | `/init` | `/import`, `/context`, `/memory`, `/doctor`, `/hr-onboard` | built-in + project | `/import` has provider and feature-flag limits; `/context` confirms what loaded | Create and inspect the repository instruction context; discover non-obvious operating knowledge |
@@ -51,7 +97,23 @@ Run the native initializer, then `python install.py`. Use `hr-onboard` for knowl
 inspection cannot reveal, such as a command that only works from one directory or a test expected
 to fail.
 
+</details>
+
 ### 2. Intent
+
+Resolve what should be achieved before selecting a solution.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Persist an agreed outcome | Use the active host’s goal feature when available. | Execution objective; durable criteria belong in the work record. |
+| Expose uncertain requirements | Use the host’s interview capability or your preferred requirements procedure. | Agreed scope, open questions and domain terms. |
+| Collect missing facts or stakeholder answers | Use research tools for evidence; draft a questionnaire when another person holds the missing knowledge. | Cited findings or an unsent questionnaire. |
+| Process incoming requests | Use the project’s triage workflow to verify the report, scope the request and identify its next owner. | Ready work or a clearly stated information gap. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -62,7 +124,24 @@ to fail.
 Record durable acceptance criteria in `work/<id>/`; a session goal is execution state, not the
 project's system of record.
 
+</details>
+
 ### 3. Spec & Architecture
+
+Describe behavior and design decisions; use visual design only when the problem is visual.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Write the specification | Use native planning/general writing or an existing spec-authoring skill. | A small spec with verifiable criteria; [optional pilot template](../templates/work/spec.md). |
+| Resolve architecture or terminology | Use the agent and the project’s domain/architecture references; select specialist guidance when needed. | Recorded trade-offs, interfaces and test seams. |
+| Explore screens or interaction | Use a UI design capability below or your preferred prototyping skill. Claude’s `/design` is visual design, not general specification writing. | Mockup/prototype plus the decision it resolves. |
+| Review a spec before building | Ask for a separate artifact critique against intent, contradictions, edge cases and testability; use the spec rubric in [work artifacts](../templates/work/README.md#review-by-artifact). | Findings tied to the exact spec revision. No assumed `design-review` command. |
+| Specify a recurring workflow | Describe triggers, actions, evidence and any human checkpoints before choosing an execution tool. | Workflow definition; scheduling is a later implementation choice. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -73,7 +152,23 @@ project's system of record.
 No inventoried agent supplies a mandatory specification format or acceptance gate. Keep the spec as small
 as the change requires, and place durable output in `work/<id>/`.
 
+</details>
+
 ### 4. Plan
+
+Turn accepted decisions into work that can be picked up and verified.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Sequence a bounded change | Use native planning or your existing task workflow; preserve output when another session will consume it. | Tasks linked to spec criteria; [optional pilot template](../templates/work/plan.md). |
+| Create independently executable tickets | Use the project’s task tracker or local task files, with deliverables and blocking dependencies. | Self-contained tasks; not a mandatory tracker migration. |
+| Investigate a large unresolved effort | Map the unanswered decisions and investigate their dependencies before decomposing implementation. | Resolved decisions before implementation tickets. |
+| Review the plan | Use a fresh artifact review when dependencies, feasibility, migration order or verification strategy are uncertain. | Missing coverage and unsafe sequencing identified before Build. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -85,7 +180,22 @@ Claude Code 2.1.251 plan mode was locally tested writing a machine-local file un
 `~/.claude/plans/` on 2026-09-03. Use `work/<id>/handoff.md` when the plan must be repository-visible,
 reviewable, or portable to another agent.
 
+</details>
+
 ### 5. Build
+
+Implement the chosen task using the runtime and isolation your current host provides.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Build one bounded change | Use the general coding agent or your preferred implementation procedure. | Code plus evidence against the agreed task. |
+| Work test-first | Use a meaningful failing test and implement one behavior at a time; add a TDD skill only if it improves the method. | A failing test followed by a passing implementation. |
+| Implement independent tasks concurrently | Use available worktrees/subagents, or work sequentially when isolation or delegation is unavailable. | Isolated changes integrated against the same spec. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -96,7 +206,23 @@ reviewable, or portable to another agent.
 Use one worktree per parallel write stream. All three agents can coordinate concurrent work; none
 is limited to a single isolated chat.
 
+</details>
+
 ### 6. Verify
+
+Produce evidence that the changed behavior works.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Run project checks | Use shell/CI and the project’s actual check commands. Test-design guidance does not replace a runner. | Commands, results, failures and skipped checks; [optional pilot record](../templates/work/verification.md). |
+| Exercise the running application | Use the available verify/run/browser capability below; store a reusable launch recipe if needed. | Observed behavior at the relevant runtime/UI surface. |
+| Prove a bug was fixed | Re-run the original failing scenario and a relevant regression check. | Before/after evidence for the actual symptom. |
+| Add targeted automated gates | Use the stack’s test/lint/boundary tooling for a recurring, machine-testable failure. | A check that demonstrably rejects a known violation. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -105,10 +231,31 @@ is limited to a single isolated chat.
 | Antigravity | `/boost` | shell, `/browser`, Artifacts | built-in + ⚠️ gated | `/boost` explicitly documents tests and independent verification but requires a paid plan; sandbox is opt-in | Run tests and UI checks, then expose results as reviewable artifacts |
 
 A tool invocation is not evidence by itself. Record the command, surface, version, result, and
-relevant artifact. If Claude's launch skill is unavailable, store the procedure as a project skill
-under `.agents/skills/`.
+relevant artifact. If Claude's launch skill is unavailable, an existing project procedure can
+serve as the fallback. A Claude-only skill belongs under `.claude/skills/<name>/SKILL.md`; see
+the [Claude skill inventory](agents/claude-code.md) for discovery details. For a cross-agent
+procedure, use a canonical source with agent-specific destinations, following the
+[installer pattern](../README.md#what-it-installs); `.agents/skills/` alone does not cover Claude.
+Any new project-owned fallback still needs to meet the project's admission criteria.
+
+</details>
 
 ### 7. Review
+
+Choose the question the review must answer. Add specialist passes only for relevant risks.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Find implementation defects | Use an available code reviewer or your preferred review procedure; declare the target and relevant criteria. | Located findings against a declared diff/revision. |
+| Check requirements coverage | Compare the implementation against the accepted spec independently of style/standards concerns. | Missing, incorrect or out-of-scope behavior. |
+| Check security-sensitive changes | Use the available security reviewer/scan below, with access to the relevant threat context. | Validated security findings; not replaced by style review. |
+| Reduce unnecessary complexity | Use a focused simplification pass when complexity is the concern. | Concrete simplifications; not a compulsory second full review. |
+| Review a spec, plan or prior fix | Use the artifact-specific rubric and [review → fix → verify protocol](../templates/work/README.md#review-fix-verify). | Stable finding IDs and independently verified dispositions. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -118,7 +265,22 @@ under `.agents/skills/`.
 
 Use review to find issues; move requirements that must bind into deterministic CI checks.
 
+</details>
+
 ### 8. Release
+
+Prepare an identifiable release candidate and let repository policy decide readiness.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Prepare commit/PR work | Use the existing Git/PR helpers below or the project’s delivery workflow. | A reviewable change and associated evidence. |
+| Resolve an in-progress conflict | Trace both changes to their intent, resolve the conflict and run project checks; scope staging to the requested work. | A completed merge/rebase verified by project checks. |
+| Version and release | Use the repository’s release workflow and CI. | Version/tag/artifact provenance and release decision. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -129,7 +291,22 @@ Use review to find issues; move requirements that must bind into deterministic C
 Wire `python check.py` and `python install.py --check` into CI for this repository. Convenience
 commands do not replace branch protection, release policy, or reproducible checks.
 
+</details>
+
 ### 9. Deploy
+
+Deploy through a provider or CI/CD identity with a known recovery path.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Execute a deployment | Use the relevant provider integration below or the project’s CI/CD pipeline. | Target environment, deployed revision and health evidence. |
+| Prepare manual setup or cutover | Use an existing runbook or prepare a manual procedure when the remaining steps require a human. | Named steps, owner and observable completion. |
+| Decide rollout/rollback readiness | Review the project’s operational runbook and evidence. | Recovery path, health criteria and owner. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -140,7 +317,22 @@ commands do not replace branch protection, release policy, or reproducible check
 Production approval remains outside the agent. Prefer a CI/CD deployment identity and an explicit
 environment approval over credentials embedded in an interactive session.
 
+</details>
+
 ### 10. Observe
+
+Inspect signals and decide when action is needed.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Investigate runtime signals | Use a configured telemetry connector/MCP or the underlying service. | Trace/log/metric evidence; a skill cannot supply a telemetry backend. |
+| Run recurring inspections | Use an available scheduler below after defining the observation workflow. | Signal, threshold, owner and durable event/alert. |
+| Respond to an actionable failure | Continue to [Diagnose](#11-diagnose--remediate). | An owned investigation, not another overlapping monitor. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -151,7 +343,22 @@ environment approval over credentials embedded in an interactive session.
 Monitoring must emit durable events or alerts. A recurring agent prompt is orchestration, not an
 observability backend.
 
+</details>
+
 ### 11. Diagnose & Remediate
+
+Find the cause, correct it and preserve the evidence.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Diagnose an unclear bug | Use native debug/tools or your preferred diagnosis procedure to reproduce the symptom and test hypotheses. | Minimal repro and supported causal explanation. |
+| Repair a known CI/review/security failure | Use the matching fix capability below and the source finding; clarify incomplete reports first. | Scoped correction linked to the original finding. |
+| Verify remediation | Re-run the original failure and relevant regression checks; use a separate reviewer when independence matters. | Verified finding disposition and remaining limitations. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -162,7 +369,23 @@ observability backend.
 Feed incident findings into `work/<id>/findings.md`, tests, and checks. Do not leave the only causal
 record in a vendor conversation.
 
+</details>
+
 ### 12. Maintain the engineering system
+
+Improve the engineering system in response to observed friction.
+
+**Choose by purpose**
+
+| When you need to… | Use | Keep / check |
+|---|---|---|
+| Inspect client health or loaded extensions | Use native doctor/context/config tools and the canonical inventory for that surface. | Actual availability and drift evidence. |
+| Improve repo instructions | Use `hr-onboard` for non-obvious repo friction, or an existing procedure that serves the same need. | A pruned instruction, procedure or deterministic check. |
+| Address architectural friction | Investigate a recurring maintenance problem, compare design options and select one supported by evidence. | One justified improvement rather than a general rewrite. |
+| Improve stack-specific checks or tests | Use existing test/lint/boundary tools or a suitable stack-specific skill. | Targeted tooling, with declared dependencies. |
+
+<details>
+<summary>Tools by agent — availability and constraints</summary>
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -173,11 +396,16 @@ record in a vendor conversation.
 Move procedures out of always-loaded instruction files and into project-prefixed skills. Use
 scheduled audits only when their output has an owner and a durable destination.
 
+</details>
+
 ---
 
 ## Cross-cutting architecture concerns
 
 ### Control Plane & Authority
+
+Use host permissions and protected CI for enforceable controls. A third-party or project skill
+can describe a procedure; it does not create a cross-agent permission boundary.
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
@@ -192,6 +420,10 @@ cannot silently redefine.
 
 ### Evidence & System of Record
 
+Use an existing durable work record when another session must continue, fix or verify the result.
+The optional [work artifact pilot](../templates/work/README.md) illustrates the required pointers;
+a repository-visible handoff must still be transferred to a new checkout or host.
+
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
 | Claude Code | Git + CI + `work/<id>/` | project tests/checks | project | **N/A** for a purpose-built agent-configuration evaluation suite | Preserve decisions, changes, verification, and operational findings outside the conversation |
@@ -205,6 +437,9 @@ relevant instruction, hook, permission, sandbox, or CI configuration changes. A 
 only its encoded contract; it does not replace independent review.
 
 ### Human Governance
+
+Questionnaires, explanation and learning procedures may help the people making decisions.
+They are optional support, not required lifecycle gates.
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|

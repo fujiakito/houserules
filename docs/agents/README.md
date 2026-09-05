@@ -3,6 +3,24 @@
 One file per agent. What it ships with, what you have to install, and how to check on your own
 machine.
 
+## Choosing from an inventory
+
+This is a reference for people comparing capabilities or adding agent support. [GUIDE.md](../GUIDE.md)
+helps locate the stage; the relevant inventory supplies the details. These files are not installed
+or automatically loaded as agent instructions.
+
+| Question | Useful evidence |
+|---|---|
+| Which operation and artifact are involved? | The current task and its [work artifact](../../templates/work/README.md), when present |
+| Does this option fit the active surface? | Agent, surface, version, capability section and known traps |
+| Is it actually available here? | Installed/enabled/model-visible state, checked with the inventory's enumeration procedure; inaccessible state remains `unknown` |
+| How do overlapping skills differ? | Actual source, trigger, outputs, dependencies and authority; similar names alone do not establish equivalence |
+| Can the user's preferred skill do the job? | Required outputs/evidence and remaining gaps; project/global/plugin visibility may be incomplete |
+
+An existing user skill can remain the selected implementation when it meets the contract. Comparing
+options does not require replacing or disabling it. An agent asked to make this comparison can be
+given the relevant inventory explicitly; no routing skill or automatic trigger is implied.
+
 ## Why one file per agent, and not one big table
 
 The stage guide in `../GUIDE.md` answers *"at this stage, what do I use?"* — it needs every agent

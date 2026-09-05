@@ -3,14 +3,18 @@
 **A portable agent layer for a repository — the part that does not ship with your agent, and does not
 die when you switch.**
 
-Most of the software lifecycle is already built into modern coding agents: planning, parallel
-implementation, verification, review, security scanning, maintenance. That is why this is small. It
-carries only the two things a vendor cannot give you:
+**Scope: the full SDLC, through portable contracts and optional, evaluated fallback skills.**
+Today the installer supplies repository instructions, `hr-onboard`, `check.py` and its ownership
+record. Six optional work templates are available separately as pilots; no new fallback skill
+has been shipped or evaluated yet.
+Coverage means each stage can communicate its inputs, outputs, evidence and next action when the
+agent changes. Capability availability varies by surface; use the implementation that fits the task.
+The shared layer carries:
 
 1. **What is true about *this* repository** — the non-obvious rules an agent cannot read off the code
-2. **What survives an agent switch** — because most mature adopters run more than one agent, and a
-   sizeable share have already dropped one *(figures from an unpublished prior scan; see
-   `research/PORTABILITY.md` §0)*
+2. **What survives an agent switch** — decisions, work state and evidence another agent can consume
+3. **Procedures for demonstrated gaps** — optional fallbacks when available tools or user skills
+   do not satisfy the task contract; admitted under [these criteria](research/PORTABILITY.md#4-what-the-boilerplate-therefore-ships)
 
 The name is what an entry has to answer before it goes in: **does this earn its place?**
 
@@ -68,7 +72,8 @@ Linux, `python3` may be the name.
 
 There is no uninstaller, because there is nothing to unwind: delete `AGENTS.md`, the `@AGENTS.md`
 line from `CLAUDE.md`, `check.py`, and the `hr-onboard` directory under each agent's skills path.
-Everything this installs is a plain file.
+Also remove `.houserules/skills.json` when removing the managed layer. Preserve your own content
+in files you have edited. Everything this installs is a plain file (or an optional skill symlink).
 </details>
 
 ## What it installs
@@ -79,20 +84,40 @@ Everything this installs is a plain file.
 | `CLAUDE.md` containing `@AGENTS.md` | **required, not an adapter.** Without it Claude Code ignores `AGENTS.md` and raises no error |
 | `hr-onboard` skill, in documented nested-Skill paths | one source is copied to each configured path. Antigravity CLI's documented flat `.md` variant is not synthesized; the current coverage and open test live in [`research/MATRIX.md` §2](research/MATRIX.md#2-skills--the-same-standard-three-different-paths) |
 | `check.py` | the only portable enforcement: a script with an exit code binds regardless of which agent, or human, made the change |
+| `.houserules/skills.json` | managed skill names, selected project paths and source digests; commit it with the installed layer |
+
+Skill sync checks only those recorded copies. Foreign skills are preserved; local name and
+frontmatter checks still apply. Digests normalize CRLF/LF in UTF-8 text so ordinary Git checkout
+conversion does not cause drift; binary content stays byte-exact. Global/plugin discovery and runtime loading are outside this
+offline check. Without a record, a path matching a shipped skill name fails with ownership
+unknown; unrelated user skills only produce a warning. The name does not claim ownership.
+Inspect the paths, then rerun the installer with your intended `--agents` selection to establish
+the record. Later selections add paths; they do not uninstall previous ones. Known conflicts
+stop installation before writes across the selected skill paths and root checker. For skill-path
+conflicts, resolve the conflict or select only the non-conflicting agents. A root `check.py`
+conflict applies to every selection: review and reconcile that file with the shipped source first.
+User content stays untouched. This preflight does not provide rollback for filesystem errors or
+concurrent edits.
+
+When a skill's source changes, the shared digest can advance only if the selection covers all
+previously recorded paths for that skill. Partial upgrades stop before writes, including with
+`--force`; select agents covering those paths (or `--agents all`) and inspect content conflicts.
+The installer does not automatically distinguish a safe old-version upgrade from user edits.
 
 ## What it deliberately does not install
 
-Hooks, subagent definitions, plugins, recipes — all per-vendor formats — and **anything that
-duplicates a built-in**. `/init`, `/verify`, `/code-review`, `/doctor` already exist and are better
-integrated than a reimplementation would be. Rebuilding them is the mistake the surveyed frameworks
-made: measured adoption of every AI-native SDLC framework checked was essentially zero.
+Vendor hooks, subagent definitions, plugin bundles and a mandatory skill for every stage. Use your
+preferred native, third-party or project capability when it satisfies the contract. Researching an
+external skill does not make it a dependency or recommendation.
+
+`hr-onboard` is the only shipped skill today. The [work templates](templates/work/README.md) are
+optional pilots; full SDLC is the design scope, not a claim that every workflow has been validated.
 
 ## The rule everything follows
 
-> A capability that must survive an agent switch can be expressed as exactly three things:
-> **text in `AGENTS.md`**, **an MCP server**, or **a CI check**.
->
-> Everything else is vendor-local convenience. Use it. Do not depend on it.
+> Keep repository rules and work contracts portable. Use available tools to execute them, and
+> deterministic checks to enforce what can be enforced. Add a fallback procedure only for a
+> demonstrated gap; keep surface-specific adapters outside its core.
 
 ## Files
 
@@ -108,10 +133,11 @@ research/MATRIX.md         8 agents x 6 extension mechanisms, with check dates a
 research/PORTABILITY.md    what dies on a switch, and what the portable layer must therefore carry
 templates/AGENTS.md        mostly empty, with the inclusion test that keeps it that way
 templates/CLAUDE.md        the required import line
-templates/work/            cross-session, cross-agent wire format — handoff.md, findings.md
+templates/work/            optional handoff, spec, plan, review, findings and verification contracts
 templates/skills/          hr-onboard — discovery by attempting, not by scanning
 install.py                 one source of truth into every agent's path
-check.py                   guards six failures that are otherwise silent
+check.py                   checks instruction integrity, skill names/frontmatter, sync and inventory drift
+tests/                     installer/coexistence regressions and a worked contract pilot
 ```
 
 ## Evidence

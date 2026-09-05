@@ -17,6 +17,35 @@
 
 # Findings
 
+<!-- Optional pilot convention for new findings: use stable IDs (F-001, F-002...) and append
+     lifecycle events below. Existing dated entries remain valid historical records; assign
+     an ID by a new linking entry when a later session needs to act on one. -->
+
+## F-001
+
+**Recorded:** YYYY-MM-DD; stage; reviewer/session; severity: blocker | should-fix | note
+
+**Target:** artifact path/URL + revision/digest, or code base/target and working-tree scope.
+
+**Requirement:** criterion/standard ID or source location.
+
+**Observation and evidence:** what is wrong and where it can be observed.
+
+**Consequence:** why it matters. Keep proposed fixes separate from the observation.
+
+### Event FE-001 — F-001 — YYYY-MM-DD — <owner/session>
+
+**State:** proposed-fix | verified | reopened | rejected | accepted-risk
+
+**Evidence:** changed revision + verification record, or reason and decision owner for rejection
+or accepted risk. A proposed fix leaves the finding open. Verification names who checked what
+on which revision; later changes can reopen it. Record no secret values.
+
+---
+
+<!-- Original entry forms below remain usable. Choose one finding form; do not duplicate the
+     same finding in both forms or in a review report. -->
+
 <!-- One block per finding. Keep the header line machine-parseable so a later stage can filter. -->
 
 ## [YYYY-MM-DD] [stage] [owner] [severity: blocker | should-fix | note]

@@ -9,8 +9,9 @@ This matters because teams do switch.
 
 > ⚠️ **These numbers are not externally sourced.** A prior scan of **91 mature adopters** found
 > **79% carrying two or more vendor surfaces and 31% having dropped one**, with dated arrivals and
-> departures. The **2,424 repositories** figure in `templates/work/README.md` comes from the same
-> scan.
+> departures. The **2,424 repositories** figure came from the same scan and was removed from
+> `templates/work/README.md` on 2026-09-05. It is retained here only as a historical, unverified
+> claim; it no longer supports the template guidance.
 >
 > **The scan is unpublished and its method is not recorded here, so by this project's own evidence
 > rule these are `(unverified)`.** They are retained because the design decisions they support —
@@ -54,17 +55,25 @@ part of the tool.
 
 ## 3. The rule
 
-> **A capability that must survive an agent switch can be expressed as exactly three things:**
+> **Project scope, adopted 2026-09-05: full SDLC coverage through portable contracts, with
+> optional, evaluated fallback skills for demonstrated gaps.**
 >
-> 1. **text in `AGENTS.md`**
-> 2. **an MCP server**
-> 3. **a CI or git-hook check**
->
-> Anything else is vendor-local convenience.
+> Repository rules and work artifacts carry context; skills carry procedures; tools execute;
+> deterministic checks enforce their encoded conditions. Loading and invocation may need a
+> surface adapter. Portable content alone does not prove runtime compatibility.
 
-Vendor-local convenience is not a bad thing — it is usually better than what you would build, and it
-is free. **Use it. Do not depend on it.** The test is whether the repository still works correctly
-for someone arriving with a different agent.
+Use an available native, third-party or user-owned implementation when it satisfies the contract.
+The test is whether another agent can recover the inputs and produce acceptable outputs/evidence.
+
+**Revised 2026-09-05:** the prior rule limited portable capabilities to `AGENTS.md` text, MCP
+and CI checks, with "Use it. Do not depend on it" for vendor conveniences. Section 4 and
+`AGENTS.md` also excluded every capability duplicating any agent built-in. That blanket exclusion
+is now narrowed: a built-in on one surface does not fill a demonstrated gap on another. The
+adopted scope keeps portable contracts central and admits optional fallbacks only under section
+4's evidence and coexistence criteria. This is a project scope decision authorized by the user,
+not a new claim that skill execution is universally portable. The earlier
+[fallback analysis](MATT-POCOCK-SKILLS.md#does-a-portable-fallback-fit-the-project) records the
+research rationale; it does not endorse or install that provider's skills.
 
 ### The corollary that resolves the hook question
 
@@ -121,7 +130,32 @@ assertions are sufficient, and it does not replace independent review.
 | agent hooks | per-vendor schema; ships as a CI check instead, optionally mirrored |
 | subagent definitions | per-vendor format |
 | plugin or recipe bundles | per-vendor format |
-| **anything that duplicates a built-in** | `/init`, `/verify`, `/code-review`, `/doctor` already exist and are better integrated. Rebuilding them is the mistake the surveyed frameworks made |
+| **automatic replicas of built-ins or one skill per stage** | a stage is not a procedure; a new skill must pass the admission criteria below |
+
+### Fallback admission criteria
+
+Before adding an optional `hr-` skill, record:
+
+1. **Concrete gap:** target operation/artifact, agent surface/version, expected contract and an
+   observed failure. Missing from an inventory means unknown, not absent. An equivalent built-in
+   on another surface does not disqualify a fallback here.
+2. **Existing choices:** compare the user's preferred skill, available native/third-party options
+   and a direct procedure. Assess outputs, authority and dependencies, not names alone.
+3. **Small coherent procedure:** define trigger, inputs, outputs, completion/stop conditions and
+   relevant rubric. Split skills when triggers or procedures differ substantially; spec review
+   and code review can share a review contract while using different expertise.
+4. **Portable core:** prefer dependency-free instructions and ordinary artifacts. Declare necessary
+   tools; isolate surface bindings in adapters. Do not require a router or proprietary tracker.
+5. **Evidence:** compare baseline and candidate on representative tasks with recorded outcomes,
+   cost and failure cases. Validate consumption in fresh sessions on the claimed surfaces. A
+   self-review pilot or file copy is not evidence of cross-agent execution.
+6. **Coexistence and provenance:** optional selection, `hr-` identity, explicit installer ownership,
+   preserved user skills, upstream revision/license notices for adapted material, and a maintainer
+   and recheck trigger. Promote only where the evidence supports it.
+
+These are project design decisions, not a claim of a universally optimal architecture. No new
+fallback or routing skill is adopted by this scope change. Capability facts stay in `docs/agents/`;
+dated research snapshots are revisited only when evaluating a concrete candidate.
 
 ## 5. The handoff contract
 
@@ -182,6 +216,11 @@ row. Do not cite the overview row as if it were settled.
 
 ## Open items
 
+- **Artifact pilot validation:** the optional templates in
+  [`templates/work/`](../templates/work/README.md) still need a real cross-session/agent
+  trial. The [worked pilot](../tests/workflows/README.md) records this task's shared-context
+  spec-review and code-fix evidence, including stale revisions; it does not establish fresh-context
+  recovery or cross-host compatibility. No artifact-schema gate is claimed.
 - Whether Goose has a standalone hook mechanism at all
 - Antigravity has a full official inventory across four core products and its Remote/API/Enterprise
   modes but no local surface test; Kiro and the remaining
