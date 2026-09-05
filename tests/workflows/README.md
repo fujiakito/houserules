@@ -209,3 +209,10 @@ forced directory replacement was performed.
 **Next consumer:** independently recheck AC-014–017. A successful upgrade requires the complete
 recorded path selection and resolved conflicts; automatic migration of a differing root checker
 is not implemented. No Linux CI run or fresh-agent skill loading was observed in this round.
+
+
+## Prior-art follow-up
+
+See the [paired artifact-consumption smoke trial](prior-art/README.md) for its frozen
+packets, outcome rubric, execution status and limitations. This is separate from the historical
+author-only pilot above; neither upgrades untested vendor surfaces.

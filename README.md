@@ -119,9 +119,12 @@ optional pilots; full SDLC is the design scope, not a claim that every workflow 
 > deterministic checks to enforce what can be enforced. Add a fallback procedure only for a
 > demonstrated gap; keep surface-specific adapters outside its core.
 
+See the [enforcement map](docs/ENFORCEMENT.md) for what current checks establish and what requires review.
+
 ## Files
 
 ```
+docs/ENFORCEMENT.md        current mechanical checks, review responsibilities and limits
 docs/GUIDE.md              the AI-native SDLC: 12 stages + 3 cross-cutting concerns — for you
 docs/agents/claude-code.md the full Claude Code inventory: surfaces, bundled skills, subagents,
                            hooks, permission modes, artifacts, scheduling, plugins, limits

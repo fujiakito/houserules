@@ -33,14 +33,19 @@ Amazon Q Developer is being wound down — new signups blocked 2026-05-15, full 
 2027-04-30, with AWS directing users to **Kiro**, which is in this table — Gemini CLI is being
 replaced by Antigravity CLI, Cursor was acquired
 and shipped a git forge, all within twelve months. **Every row below is a claim about a date, not a
-permanent fact.** Re-run the local tests on each recheck; they take minutes and settle what
+permanent fact.** A 2026-09-05 documentation recheck also confirms Goose moved to the
+Agentic AI Foundation (AAIF); use the current [official documentation host](https://goose-docs.ai/docs/guides/context-engineering/using-skills/)
+for future rechecks. This changes neither its skill path nor its `documented` grade. Re-run the local tests on each recheck; they take minutes and settle what
 documentation disputes.
 
 Status: **Claude Code and Codex are `tested`** — real installations, surfaces and versions recorded
 (with any historical environment gap explicit), and the
 only two this project should be described as supporting. **Goose, Cursor, Copilot, OpenCode,
 Antigravity and Kiro are `documented`**: their rows cite official pages with retrieval dates, and
-none has been run. Windsurf is backlog.
+none has been run. Zed has supplemental documented skill-path coverage below. The Windsurf documentation URL
+redirected to Devin Desktop Cascade documentation on 2026-09-05; the supplemental row records
+that source observation, not a verified product identity. Remaining mechanisms and runtime
+behavior are backlog.
 
 ---
 
@@ -78,11 +83,21 @@ one vendor's surfaces; the location is not portable either.**
 | **Claude Code** | `.claude/skills/<name>/SKILL.md` | `~/.claude/skills/` | `.claude/commands/*.md` still works (merged into skills). **`tested`** — Claude Code CLI/Desktop session v2.1.251, 2026-08-31 |
 | **Copilot** | **`.agents/skills`**, `.claude/skills`, `.github/skills` | `~/.copilot/skills`, **`~/.agents/skills`** | `documented`, retrieved 2026-09-01 |
 | **Codex** | **`.agents/skills/`** — searched from cwd up to repo root | **`~/.agents/skills/`** | `/etc/codex/skills` admin, plus plugin `skills/` and the vendored catalogue. **Invoked with `$<name>`, not `/`**. Project path `tested`: CLI 0.151.0-alpha.7.2 baseline (process environment not recorded), 2026-08-31; reconfirmed in the Desktop Codex-mode task and its sandbox-launched CLI 0.153.0 child, 2026-09-04. Other locations `documented`, [official Build skills](https://learn.chatgpt.com/docs/build-skills), retrieved 2026-09-04 |
-| **Goose** | **`.agents/skills/`** | **`~/.agents/skills/`** | `~/.agents/plugins/<name>/`; legacy `.goose/skills/` still read but **deprecated in favour of `.agents/skills/`**. `documented`, retrieved 2026-09-01 |
+| **Goose** | **`.agents/skills/`** | **`~/.agents/skills/`** | `~/.agents/plugins/<name>/`; legacy `.goose/skills/` still discovered; `.agents/skills/` is recommended. `documented`, [official skills](https://goose-docs.ai/docs/guides/context-engineering/using-skills/), retrieved 2026-09-05 |
 | **Antigravity** | **2.0/IDE:** `<project-root>/.agents/skills/<name>/SKILL.md`; **CLI:** `.agents/skills/*.md` | **2.0/general:** `~/.gemini/config/skills/`; **IDE:** `~/.gemini/antigravity/skills/`; **CLI:** `~/.gemini/antigravity-cli/skills/` | `.agent/skills` remains a 2.0/IDE legacy fallback. The shared directory name hides different file-layout and global-path contracts. **`documented`**, [2.0 Skills](https://antigravity.google/docs/skills), [IDE Skills](https://antigravity.google/docs/ide/skills), and [CLI Plugins & Skills](https://antigravity.google/docs/cli/plugins/), retrieved 2026-09-04 |
 | **Cursor** | **`.agents/skills/`** and `.cursor/skills/` | **`~/.agents/skills/`**, `~/.cursor/skills/` | Also loads `.claude/skills/` and `.codex/skills/` for compatibility. Not copied to Cloud Agents — use project skills there. `documented`, retrieved 2026-09-01 |
 | **Kiro** | `.kiro/skills/` | project or global | Default agent loads `.kiro/skills/` and `~/.kiro/skills/`; a custom agent needs a `skill://` resource entry. `documented`, retrieved 2026-09-01 |
 | **OpenCode** | `.opencode/skills/`, `.claude/skills/`, **`.agents/skills/`** | `~/.config/opencode/skills/`, `~/.claude/skills/`, **`~/.agents/skills/`** | Walks up to the git worktree, loading each match along the way. `documented`, retrieved 2026-09-01 |
+
+### Supplemental skill-path coverage (2026-09-05)
+
+These are official-documentation observations, not additional tested agents or installer targets.
+The eight-agent comparison below retains its original denominator.
+
+| Surface | Project / user paths | Evidence and limit |
+|---|---|---|
+| Zed Agent | `.agents/skills/`; `~/.agents/skills/` | `documented`, [Skills](https://zed.dev/docs/ai/skills), retrieved 2026-09-05. Named directories with SKILL.md; project loading requires a trusted worktree. Does not establish external-agent behavior inside Zed |
+| Windsurf / current Devin Desktop Cascade docs | `.windsurf/skills/`; `~/.codeium/windsurf/skills/`; also `.agents/skills/` and `~/.agents/skills/` | `documented`, [Cascade Skills](https://docs.devin.ai/desktop/cascade/skills), retrieved 2026-09-05 via the redirected Windsurf documentation URL. Named directories with SKILL.md; no local runtime or historical-version claim |
 
 > **`.agents/skills/` has become the majority path — reversing what this section said before.**
 > Per official documentation retrieved through 2026-09-04, it is read by **Codex, Goose,
@@ -345,7 +360,7 @@ Three results from those files that this comparison depends on:
 | Claim-level sourcing | This file carries a document-level "checked" date. Volatile rows should each carry their own official link and retrieval date; several now do, most do not |
 | Antigravity local verification | Windows presence audit found 2.0 v2.11.0 and IDE v2.5.5 installed; neither was run or capability-enumerated. CLI/SDK were not locally enumerated and `agy` was absent from `PATH`. Test the exact checklist in `docs/agents/antigravity.md` section 15 before calling any capability `tested`; treat Remote Control and the managed API separately |
 | Tier 2/3 | Kiro — Cursor and Copilot now have sourced skill-path rows |
-| Windsurf | backlog |
+| Zed / Windsurf | Skill paths documented in section 2, 2026-09-05; other mechanisms and runtime loading remain backlog |
 
 
 ---

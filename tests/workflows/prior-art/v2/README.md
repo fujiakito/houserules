@@ -1,0 +1,36 @@
+# V2 controlled packet comparison
+
+Prepared 2026-09-05 in response to review R-003 / F-001. **Not run.**
+The [v1 attempt](../README.md) and its hashes remain unchanged as evidence of that attempt.
+Use this input set for a future trial, not the superseded v1 packets.
+
+Both [baseline](baseline-prompt.md) and [candidate](candidate-prompt.md) contain the exact same
+consumer-protocol bytes and task facts. Only the session-note/handoff presentation varies.
+The [rubric](rubric.md) evaluates dispositions; protocol repetition is not a scored outcome.
+This resolves the unequal-instruction control problem without changing historical inputs.
+A win would concern this combined handoff presentation only, not broad portability or skill admission.
+
+## Frozen inputs
+
+SHA-256 covers exact file bytes, including line endings.
+
+| Input | SHA-256 |
+|---|---|
+| baseline-prompt.md | `de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5` |
+| candidate-prompt.md | `c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c` |
+| rubric.md | `4a2126bdd5d96ff469c1c3a39b2530c820fa3ca4c7846efb66a7bac9436cba67` |
+
+## Next execution requirements
+
+No retry was performed in this revision. For a future attempt:
+use a 300-second per-arm process deadline as a chosen budget, not a proven sufficient timeout.
+Retain partial stdout/stderr on timeout and record outcome as indeterminate, not a diagnosed
+infrastructure defect. Preserve the v1 metadata unchanged. Store a new attempt record with:
+UTC start/end timestamps, exact argv, timeout_seconds, surface/version, actual model/provider
+(or explicitly unavailable), configuration/permissions, working directory and input hashes,
+exit/timeout status, elapsed time, output/diagnostic paths and available token/cost totals.
+Do not expose credentials. Missing usage is unknown, not zero. Keep progress reporting separate
+from the process deadline, and do not increase the deadline repeatedly to obtain a desired score.
+
+A completed synthetic pair is only a smoke test. Real task artifacts, actual consumption and
+fresh-session evidence remain required before a promotion claim.
