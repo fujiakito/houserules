@@ -57,10 +57,26 @@ its evidence is currently reusable. A successful command with a missing target c
 Only the **latest command** is the current result. Use a project check that covers the necessary
 gates together when acceptance needs multiple checks; prior attempts remain in the record.
 
+### Match the claim to the evidence
+
+| Claim | Evidence to inspect | Does not establish it |
+|---|---|---|
+| Tests pass | Named test command, result and tested revision/environment | A test file that was only written |
+| Build succeeds | Actual build command and successful result | Lint or unit tests alone |
+| Requirements met | Each criterion linked to observed behavior, a check or an inspected artifact | An unrelated green suite |
+| Bug fixed | Original failing scenario succeeds at the corrected revision, with relevant regression evidence | A plausible edit or the fixer's completion report |
+
+Reuse an adequate recorded run when its selected inputs/log are unchanged and its environment is
+still relevant. Recheck changed behavior, stale evidence or a new unresolved doubt; do not rerun
+only to make the result belong to the current message. Workflow status validates selected bytes,
+not the relevance or sufficiency of a check. For example, unchanged files do not establish that a
+deployment is still healthy. State what remains unverified instead of upgrading a partial result.
+
 ## What the controls cover
 
 - Bounds apply only to commands invoked through workflow.py. They do not cap surrounding chat,
-  token use, API charges or other processes. A timeout stops the direct child, not necessarily
+  token use, API charges or other processes. A timeout exhausts the remaining command budget;
+  recorded elapsed time remains the actual measured duration. It stops the direct child, not necessarily
   detached descendants; use short-lived verification commands.
 - Freshness covers exact selected files and log bytes, not the entire repository, dependencies,
   network state or environment. Choose targets deliberately; this is not tamper-proof attestation.
@@ -93,6 +109,9 @@ For this project, apply them as follows:
 
 ## What our existing runs show
 
+Model-specific prompting guidance is in [Model differences](#model-differences); the observations
+below are execution records, not a comparison of model quality.
+
 Read from the original Codex CLI 0.153.4 JSONL and metadata on 2026-09-06; configured
 gpt-6-astra / medium. The [acceptance report](../tests/workflows/toolkit-adoption/README.md#independent-cli-attempts-and-limits)
 records the blockers. Each row below has one `turn.completed` event, not a sum of snapshots.
@@ -107,3 +126,21 @@ Cached counts are displayed as reported, not added again. Dollars and subscripti
 attributable to these attempts are unknown. There is no measured before/after saving yet.
 The actionable next measurement is completed task outcome plus resource use under the bounded
 retry procedure, not another replay of an unchanged infrastructure failure.
+
+## Model differences
+
+Keep task inputs, acceptance criteria, evidence and handoff content stable across models.
+Host adapters own discovery, tool calls and permissions; model settings and measured wording
+adjustments belong in the harness, rather than every portable skill.
+
+Official guidance retrieved **2026-09-06**:
+
+| Model / source | What to calibrate |
+|---|---|
+| [GPT-6 Astra](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6-astra) | Audit conflicting instructions, unnecessary approval pauses and repeated checks. State when already-authorized work continues; configure delegation and effort for the task. |
+| [Claude Fable 5.1](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1) | Existing Fable 5 prompts generally remain usable. Check complete delivery of long tasks, progress updates, scope/test expansion and preservation of constraints during compaction. |
+
+For these and future models, change guidance when an observed failure and a local comparison
+justify it; consult current official guidance where available. A newer model does not imply
+that every prompt should be shorter or every skill removed. Preserve the user's selected model.
+These are tuning considerations, not measured quality or usage improvements in this project.

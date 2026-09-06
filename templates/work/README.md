@@ -27,6 +27,13 @@ Copy selected templates into work/<id>/ or the existing project convention. Leav
 6. Save output where the next consumer can reach it. Update the handoff; append completed review,
    verification and finding events rather than rewriting history.
 
+For each finding, check the stated requirement and observation against the declared revision before
+accepting the proposed fix. A rejection needs a concrete counterexample, code/artifact reference or
+check result, plus the decision owner; disagreement alone is insufficient. A real defect deferred
+by an authorized owner is accepted risk, not a false positive. Use the existing
+[finding event states](findings.md), linking the changed revision and evidence before marking a fix
+verified. If one item needs clarification, continue independent, clear and authorized items.
+
 ## Bound the work and record usage
 
 The short execution entry at .houserules/START.md owns the budget/retry method. Use its installed

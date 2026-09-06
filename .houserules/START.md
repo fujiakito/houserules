@@ -17,6 +17,11 @@ that will resume, use the local workflow tool:
 5. On repeated blockers or exhausted budget, record what changed and the next owner/action in
    the existing work record. Do not create another task id merely to evade the budget.
 
+Tie each completion claim to evidence for that criterion: tests, build, requirements or the original
+bug scenario. For executable claims, name the command and inspected result; reuse recorded runs
+only after checking freshness and relevant environment changes. A passing test does not by itself
+prove requirement coverage; identify the artifact or behavior inspected for non-executable criteria.
+
 workflow.json retains command attempts, target hashes, logs, elapsed time and raw reported usage.
 Unknown tokens/cost remain unknown. This tool bounds commands invoked through it; it does not
 meter the surrounding chat, prove semantic correctness, or enforce provider spending limits.

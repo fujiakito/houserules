@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'templates/workflow.py'
 spec = importlib.util.spec_from_file_location('workflow', SCRIPT)
@@ -86,6 +87,22 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.run_code('import time; time.sleep(5)').returncode, 1)
         self.assertEqual(self.state()['runs'][0]['outcome'], 'timeout')
         self.assertEqual(self.run_code("print('retry')").returncode, 2)
+
+    def test_timeout_below_allocation_preserves_elapsed_and_blocks_side_effect(self):
+        self.start('--max-seconds', '1')
+        argv = ['--repo', str(self.repo), 'run', 'example', '--', 'controlled-command']
+        with patch.object(workflow.subprocess, 'run',
+                          side_effect=subprocess.TimeoutExpired('controlled-command', 1)), \
+                patch.object(workflow.time, 'monotonic', side_effect=[10, 10.25]), \
+                patch('builtins.print'):
+            self.assertEqual(workflow.main(argv), 1)
+        before = self.state()
+        self.assertEqual(before['runs'][0]['elapsed_seconds'], 0.25)
+        self.assertEqual(before['runs'][0]['outcome'], 'timeout')
+        result = self.run_code("open('unwanted.txt', 'w').write('bad')")
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse((self.repo / 'unwanted.txt').exists())
+        self.assertEqual(self.state(), before)
 
     def test_invalid_ids_and_budget_are_read_only(self):
         for task, budget in [('../escape', '1'), ('valid', '0'), ('valid', 'nan')]:

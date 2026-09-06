@@ -36,11 +36,15 @@ Turn the reproduction into a regression at the actual failure boundary before fi
 red, apply the minimal change, confirm green, then rerun the original scenario and relevant
 regressions. If a suitable test boundary is absent, report that limitation explicitly.
 
+If fixes repeatedly fail the original scenario, revisit the causal hypothesis and relevant
+design assumptions before another edit; record what new evidence justifies the next attempt,
+and respect the task's existing retry budget and stop conditions.
+
 Remove only instrumentation introduced for this task and only within authorized paths. Respect
 repository cleanup policy; retain clearly identified debug artifacts when removal is not allowed.
 Record the cause, target revision, commands/results and unresolved limitations. For cross-session
 work, use existing project records or selected `.houserules/work/findings.md` and
 `verification.md` templates. A proposed fix is not a verified finding disposition.
 
-This adaptation requires no Bash harness, tracker or other skill. Human interaction is needed only
-when the chosen reproduction actually depends on it. [Source and changes](NOTICE.md).
+This adaptation requires no Bash harness, tracker or other skill. Escalate when missing input or
+authority blocks further progress. [Source and changes](NOTICE.md).

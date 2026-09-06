@@ -44,6 +44,9 @@ next action. Say no findings where appropriate. Disclose self-review/shared cont
 review is supported, and independent sessions may be used when available and warranted. No
 parallel agents are required. Do not equate different owner names with independence.
 
+Use the project's severity scale; when using the selected `.houserules/work/findings.md` template,
+follow its vocabulary. If neither provides a scale, define the labels in the report by consequence.
+
 For durable work, use the existing project record or selected `.houserules/work/review.md` and
 `findings.md` templates. Append a new round for a changed target; do not carry forward the old
 pass without reassessment. A review does not authorize commit, publishing or release.

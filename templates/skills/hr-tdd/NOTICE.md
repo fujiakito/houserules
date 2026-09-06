@@ -12,5 +12,9 @@ optional local artifact guidance; no mandatory external tracker, companion skill
 or parallel agents. Tests and real use establish only the reported surface/operation, not
 comparative superiority. Status: experimental, explicitly selected by the adopter.
 
+2026-09-07 local refinement: permit optional behavior-preserving refactoring within a green
+slice, followed by covering tests; keep broader redesign outside the task. This changes the
+earlier adaptation's instruction to review all refactoring separately. No upstream files added.
+
 Maintainer: houserules maintainers. Recheck on an upstream update proposed for adoption or a
 reported behavior failure. No background downloads or updates are performed.

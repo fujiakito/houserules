@@ -218,7 +218,8 @@ def same_tree(src: Path, dst: Path) -> bool:
     return tree_hash(src) == tree_hash(dst)
 
 
-def place(src: Path, dst: Path, link: bool, check: bool, force: bool) -> str:
+def place(src: Path, dst: Path, link: bool, check: bool, force: bool,
+          managed: bool = False) -> str:
     """Install src at dst.
 
     Refuses to replace a directory that already holds something different, because that
@@ -228,6 +229,10 @@ def place(src: Path, dst: Path, link: bool, check: bool, force: bool) -> str:
     if same_tree(src, dst) or (link and dst.is_symlink() and dst.resolve() == src):
         return "unchanged"
     if (dst.exists() or dst.is_symlink()) and not force:
+        if managed:
+            return ("CONFLICT - recorded installed copy differs from current source "
+                    "(older version or local modification); compare and preserve local changes "
+                    "before using --force to overwrite it")
         return ("CONFLICT - a different skill of this name is already here; "
                 "rename yours or pass --force to overwrite it")
     if check:
@@ -407,7 +412,8 @@ def main() -> int:
     conflicts = []
     for rel in sorted(selected):
         for skill in skills:
-            outcome = place(skill, repo / rel / skill.name, a.link, True, a.force)
+            managed = rel in (previous or {}).get("skills", {}).get(skill.name, {}).get("paths", [])
+            outcome = place(skill, repo / rel / skill.name, a.link, True, a.force, managed)
             if outcome.startswith("CONFLICT"):
                 conflicts.append(f"{rel}/{skill.name}: {outcome}")
     outcome = place_file(HERE / "check.py", repo / "check.py", True, a.force)
@@ -438,7 +444,8 @@ def main() -> int:
                 print("    note: nested SKILL.md covers documented Antigravity 2.0/IDE;"
                       " CLI flat .md is not installed")
             for s in skills:
-                outcome = place(s, repo / rel / s.name, a.link, a.check, a.force)
+                managed = rel in (previous or {}).get("skills", {}).get(s.name, {}).get("paths", [])
+                outcome = place(s, repo / rel / s.name, a.link, a.check, a.force, managed)
                 results.append(outcome)
                 print(f"    {s.name:<28} {outcome}")
             print()

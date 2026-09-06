@@ -81,6 +81,10 @@ def read_state(path):
 def allowance(state):
     if any(run.get('outcome') == 'running' for run in state['runs']):
         return 0, 0, 'An interrupted or active run must be inspected; do not retry blindly'
+    # Each command receives all remaining time. Timeout exhausts that allocation even
+    # when clock resolution reports a slightly shorter actual duration; keep usage honest.
+    if any(run.get('outcome') == 'timeout' for run in state['runs']):
+        return 0, 0, 'Budget exhausted by timeout'
     remaining_runs = state['max_runs'] - len(state['runs'])
     remaining_seconds = state['max_seconds'] - sum(r['elapsed_seconds'] for r in state['runs'])
     reason = 'Budget exhausted' if remaining_runs <= 0 or remaining_seconds <= 0 else None

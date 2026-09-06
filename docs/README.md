@@ -42,6 +42,7 @@ their prose. Task acceptance, reviewer independence and authority remain explici
 | [MATRIX](../research/MATRIX.md) | Compare discovery/extension mechanisms; choose installer paths | Recheck changed or due claims before relying on them |
 | [PORTABILITY](../research/PORTABILITY.md) | Decide which behavior belongs in the shared layer | Apply admission criteria to a proposed fallback; revise when evidence changes |
 | [Matt Pocock study](../research/MATT-POCOCK-SKILLS.md) and [skill design](../research/SKILL-DESIGN.md) | Preserve rationale/provenance for skill decisions | Historical evidence; add corrections when reused, not periodic full rereads |
+| [Superpowers study](../research/SUPERPOWERS-SKILLS.md) | Maintainer selects a stage-specific fallback candidate and comparison baseline | Revisit when the selected upstream procedure, host adapter or target model changes |
 | [Workflow reports](../tests/workflows/README.md) | Reproduce or challenge a particular result | Retain dated scope/hashes; append new results rather than silently upgrading old claims |
 | Skill LICENSE / NOTICE files | Preserve upstream terms, revision and adaptation history | Update with imported content/revision changes |
 | [THIRD-PARTY](../THIRD-PARTY.md) | Reader checking what is original and what is adapted | Update when a skill's upstream source, revision or license changes |
