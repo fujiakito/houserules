@@ -42,7 +42,9 @@ Status: **Claude Code and Codex are `tested`** — real installations, surfaces 
 (with any historical environment gap explicit), and the
 only two this project should be described as supporting. **Goose, Cursor, Copilot, OpenCode,
 Antigravity and Kiro are `documented`**: their rows cite official pages with retrieval dates, and
-none has been run. Zed has supplemental documented skill-path coverage below. The Windsurf documentation URL
+native capability loading has not been run for those rows. Cursor and Kiro now have
+[dated inventories](../docs/agents/README.md) and local launcher/installer checks (2026-09-06);
+these do not promote their capabilities to tested. Zed has supplemental documented skill-path coverage below. The Windsurf documentation URL
 redirected to Devin Desktop Cascade documentation on 2026-09-05; the supplemental row records
 that source observation, not a verified product identity. Remaining mechanisms and runtime
 behavior are backlog.
@@ -65,7 +67,7 @@ comparative effectiveness and loading of these candidates on other surfaces rema
 | **Goose** | **`AGENTS.md`**, then `.goosehints` | project directories; `~/.config/goose/` global | Default is `["AGENTS.md", ".goosehints"]`, overridable with the `CONTEXT_FILE_NAMES` env var. All found files are combined. `documented`, retrieved 2026-08-31 |
 | **Cursor** | **`AGENTS.md`** | project root **and any subdirectory, no configuration** | Also `.cursor/rules/*.mdc`, and the Cursor CLI reads `CLAUDE.md` too. **No global `~/.cursor/AGENTS.md`** — cross-project instructions go to User Rules or Team Rules. `documented`, retrieved 2026-09-01 |
 | **Copilot** | **`AGENTS.md`** | repo root, plus nested per-subtree | Also reads `.github/copilot-instructions.md`, `.github/instructions/**`, **and `CLAUDE.md` and `GEMINI.md`**. Note the precedence: `.github/copilot-instructions.md` **outranks** `AGENTS.md`. `documented`, retrieved 2026-09-01 |
-| **Kiro** | **`AGENTS.md`** | loads as steering context from anywhere in the workspace tree | Plus `.kiro/steering/`. `documented`, retrieved 2026-08-31 — **not re-checked on 2026-09-01** |
+| **Kiro** | **`AGENTS.md`** | workspace root/subdirectories, plus global steering location | Custom-agent inheritance is disputed; see [Kiro inventory](../docs/agents/kiro.md#5-extension-points). [Steering](https://kiro.dev/docs/steering/), `documented`, retrieved 2026-09-06 |
 | **Antigravity** | **`AGENTS.md`** and `GEMINI.md` | ⚠️ **disputed:** CLI website says workspace root; installed 2.0 v2.11.0 built-in docs say walk from cwd to repository root; `~/.gemini/GEMINI.md` global | Neither discovery contract was exercised. `.agents/rules/*.md` adds Manual, Always On, Model Decision and Glob activation; `.agent/rules` is a legacy fallback. [Best Practices](https://antigravity.google/docs/cli/best-practices/), [Migration](https://antigravity.google/docs/gcli-migration), and [Rules](https://antigravity.google/docs/rules-workflows/), retrieved 2026-09-04; installed built-in `agy-customizations/docs/rules.md` inspected 2026-09-04. Precedence remains `(unverified)` |
 | **OpenCode** | **`AGENTS.md`** | project | Listed in section 2 as an `AGENTS.md` reader but omitted from this table until 2026-09-01. `documented`, retrieved 2026-09-01 |
 
@@ -92,8 +94,8 @@ one vendor's surfaces; the location is not portable either.**
 | **Codex** | **`.agents/skills/`** — searched from cwd up to repo root | **`~/.agents/skills/`** | `/etc/codex/skills` admin, plus plugin `skills/` and the vendored catalogue. **Invoked with `$<name>`, not `/`**. Project path `tested`: CLI 0.151.0-alpha.7.2 baseline (process environment not recorded), 2026-08-31; reconfirmed in the Desktop Codex-mode task and its sandbox-launched CLI 0.153.0 child, 2026-09-04. Other locations `documented`, [official Build skills](https://learn.chatgpt.com/docs/build-skills), retrieved 2026-09-04 |
 | **Goose** | **`.agents/skills/`** | **`~/.agents/skills/`** | `~/.agents/plugins/<name>/`; legacy `.goose/skills/` still discovered; `.agents/skills/` is recommended. `documented`, [official skills](https://goose-docs.ai/docs/guides/context-engineering/using-skills/), retrieved 2026-09-05 |
 | **Antigravity** | **2.0/IDE:** `<project-root>/.agents/skills/<name>/SKILL.md`; **CLI:** `.agents/skills/*.md` | **2.0/general:** `~/.gemini/config/skills/`; **IDE:** `~/.gemini/antigravity/skills/`; **CLI:** `~/.gemini/antigravity-cli/skills/` | `.agent/skills` remains a 2.0/IDE legacy fallback. The shared directory name hides different file-layout and global-path contracts. **`documented`**, [2.0 Skills](https://antigravity.google/docs/skills), [IDE Skills](https://antigravity.google/docs/ide/skills), and [CLI Plugins & Skills](https://antigravity.google/docs/cli/plugins/), retrieved 2026-09-04 |
-| **Cursor** | **`.agents/skills/`** and `.cursor/skills/` | **`~/.agents/skills/`**, `~/.cursor/skills/` | Also loads `.claude/skills/` and `.codex/skills/` for compatibility. Not copied to Cloud Agents — use project skills there. `documented`, retrieved 2026-09-01 |
-| **Kiro** | `.kiro/skills/` | project or global | Default agent loads `.kiro/skills/` and `~/.kiro/skills/`; a custom agent needs a `skill://` resource entry. `documented`, retrieved 2026-09-01 |
+| **Cursor** | **`.agents/skills/`** and `.cursor/skills/` | **`~/.agents/skills/`**, `~/.cursor/skills/` | Also loads `.claude/skills/` and `.codex/skills/` for compatibility. Nested project skill directories are discovered and scoped to their subdirectory. Optional Cloud sync covers ~/.cursor/skills only; other local roots are not automatically copied. See [Cursor inventory](../docs/agents/cursor.md#7-surface-differences) and [skills source](https://cursor.com/docs/skills). `documented`, retrieved 2026-09-06; nested discovery rechecked, not runtime-tested |
+| **Kiro** | `.kiro/skills/` | project or global | Workspace/global skills are documented; custom-agent default inheritance differs between official pages. Explicit `skill://` resources are supported, not established as universally required. See [Kiro inventory](../docs/agents/kiro.md#5-extension-points). `documented` / disputed, retrieved 2026-09-06 |
 | **OpenCode** | `.opencode/skills/`, `.claude/skills/`, **`.agents/skills/`** | `~/.config/opencode/skills/`, `~/.claude/skills/`, **`~/.agents/skills/`** | Walks up to the git worktree, loading each match along the way. `documented`, retrieved 2026-09-01 |
 
 ### Supplemental skill-path coverage (2026-09-05)
@@ -366,7 +368,7 @@ Three results from those files that this comparison depends on:
 | Antigravity IDE global Skill root | Official IDE docs say `~/.gemini/antigravity/skills`; installed IDE 2.5.5 state uses `~/.gemini/antigravity-ide`. This is a test prompt, not a contradiction, until Skill loading is exercised |
 | Claim-level sourcing | This file carries a document-level "checked" date. Volatile rows should each carry their own official link and retrieval date; several now do, most do not |
 | Antigravity local verification | Windows presence audit found 2.0 v2.11.0 and IDE v2.5.5 installed; neither was run or capability-enumerated. CLI/SDK were not locally enumerated and `agy` was absent from `PATH`. Test the exact checklist in `docs/agents/antigravity.md` section 15 before calling any capability `tested`; treat Remote Control and the managed API separately |
-| Tier 2/3 | Kiro — Cursor and Copilot now have sourced skill-path rows |
+| Tier 2/3 | Cursor/Kiro native invocation remains pending after launcher/installer checks; Copilot, Goose and OpenCode still need canonical inventories |
 | Zed / Windsurf | Skill paths documented in section 2, 2026-09-05; other mechanisms and runtime loading remain backlog |
 
 

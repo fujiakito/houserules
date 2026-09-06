@@ -19,7 +19,8 @@ error (research/MATRIX.md section 1, tested).
 Three things land at the repository root as well: AGENTS.md, the CLAUDE.md import line, and
 check.py. They carry different overwrite rules, because they are different kinds of thing.
 AGENTS.md is a *scaffold* - a repository that has filled it in has not drifted, so an
-existing one is left alone and never reported as a conflict. check.py is a *shipped
+existing one is left alone unless --activate-workflow explicitly appends the routing block.
+An edited routing block is preserved and reported for reconciliation. check.py is a *shipped
 artifact* meant to be identical everywhere, so a byte difference is a conflict.
 
 An existing skill directory is never replaced without --force. Adopting this layer into a
@@ -28,7 +29,9 @@ Successful installs record owned names, selected paths and source digests in
 .houserules/skills.json. Later agent selections are additive; foreign skills are not enrolled.
 Known conflicts are checked across all selected destinations before any installation write.
 
-The default installs hr-onboard and a local HOUSERULES.md entry. --skills and --work select
+The default installs hr-onboard, a local HOUSERULES.md entry, START.md and workflow.py.
+--activate-workflow appends a short instruction trigger; no hook or background process starts.
+--skills and --work select
 additional material; existing selections remain installed. --list shows the offline catalog.
 The default `python check.py` path only reads;
 `check.py --fix` is an explicit local repair mode and must not be used as a CI gate.
@@ -67,6 +70,25 @@ AGENT_SKILL_PATHS: dict[str, str] = {
 
 IMPORT_LINE = "@AGENTS.md"
 
+WORKFLOW_BLOCK = """<!-- houserules:workflow -->
+For multi-step or usage-sensitive work, read `.houserules/START.md` before execution.
+When resuming a task with `work/<id>/workflow.json`, run
+`python .houserules/workflow.py status <id>` before reusing its verification.
+<!-- /houserules:workflow -->"""
+
+
+def workflow_activation(repo: Path) -> bytes | None:
+    path = repo / 'AGENTS.md'
+    if path.is_symlink() or not path.resolve().is_relative_to(repo):
+        raise ValueError('Workflow activation cannot modify a linked AGENTS.md')
+    current = path.read_bytes() if path.exists() else (HERE / 'templates/AGENTS.md').read_bytes()
+    text = current.decode('utf-8')
+    if '<!-- houserules:workflow -->' in text or '<!-- /houserules:workflow -->' in text:
+        if WORKFLOW_BLOCK not in text.replace('\r\n', '\n'):
+            raise ValueError('Preserve edited workflow instruction block; reconcile it before activation')
+        return None
+    return current + b'\n\n' + WORKFLOW_BLOCK.encode('utf-8') + b'\n'
+
 CLAUDE_MD_NOTE = """@AGENTS.md
 
 <!--
@@ -103,6 +125,13 @@ def start_page(skills: dict, work: set[str]) -> bytes:
     lines = ["# Using houserules in this project", "",
              "Start with this project's AGENTS.md and existing task instructions.",
              "This page lists installed choices; it does not authorize external actions.", "",
+             "## Start a task", "",
+             "Tell your agent: **Read `.houserules/START.md` and use it for this task: <outcome>.**",
+             "The [short execution protocol](.houserules/START.md) uses the installed",
+             "[workflow tool](.houserules/workflow.py) to bound command attempts and execution time,",
+             "save logs and detect stale verification. It does not cap surrounding chat usage.",
+             "To load this protocol on relevant tasks automatically, install with --activate-workflow;",
+             "that explicitly appends a small trigger to AGENTS.md, preserving existing content.", "",
              "## Installed skills", "",
              "Ask your agent to use a skill by name, or open its local SKILL.md below.",
              "Actual native discovery must be checked on your agent surface; files alone are not proof.", ""]
@@ -138,7 +167,9 @@ def start_page(skills: dict, work: set[str]) -> bytes:
 
 
 def plan_assets(repo: Path, previous: dict, skills: dict, work: set[str]) -> dict[str, bytes]:
-    files = {"HOUSERULES.md": start_page(skills, work)}
+    files = {"HOUSERULES.md": start_page(skills, work),
+             ".houserules/START.md": (HERE / 'templates/START.md').read_bytes(),
+             ".houserules/workflow.py": (HERE / 'templates/workflow.py').read_bytes()}
     if work:
         for name in work | {"README"}:
             content = (HERE / "templates/work" / f"{name}.md").read_bytes()
@@ -273,6 +304,7 @@ def main() -> int:
     ap.add_argument("--skills", help="comma-separated skill names, all or none; default: hr-onboard and previously selected skills")
     ap.add_argument("--work", help="comma-separated work templates, all or none; default: keep previous selection")
     ap.add_argument("--list", action="store_true", help="list available skills and work templates; write nothing")
+    ap.add_argument("--activate-workflow", action="store_true", help="append an idempotent execution trigger to AGENTS.md; preserve existing bytes")
     ap.add_argument("--link", action="store_true", help="symlink instead of copy where possible")
     ap.add_argument("--check", action="store_true", help="report only; write nothing")
     ap.add_argument("--force", action="store_true",
@@ -312,7 +344,8 @@ def main() -> int:
         prior_work = {Path(rel).stem for rel in assets["files"]
                       if rel.startswith(".houserules/work/") and Path(rel).stem in WORK_NAMES}
         work = prior_work | choose(a.work, WORK_NAMES, set())
-    except ValueError as exc:
+        activation = workflow_activation(repo) if a.activate_workflow else None
+    except (ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
@@ -405,6 +438,14 @@ def main() -> int:
     outcome = seed_file(HERE / 'templates' / 'AGENTS.md', repo / 'AGENTS.md', a.check)
     results.append(outcome)
     print(f"    {'AGENTS.md':<28} {outcome}")
+    if activation is not None:
+        if a.check:
+            outcome = 'would append workflow trigger'
+        else:
+            (repo / 'AGENTS.md').write_bytes(activation)
+            outcome = 'appended workflow trigger'
+        results.append(outcome)
+        print(f"    workflow activation          {outcome}")
     outcome = place_file(HERE / "check.py", repo / "check.py", a.check, a.force)
     results.append(outcome)
     print(f"    {'check.py':<28} {outcome}")

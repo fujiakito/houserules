@@ -224,7 +224,38 @@ author-only pilot above; neither upgrades untested vendor surfaces.
 installer preservation, manual workflow gaps and its shared-context evidence limits.
 
 
+## Cursor / Kiro and usage follow-up
+
+The [Cursor/Kiro acceptance record](cursor-kiro/README.md) covers local launcher identification,
+isolated installation, preservation, modified-template refusal and delivery of budget guidance.
+Native skill invocation remains pending. [Usage and cost](../../docs/USAGE.md) analyses existing
+failed-run counters without claiming task savings or converting them into a subscription bill.
+
+The record's [executable workflow follow-up](cursor-kiro/README.md#executable-workflow-follow-up)
+adds installation/activation, bounded verification, freshness checks and complete five-agent GUIDE
+coverage. It supersedes the earlier documentation-only completion scope without changing its history.
+
 ## Selectable toolkit acceptance
 
 [Toolkit adoption](toolkit-adoption/README.md) covers the implemented local entry, optional Matt
 skills and work templates, preservation tests, and the explicit native-loading limitation.
+
+
+## Pilot F-003 and review F-017 — executed Linux verification, 2026-09-06
+
+This addendum supersedes earlier statements that **pilot F-003** (symlink preservation) remained
+unverified; those rounds are historical. It is distinct from review F-003 (README navigation).
+The implementer independently reran the current suite in Linux Docker/Python 3.12.14: 50 passed,
+zero skips, plus check.py and install.py --check exit 0. Both resolvable and dangling user symlinks
+were exercised. Removing the symlink guard in a separate scratch copy made the dangling test fail,
+closing review F-017 with discriminating regression evidence.
+See [the current acceptance record](cursor-kiro/README.md#review-r-010-remediation--2026-09-06)
+for the image, isolation, evidence locations and hashes.
+
+.github/workflows/check.yml already configures Ubuntu/Python 3.11; no duplicate job was added.
+`git remote -v` returned no configured remote on 2026-09-06, so no hosted CI run was inspected.
+Local Docker execution does not imply hosted CI success.
+
+The later v2 pair is now [archived as reviewer-reported](prior-art/v2/README.md#archived-reviewer-reported-attempt--2026-09-06).
+Original outputs/traces and complete execution metadata remain unavailable; no independent score,
+model benefit or fallback promotion is inferred.

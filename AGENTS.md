@@ -35,3 +35,10 @@
 - `python check.py` must pass, and `python install.py --check` must report no drift, before a change
   is done.
 - Changes to the scripts or tests must also pass `python -m unittest discover -s tests -v`.
+
+
+<!-- houserules:workflow -->
+For multi-step or usage-sensitive work, read `.houserules/START.md` before execution.
+When resuming a task with `work/<id>/workflow.json`, run
+`python .houserules/workflow.py status <id>` before reusing its verification.
+<!-- /houserules:workflow -->

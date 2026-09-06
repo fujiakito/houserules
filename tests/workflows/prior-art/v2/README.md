@@ -34,3 +34,17 @@ from the process deadline, and do not increase the deadline repeatedly to obtain
 
 A completed synthetic pair is only a smoke test. Real task artifacts, actual consumption and
 fresh-session evidence remain required before a promotion claim.
+
+
+## Archived reviewer-reported attempt — 2026-09-06
+
+R-009 reports one completed Claude Code CLI pair after this packet was prepared: both arms scored
+3.5/4 under the reviewer's grading. See the [attempt record](attempt-20260906-reported.json) and
+[archived reviewer account](attempt-20260906-reviewer-excerpt.md). The original "Not run" statement
+above describes preparation, not this later reported event; v1 and the frozen packets remain unchanged.
+
+This is an incomplete archival record, not recovered primary execution evidence. Full outputs,
+traces, argv, timestamps and the deadline were unavailable in the supplied account and repository
+work files; unknown fields are null. Current input hashes match the frozen set. No model rerun or
+independent regrading was performed. Reported token counts do not establish a billing advantage.
+The pair remains reviewer-reported and does not satisfy fallback promotion criteria.

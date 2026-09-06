@@ -226,6 +226,25 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual((user_skill / "SKILL.md").read_text(encoding="utf-8"), "user content")
         self.assertFalse((self.repo / check.MANIFEST).exists())
 
+    def test_dangling_symlink_is_preserved(self):
+        # exists() follows the link and is false here; is_symlink() is the essential guard.
+        missing = self.repo / 'missing-user-skill'
+        link = self.repo / '.claude/skills/hr-onboard'
+        link.parent.mkdir(parents=True)
+        try:
+            link.symlink_to(missing, target_is_directory=True)
+        except OSError as exc:
+            if os.name == 'nt' and getattr(exc, 'winerror', None) == 1314:
+                self.skipTest(f'OS cannot create a symlink: {exc}')
+            raise
+        self.assertFalse(link.exists())
+        result = self.run_install('--agents', 'claude')
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(link.is_symlink())
+        self.assertEqual(link.readlink(), missing)
+        self.assertFalse(missing.exists())
+        self.assertFalse((self.repo / check.MANIFEST).exists())
+
     def test_invalid_manifest_blocks_before_writes(self):
         self.install_ok("--agents", "claude")
         path = self.repo / check.MANIFEST
@@ -280,7 +299,7 @@ class InstallationTests(unittest.TestCase):
         self.install_ok("--agents", "codex", "--skills", "none", "--work", "none")
         self.assertEqual(set(check.read_manifest(self.repo)["skills"]), {"hr-tdd", "hr-code-review"})
         self.assertEqual(set(check.read_assets(self.repo)["files"]),
-                         {"HOUSERULES.md", ".houserules/work/README.md",
+                         {"HOUSERULES.md", ".houserules/START.md", ".houserules/workflow.py", ".houserules/work/README.md",
                           ".houserules/work/handoff.md", ".houserules/work/review.md"})
 
     def test_unknown_selection_and_list_write_nothing(self):
@@ -290,6 +309,52 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(self.run_install("--list").returncode, 0)
         self.assertEqual(check.tree_hash(self.repo), before)
 
+    def test_workflow_activation_is_explicit_append_only_and_idempotent(self):
+        agents = self.repo / 'AGENTS.md'
+        original = b'# User instructions\r\n\r\nKeep my exact bytes.\r\n'
+        agents.write_bytes(original)
+        self.install_ok('--agents', 'codex')
+        self.assertEqual(agents.read_bytes(), original)
+        before = check.tree_hash(self.repo)
+        self.assertEqual(self.run_install('--agents', 'codex', '--activate-workflow', '--check').returncode, 1)
+        self.assertEqual(check.tree_hash(self.repo), before)
+        self.install_ok('--agents', 'codex', '--activate-workflow')
+        self.assertTrue(agents.read_bytes().startswith(original))
+        after = agents.read_bytes()
+        self.assertEqual(self.run_install('--agents', 'codex', '--activate-workflow', '--check').returncode, 0)
+        self.install_ok('--agents', 'codex', '--activate-workflow')
+        self.assertEqual(agents.read_bytes(), after)
+
+    def test_modified_activation_and_runtime_stop_before_writes(self):
+        self.install_ok('--agents', 'codex', '--activate-workflow')
+        agents = self.repo / 'AGENTS.md'
+        agents.write_text(agents.read_text().replace('before execution', 'after execution'))
+        before = check.tree_hash(self.repo)
+        self.assertEqual(self.run_install('--agents', 'claude', '--activate-workflow').returncode, 2)
+        self.assertEqual(check.tree_hash(self.repo), before)
+        runtime = self.repo / '.houserules/workflow.py'
+        runtime.write_bytes(runtime.read_bytes() + b'\n# User edit\n')
+        before = check.tree_hash(self.repo)
+        self.assertEqual(self.run_install('--agents', 'claude').returncode, 1)
+        self.assertEqual(check.tree_hash(self.repo), before)
+
+    def test_installed_workflow_runs_without_distribution(self):
+        self.install_ok('--agents', 'cursor,kiro', '--activate-workflow')
+        runtime = self.repo / '.houserules/workflow.py'
+        target = self.repo / 'behavior.txt'
+        target.write_text('expected')
+        def execute(*args):
+            return subprocess.run([sys.executable, str(runtime), '--repo', str(self.repo), *args],
+                                  capture_output=True, text=True, encoding='utf-8')
+        result = execute('start', 'local', '--task', 'Check behavior', '--target', 'behavior.txt')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = execute('run', 'local', '--', sys.executable, '-c',
+                         "from pathlib import Path; assert Path('behavior.txt').read_text() == 'expected'")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(execute('status', 'local').returncode, 0)
+        target.write_text('changed')
+        self.assertEqual(execute('status', 'local').returncode, 1)
+
     def test_work_preview_is_read_only_then_converges(self):
         before = check.tree_hash(self.repo)
         args = ("--agents", "codex", "--skills", "all", "--work", "all")
@@ -297,7 +362,7 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(check.tree_hash(self.repo), before)
         self.install_ok(*args)
         self.assertEqual(self.run_install(*args, "--check").returncode, 0)
-        self.assertEqual(len(check.read_assets(self.repo)["files"]), 8)
+        self.assertEqual(len(check.read_assets(self.repo)["files"]), 10)
         report = check.Report()
         check.check_assets(self.repo, report)
         self.assertFalse(report.failed)

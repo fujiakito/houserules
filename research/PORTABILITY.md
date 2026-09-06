@@ -121,7 +121,7 @@ assertions are sufficient, and it does not replace independent review.
 | **`AGENTS.md`** — the template | universal carrier |
 | **`CLAUDE.md` containing `@AGENTS.md`** | **correctness requirement, not an adapter.** Without it Claude Code ignores the file and raises no error |
 | **`SKILL.md` files plus an installer** | the format is portable; the path is not. Copying into each vendor's location is the ecosystem's own working pattern |
-| **CI checks** | the only portable enforcement |
+| **Executable checks** | portable enforcement of explicit predicates, locally or in CI; see [ENFORCEMENT](../docs/ENFORCEMENT.md) |
 | **MCP configuration** (optional) | the only portable capability |
 | **A handoff contract** (see §5) | context does not cross sessions or agents; the file is the only channel |
 
@@ -209,6 +209,10 @@ Constraints, each derived rather than chosen:
 
 ## 6. Size and cost budget
 
+Practical budgets and observed run usage live in [docs/USAGE.md](../docs/USAGE.md). The research
+figures below are source-specific historical measurements, not a prediction of savings or a
+conversion between tokens and subscription allowance for an adopting project.
+
 | Limit | Source |
 |---|---|
 | **32 KiB** — Codex `project_doc_max_bytes`, **default and configurable**. Enforced here against the **combined** chain, the stricter of two contradictory official readings | Codex docs, retrieved 2026-09-01 |
@@ -251,8 +255,9 @@ row. Do not cite the overview row as if it were settled.
   recovery or cross-host compatibility. No artifact-schema gate is claimed.
 - Whether Goose has a standalone hook mechanism at all
 - Antigravity has a full official inventory across four core products and its Remote/API/Enterprise
-  modes but no local surface test; Kiro and the remaining
-  Tier 2/3 rows are documentation-sourced and untested
+  modes but no local surface test; Cursor and Kiro now have dated inventories and local installer
+  checks, but native capability execution remains untested. Remaining Tier 2/3 rows are
+  documentation-sourced and untested
 - **Managed Agents reads `.claude/skills/` from a mounted repository** (`MATRIX.md` §2). Two
   consequences are unresolved: whether the survey's frame should be "coding agents" at all rather
   than "anything that mounts the repo", and whether the portable layer should say anything about

@@ -1,83 +1,45 @@
-# The AI-native SDLC, by stage
+# Choose the next step
 
-This guide maps a complete software lifecycle to the capabilities currently available in Claude
-Code, Codex, and Google Antigravity:
-
-`Onboard → Intent → Spec → Plan → Build → Verify → Review → Release → Deploy → Observe → Diagnose/Remediate → Maintain`
-
-Three concerns apply across the whole lifecycle rather than forming more stages: **Control Plane &
-Authority**, **Evidence & System of Record**, and **Human Governance**.
-
-**This file is for people, not agents.** Anything an agent must act on belongs in `AGENTS.md`, a
-skill, or a deterministic check, expressed as a trigger rather than background prose.
-
-**Canonical tool facts live in [`agents/`](agents/)** — especially
-[`claude-code.md`](agents/claude-code.md), [`codex.md`](agents/codex.md), and
-[`antigravity.md`](agents/antigravity.md). The tables below are a routing layer only. Follow those
-inventories for evidence grade, install state, feature flags, provider, version, plan, and surface
-restrictions.
-
-**Native mapping checked 2026-09-04; project-skill routing updated 2026-09-06.**
-Claude Code and Codex are locally tested; Antigravity is official-documentation-only.
-The inventories retain the surface versions and retrieval date for each claim.
-Recheck policy is in `../research/MATRIX.md`.
+Use this guide when deciding **what to do and which capability to use**. It covers Claude Code,
+Codex, Antigravity, Cursor and Kiro across all 12 stages. You do not need to run every stage or
+install every tool. Start with the current problem; expand its agent table only when needed.
 
 ## Choose the next action
 
-Start with the stage that matches your **current problem**, then pick one row under **Choose by
-purpose**. The tools in a stage serve different jobs; they are not a checklist to run in full.
-Expand **Tools by agent** only when you need the exact native option and its availability limits.
-
-| I need to… | Start here |
+| Your task | Go to |
 |---|---|
-| Understand the repo or clarify the request | [Onboard](#1-onboard--context) → [Intent](#2-intent) |
-| Define behavior, architecture or UI | [Spec & Architecture](#3-spec--architecture) |
-| Turn an accepted design into executable work | [Plan](#4-plan) → [Build](#5-build) |
-| Check behavior or critique an artifact/change | [Verify](#6-verify) / [Review](#7-review) |
-| Deliver or operate the system | [Release](#8-release) → [Deploy](#9-deploy) → [Observe](#10-observe) |
-| Fix a failure or recurring friction | [Diagnose](#11-diagnose--remediate) / [Maintain](#12-maintain-the-engineering-system) |
-| Switch agents or resume after feedback | [Work artifacts](../templates/work/README.md) |
-
-A **tool** executes an action; a **skill** supplies a procedure; a **plugin** distributes capabilities;
-a **template** carries output to its next consumer. Choose an implementation already available to
-you that meets the task's needs, including your own or preferred third-party skill. Native tools
-and project procedures below are options with known provenance, not a requirement to replace yours.
-
-These purpose tables describe **jobs to do**, not a recommended third-party skill catalog. Researching
-a skill does not add it to the project's supported or recommended set. Project-owned skills must
-also justify their value and coexist with the user's choices. New research should improve a task
-contract or validate a specific gap; it should not automatically expand this guide's tool list.
-
-The project covers the full SDLC through contracts. Recommended/default fallbacks require
-[evaluated gaps](../research/PORTABILITY.md#fallback-admission-criteria); experimental candidates
-can be explicitly selected before promotion. The
-[candidate comparison](../research/PORTABILITY.md#experimental-candidate-comparison--2026-09-06)
-records alternatives and open evidence requirements. A stage does not require
-its own skill, and missing native tooling does not prevent using a direct procedure.
-
-The [work artifact templates](../templates/work/README.md) are optional pilot drafts.
-Use your existing spec, plan or review format when it carries the information the next consumer needs.
+| Set up the project | [Onboard](#1-onboard--context) |
+| Clarify the outcome | [Intent](#2-intent) |
+| Design or plan | [Spec](#3-spec--architecture) / [Plan](#4-plan) |
+| Implement and test | [Build](#5-build) / [Verify](#6-verify) |
+| Critique a result | [Review](#7-review) |
+| Ship and operate | [Release](#8-release) / [Deploy](#9-deploy) / [Observe](#10-observe) |
+| Fix a failure | [Diagnose](#11-diagnose--remediate) |
+| Improve the workflow | [Maintain](#12-maintain-the-engineering-system) |
+| Resume with another agent | Read the existing handoff; check [workflow status](USAGE.md#run-a-bounded-check) |
 
 ## How to read the tables
 
-| Type | Means |
-|---|---|
-| **built-in** | ships with the agent or surface |
-| **install** | official capability that must be installed or connected |
-| ⚠️ **gated** | also requires account, plan, provider, or organization provisioning |
-| **project** | supplied by this repository or the target repository |
-| **N/A** | no purpose-built capability for this purpose; the general agent can still do the work |
+**built-in** is supplied by the agent; **install** means a plugin, Power or integration must be
+installed/configured; **project** is your repository's procedure; **gated** needs separate account,
+plan or organization access. N/A means no dedicated option is recorded, not that the task is impossible.
+A skill describes a procedure; tools execute it; plugins/Powers package capabilities.
 
-The three optional `hr-` candidates below are experimental and off by default.
-Select them with the [installer](../README.md); use the installed `HOUSERULES.md` for local paths.
-Their table placement does not establish native loading on each surface; see the
-[acceptance record](../tests/workflows/toolkit-adoption/README.md).
+Agent-name links open the canonical inventory for exact commands, sources, versions and constraints.
+Claude/Codex mappings retain their 2026-09-04 evidence; Cursor/Kiro mappings were checked against
+2026-09-06 official sources. Antigravity, Cursor and Kiro capability mappings are documented,
+not runtime-tested. A tool shown for one surface is not promised on every surface.
 
-Mixed rows list every applicable type. Assume one agent, not a combination: each stage must work
-with whichever inventoried agent is active. Agents without a capability inventory are omitted
-rather than marked `N/A`.
+## Apply the method in your project
 
----
+After [installation](../README.md#install), give the agent the task and the short
+`.houserules/START.md` entry. With `--activate-workflow`, a small AGENTS.md trigger routes relevant
+tasks there. The agent reads the selected skill and current inputs, not this entire guide.
+The installed workflow command records attempts and rejects exhausted budgets, unchanged duplicate
+checks and stale evidence. See [Usage](USAGE.md) for actual limits and commands.
+
+The optional hr-tdd, hr-diagnosing-bugs and hr-code-review skills are experimental; use your
+preferred/native procedure when it fits. Work templates are optional outputs, not a document quota.
 
 ## Lifecycle stages
 
@@ -96,11 +58,13 @@ Create useful context and make setup reproducible.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/init` | `/import`, `/context`, `/memory`, `/doctor`, `/hr-onboard` | built-in + project | `/import` has provider and feature-flag limits; `/context` confirms what loaded | Create and inspect the repository instruction context; discover non-obvious operating knowledge |
-| Codex | `/init` | `$migrate-to-codex`, `codex debug prompt-input`, Local Environments, `$hr-onboard` | built-in + install + project | `/init` and Local Environments are surface-specific; Local Environments are desktop-only | Create/import `AGENTS.md`, inspect the model-visible prompt, and make setup repeatable |
-| Antigravity | `AGENTS.md` + Rules | `/learn`, `/skills`, `hr-onboard` | built-in + project | CLI documents `AGENTS.md`/`GEMINI.md`; `.agents/rules` adds activation modes; no local loading test | Load repository context and turn session corrections into durable, scoped guidance |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/init` | `/import`, `/context`, `/memory`, `/doctor`, `/hr-onboard` | built-in + project; `/import` has provider and feature-flag limits; `/context` confirms what loaded |
+| [Codex](agents/codex.md) | `/init` | `$migrate-to-codex`, `codex debug prompt-input`, Local Environments, `$hr-onboard` | built-in + install + project; `/init` and Local Environments are surface-specific; Local Environments are desktop-only |
+| [Antigravity](agents/antigravity.md) | `AGENTS.md` + Rules | `/learn`, `/skills`, `hr-onboard` | built-in + project; CLI documents `AGENTS.md`/`GEMINI.md`; `.agents/rules` adds activation modes; no local loading test |
+| [Cursor](agents/cursor.md) | AGENTS.md + rules | /create-rule, /create-skill, hr-onboard | built-in + project; IDE: Customize; CLI reads project rules; loading pending |
+| [Kiro](agents/kiro.md) | Steering + skills | Agent Steering & Skills, hr-onboard | built-in + project; IDE/CLI: verify the selected agent resources; inheritance disputed |
 
 Run the native initializer, then `python install.py`. Use `hr-onboard` for knowledge that repository
 inspection cannot reveal, such as a command that only works from one directory or a test expected
@@ -124,11 +88,13 @@ Resolve what should be achieved before selecting a solution.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/goal` | `/deep-research`, MCP/connectors | built-in + install + ⚠️ gated | `/deep-research` varies by plan, provider, settings, and surface | Persist the outcome and gather decision inputs before choosing a solution |
-| Codex | `/goal` | `$define-goal`, `/apps`, MCP | built-in + install | `/goal` is documented from the desktop app surface; apps/MCP require a configured source | Persist or formalize the objective and bring external context into scope |
-| Antigravity | `/goal` | `/grill-me`, `/btw`, MCP | built-in | `/goal` continues autonomously; `/grill-me` is the explicit requirements interview | Persist the objective, expose ambiguity, and gather context before implementation |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/goal` | `/deep-research`, MCP/connectors | built-in + install + ⚠️ gated; `/deep-research` varies by plan, provider, settings, and surface |
+| [Codex](agents/codex.md) | `/goal` | `$define-goal`, `/apps`, MCP | built-in + install; `/goal` is documented from the desktop app surface; apps/MCP require a configured source |
+| [Antigravity](agents/antigravity.md) | `/goal` | `/grill-me`, `/btw`, MCP | built-in; `/goal` continues autonomously; `/grill-me` is the explicit requirements interview |
+| [Cursor](agents/cursor.md) | Agent conversation | search; Atlassian plugin for issue context | built-in + install; IDE/CLI; plugin needs installation and provider access |
+| [Kiro](agents/kiro.md) | Feature Spec requirements | Plan agent; configured MCP | built-in + install; IDE/CLI; Plan reads context but excludes MCP/tools that mutate |
 
 Record durable acceptance criteria in `work/<id>/`; a session goal is execution state, not the
 project's system of record.
@@ -152,14 +118,16 @@ Describe behavior and design decisions; use visual design only when the problem 
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/plan` | `/deep-research`, Artifacts, `/design` | built-in + ⚠️ gated | Artifacts require an eligible plan/provider/surface; `/design` is for UI work, not a general architecture gate | Explore architecture, validate external assumptions, and communicate a proposed design |
-| Codex | `/plan mode` | `documents`, `visualize`, MCP/apps | built-in + install | `/plan mode` is app-specific; plugins are not available in the IDE extension; no dedicated spec gate | Produce and inspect a spec or architecture artifact using general planning and document tools |
-| Antigravity | `/grill-me` | `/plan`, Artifacts, `/boost` | built-in + ⚠️ gated | `/boost` is paid; `/plan` produces a reviewable Implementation Plan, not a mandatory spec gate | Interview for constraints and communicate the proposed architecture before edits |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/plan` | `/deep-research`, Artifacts, `/design` | built-in + ⚠️ gated; Artifacts require an eligible plan/provider/surface; `/design` is for UI work, not a general architecture gate |
+| [Codex](agents/codex.md) | `/plan mode` | `documents`, `visualize`, MCP/apps | built-in + install; `/plan mode` is app-specific; plugins are not available in the IDE extension; no dedicated spec gate |
+| [Antigravity](agents/antigravity.md) | `/grill-me` | `/plan`, Artifacts, `/boost` | built-in + ⚠️ gated; `/boost` is paid; `/plan` produces a reviewable Implementation Plan, not a mandatory spec gate |
+| [Cursor](agents/cursor.md) | Agent design/planning | /canvas; relevant plugins | built-in + install; IDE: canvas is visual output, not a specification gate |
+| [Kiro](agents/kiro.md) | Feature Spec / Quick Spec | Figma Power for design context | built-in + install; IDE/CLI/Web workflows differ; Power needs installation/access |
 
-No inventoried agent supplies a mandatory specification format or acceptance gate. Keep the spec as small
-as the change requires, and place durable output in `work/<id>/`.
+Kiro offers native specification workflows; other agents can use existing specs or the optional
+template. Pick a format that serves the next consumer and keep business acceptance explicit.
 
 </details>
 
@@ -179,11 +147,13 @@ Turn accepted decisions into work that can be picked up and verified.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/plan` | Plan subagent, dynamic workflows | built-in + ⚠️ gated | Dynamic workflows have provider, plan, settings, and concurrency limits | Turn the accepted intent/spec into executable work and delegate bounded research |
-| Codex | `/plan mode` | `/goal`, subagents | built-in | `/plan mode` and `/goal` are app commands; subagents are configuration- and concurrency-limited | Decompose the work while preserving the goal across turns |
-| Antigravity | `/plan` | Implementation Plan Artifact, subagents, `/boost` | built-in + ⚠️ gated | `/boost` is paid; children can inherit, branch into a worktree, or share storage | Produce a reviewable plan and delegate isolated research before implementation |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/plan` | Plan subagent, dynamic workflows | built-in + ⚠️ gated; Dynamic workflows have provider, plan, settings, and concurrency limits |
+| [Codex](agents/codex.md) | `/plan mode` | `/goal`, subagents | built-in; `/plan mode` and `/goal` are app commands; subagents are configuration- and concurrency-limited |
+| [Antigravity](agents/antigravity.md) | `/plan` | Implementation Plan Artifact, subagents, `/boost` | built-in + ⚠️ gated; `/boost` is paid; children can inherit, branch into a worktree, or share storage |
+| [Cursor](agents/cursor.md) | Agent planning | /create-subagent; project plan | built-in + project; IDE/CLI; delegate only when authorized and independently useful |
+| [Kiro](agents/kiro.md) | Plan agent / Spec tasks | requirements and design artifacts | built-in; IDE/CLI: Plan is read-only; hand off accepted work for execution |
 
 Claude Code 2.1.251 plan mode was locally tested writing a machine-local file under
 `~/.claude/plans/` on 2026-09-03. Use `work/<id>/handoff.md` when the plan must be repository-visible,
@@ -206,14 +176,16 @@ Implement the chosen task using the runtime and isolation your current host prov
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/batch` | `/subtask`, `/background`, `/worktree`, LSP plugins, `hr-tdd` (experimental, opt-in) | built-in + install + project | `/batch` requires Git; plugin language servers are separately installed and unavailable in cloud sessions | Implement in isolated units with optional language-server feedback |
-| Codex | `codex exec` + Git worktrees | managed Worktrees, `/new playground worktree`, subagents, Local Environments, `hr-tdd` (experimental, opt-in) | built-in + project | `codex exec` is CLI/non-interactive; managed Worktrees, the slash command, and Local Environments are desktop capabilities | Isolate parallel changes, reproduce setup, and automate bounded implementation tasks across surfaces |
-| Antigravity | `/goal` | worktree subagents, `/teamwork-preview`, `agy -p`, Remote Control, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project | `/teamwork-preview` is paid/preview; headless CLI is scriptable; Remote Control drives a host session rather than supplying another runtime | Implement interactively, in isolated parallel children, headlessly, or through a remote host control channel |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/batch` | `/subtask`, `/background`, `/worktree`, LSP plugins, `hr-tdd` (experimental, opt-in) | built-in + install + project; `/batch` requires Git; plugin language servers are separately installed and unavailable in cloud sessions |
+| [Codex](agents/codex.md) | `codex exec` + Git worktrees | managed Worktrees, `/new playground worktree`, subagents, Local Environments, `hr-tdd` (experimental, opt-in) | built-in + project; `codex exec` is CLI/non-interactive; managed Worktrees, the slash command, and Local Environments are desktop capabilities |
+| [Antigravity](agents/antigravity.md) | `/goal` | worktree subagents, `/teamwork-preview`, `agy -p`, Remote Control, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project; `/teamwork-preview` is paid/preview; headless CLI is scriptable; Remote Control drives a host session rather than supplying another runtime |
+| [Cursor](agents/cursor.md) | Agent implementation | /shell; hr-tdd | built-in + project; IDE/CLI/cloud have different execution environments; hr-tdd is opt-in |
+| [Kiro](agents/kiro.md) | Default agent / Spec tasks | hr-tdd; relevant technology Power | built-in + project + install; Use an execution-capable agent; Powers in CLI require v3 |
 
-Use one worktree per parallel write stream. All three agents can coordinate concurrent work; none
-is limited to a single isolated chat.
+Use one worktree per parallel write stream. Use the concurrency available on the active surface; a general
+capability does not establish permission to delegate or a benefit from doing so.
 
 </details>
 
@@ -233,18 +205,20 @@ Produce evidence that the changed behavior works.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/verify` | `/run`, `/run-skill-generator`, Bash, `hr-tdd` (experimental, opt-in) | built-in + project | Availability and launch-recipe path are disputed across official pages; confirm on the active surface before relying on them | Build and run the changed system, then capture a reusable launch recipe |
-| Codex | **N/A — no dedicated verify command** | shell, Local Environments, `@Browser`, `$playwright`, `hr-tdd` (experimental, opt-in) | N/A + built-in + install + project | Local Environments and Browser are desktop-specific; Playwright is installable | Execute project tests and runtime checks through general tools |
-| Antigravity | `/boost` | shell, `/browser`, Artifacts, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project | `/boost` explicitly documents tests and independent verification but requires a paid plan; sandbox is opt-in | Run tests and UI checks, then expose results as reviewable artifacts |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/verify` | `/run`, `/run-skill-generator`, Bash, `hr-tdd` (experimental, opt-in) | built-in + project; Availability and launch-recipe path are disputed across official pages; confirm on the active surface before relying on them |
+| [Codex](agents/codex.md) | **N/A — no dedicated verify command** | shell, Local Environments, `@Browser`, `$playwright`, `hr-tdd` (experimental, opt-in) | N/A + built-in + install + project; Local Environments and Browser are desktop-specific; Playwright is installable |
+| [Antigravity](agents/antigravity.md) | `/boost` | shell, `/browser`, Artifacts, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project; `/boost` explicitly documents tests and independent verification but requires a paid plan; sandbox is opt-in |
+| [Cursor](agents/cursor.md) | Agent + project tests | hr-tdd; workflow run | built-in + project; IDE/CLI: preserve command output; cloud setup is separate |
+| [Kiro](agents/kiro.md) | Default agent + project tests | Postman Power; workflow run | built-in + project + install; Plan cannot execute checks; Power installation does not imply test success |
 
 A tool invocation is not evidence by itself. Record the command, surface, version, result, and
 relevant artifact. If Claude's launch skill is unavailable, an existing project procedure can
 serve as the fallback. A Claude-only skill belongs under `.claude/skills/<name>/SKILL.md`; see
 the [Claude skill inventory](agents/claude-code.md) for discovery details. For a cross-agent
 procedure, use a canonical source with agent-specific destinations, following the
-[installer pattern](../README.md#what-it-installs); `.agents/skills/` alone does not cover Claude.
+[installer pattern](../README.md#what-arrives-in-your-project); `.agents/skills/` alone does not cover Claude.
 Any new project-owned fallback still needs to meet the project's admission criteria.
 
 </details>
@@ -261,16 +235,18 @@ Choose the question the review must answer. Add specialist passes only for relev
 | Check requirements coverage | Compare the implementation against the accepted spec independently of style/standards concerns. | Missing, incorrect or out-of-scope behavior. |
 | Check security-sensitive changes | Use the available security reviewer/scan below, with access to the relevant threat context. | Validated security findings; not replaced by style review. |
 | Reduce unnecessary complexity | Use a focused simplification pass when complexity is the concern. | Concrete simplifications; not a compulsory second full review. |
-| Review a spec, plan or prior fix | Use the artifact-specific rubric and [review → fix → verify protocol](../templates/work/README.md#review-fix-verify). | Stable finding IDs and independently verified dispositions. |
+| Review a spec, plan or prior fix | Use the artifact-specific rubric and [consumer protocol](../templates/work/README.md#consumer-protocol). | Stable finding IDs, verified dispositions and disclosed reviewer context. |
 
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/code-review` | `/security-review`, `/simplify`, `hr-code-review` (experimental, opt-in) | built-in + project | Interactive-first; `--fix` mutates and `--comment` posts externally | Review correctness, security, and unnecessary complexity before integration |
-| Codex | `/code review`, `codex review` | `review-agent`, `codex-security` plugin (`$security-scan`), `hr-code-review` (experimental, opt-in) | built-in + install + ⚠️ gated + project | App and CLI surfaces differ; `review-agent` is delegated internally; Codex Security needs access beyond installation | Review interactively or in CI, with an optional staged security pipeline |
-| Antigravity | **N/A — no dedicated code-review command** | `/diff`, Artifact Review, custom `code-auditor` agent/skill, `/boost`, `hr-code-review` (experimental, opt-in) | N/A + built-in + project + ⚠️ gated | `/diff` is a viewer, not a reviewer; `/boost` is paid | Inspect changes and delegate review, then bind recurring findings in tests/checks |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/code-review` | `/security-review`, `/simplify`, `hr-code-review` (experimental, opt-in) | built-in + project; Interactive-first; `--fix` mutates and `--comment` posts externally |
+| [Codex](agents/codex.md) | `/code review`, `codex review` | `review-agent`, `codex-security` plugin (`$security-scan`), `hr-code-review` (experimental, opt-in) | built-in + install + ⚠️ gated + project; App and CLI surfaces differ; `review-agent` is delegated internally; Codex Security needs access beyond installation |
+| [Antigravity](agents/antigravity.md) | **N/A — no dedicated code-review command** | `/diff`, Artifact Review, custom `code-auditor` agent/skill, `/boost`, `hr-code-review` (experimental, opt-in) | N/A + built-in + project + ⚠️ gated; `/diff` is a viewer, not a reviewer; `/boost` is paid |
+| [Cursor](agents/cursor.md) | /review | /review-bugbot, /review-security; hr-code-review | built-in + project; Native review routing is documented; project alternative remains experimental |
+| [Kiro](agents/kiro.md) | Scoped review request | custom reviewer; hr-code-review | built-in + project; No dedicated review skill established here; capture actual findings and revision |
 
 Use review to find issues; move requirements that must bind into deterministic CI checks.
 
@@ -291,11 +267,13 @@ Prepare an identifiable release candidate and let repository policy decide readi
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | **N/A — no built-in atomic ship command** | `commit-commands`, `/install-github-app`, GitHub/GitLab integrations, Git/CI | N/A + built-in + install | Plugins/integrations must be installed and authenticated | Prepare commits and PRs, then let the repository's release gates decide readiness |
-| Codex | `$yeet` | GitHub plugin/action, `$gh-address-comments`, Git/CI | install | `$yeet` and `$gh-address-comments` are curated skills; the GitHub Action is CI-only | Stage, commit, push, open or refine a PR, and run release gates |
-| Antigravity | **N/A — no built-in atomic ship command** | headless `agy -p`, custom Skills/Plugins, Git/CI | N/A + built-in + project | Headless mode is scriptable, but release policy and credentials remain external | Prepare release work while CI and repository policy decide readiness |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | **N/A — no built-in atomic ship command** | `commit-commands`, `/install-github-app`, GitHub/GitLab integrations, Git/CI | N/A + built-in + install; Plugins/integrations must be installed and authenticated |
+| [Codex](agents/codex.md) | `$yeet` | GitHub plugin/action, `$gh-address-comments`, Git/CI | install; `$yeet` and `$gh-address-comments` are curated skills; the GitHub Action is CI-only |
+| [Antigravity](agents/antigravity.md) | **N/A — no built-in atomic ship command** | headless `agy -p`, custom Skills/Plugins, Git/CI | N/A + built-in + project; Headless mode is scriptable, but release policy and credentials remain external |
+| [Cursor](agents/cursor.md) | Git + review | /split-to-prs, /autopilot | built-in + project; Remote PR actions require repository access and task authority |
+| [Kiro](agents/kiro.md) | Git + project CI | custom delivery procedure | built-in + project; No atomic ship capability established; release decision remains separate |
 
 Wire `python check.py` and `python install.py --check` into CI for this repository. Convenience
 commands do not replace branch protection, release policy, or reproducible checks.
@@ -317,11 +295,13 @@ Deploy through a provider or CI/CD identity with a known recovery path.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | **N/A — no built-in deploy command** | `vercel`, `firebase`, `supabase` plugins | N/A + install | Provider plugins require installation, credentials, and their target service | Invoke provider-specific deployment workflows |
-| Codex | **N/A — no built-in deploy command** | `$vercel-deploy`, `$netlify-deploy`, `$render-deploy`, `$cloudflare-deploy` | N/A + install | Skills must be installed; plugin-bundled alternatives are unavailable in the IDE extension | Invoke provider-specific deployment workflows |
-| Antigravity | **N/A — no generic deploy command** | Firebase, Android, Data Agent Kit, Maps bundles; custom Skills/MCP | N/A + install | Google bundles must be enabled and authenticated; they are not fresh-install built-ins | Invoke provider-specific deployment workflows with scoped credentials |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | **N/A — no built-in deploy command** | `vercel`, `firebase`, `supabase` plugins | N/A + install; Provider plugins require installation, credentials, and their target service |
+| [Codex](agents/codex.md) | **N/A — no built-in deploy command** | `$vercel-deploy`, `$netlify-deploy`, `$render-deploy`, `$cloudflare-deploy` | N/A + install; Skills must be installed; plugin-bundled alternatives are unavailable in the IDE extension |
+| [Antigravity](agents/antigravity.md) | **N/A — no generic deploy command** | Firebase, Android, Data Agent Kit, Maps bundles; custom Skills/MCP | N/A + install; Google bundles must be enabled and authenticated; they are not fresh-install built-ins |
+| [Cursor](agents/cursor.md) | Project deployment command | provider MCP/plugin when configured | project + install; Use the target environment credentials and existing release gates |
+| [Kiro](agents/kiro.md) | Project deployment command | Netlify Power; configured provider tools | project + install; IDE/CLI v3/Web: install/connect Power; deploying still needs authority |
 
 Production approval remains outside the agent. Prefer a CI/CD deployment identity and an explicit
 environment approval over credentials embedded in an interactive session.
@@ -343,11 +323,13 @@ Inspect signals and decide when action is needed.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `sentry` integration | OpenTelemetry, `/schedule` Routines with GitHub/API triggers, Analytics dashboard/API, `/loop` | install + built-in + ⚠️ gated | Routines and analytics vary by plan, provider, and surface; scheduling runtimes have different persistence and credentials | Inspect delivery/runtime telemetry and react to repository or API events |
-| Codex | `sentry`/`posthog` plugins | Scheduled Tasks, externally scheduled `codex exec` | install + built-in | These are plugin names; Scheduled Tasks are ChatGPT/desktop capabilities, while CLI and IDE need an external scheduler | Inspect telemetry and run recurring observation tasks |
-| Antigravity | `/schedule` | Sidecars, Remote Control notifications, MCP, SDK/API hooks, headless `agy -p` | built-in + install | Sidecars are off until enabled; Remote Control monitors host tasks; neither supplies telemetry storage or alert ownership | Run recurring inspections, monitor host agents, and connect to an external observability system |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `sentry` integration | OpenTelemetry, `/schedule` Routines with GitHub/API triggers, Analytics dashboard/API, `/loop` | install + built-in + ⚠️ gated; Routines and analytics vary by plan, provider, and surface; scheduling runtimes have different persistence and credentials |
+| [Codex](agents/codex.md) | `sentry`/`posthog` plugins | Scheduled Tasks, externally scheduled `codex exec` | install + built-in; These are plugin names; Scheduled Tasks are ChatGPT/desktop capabilities, while CLI and IDE need an external scheduler |
+| [Antigravity](agents/antigravity.md) | `/schedule` | Sidecars, Remote Control notifications, MCP, SDK/API hooks, headless `agy -p` | built-in + install; Sidecars are off until enabled; Remote Control monitors host tasks; neither supplies telemetry storage or alert ownership |
+| [Cursor](agents/cursor.md) | Configured telemetry tools | Hex Canvas; /automate, /loop | install + built-in; Visualization and automation do not provide telemetry storage or credentials |
+| [Kiro](agents/kiro.md) | Configured telemetry tools | Datadog / Dynatrace Powers | install; Powers are catalog options; verify actual tools and account access |
 
 Monitoring must emit durable events or alerts. A recurring agent prompt is orchestration, not an
 observability backend.
@@ -369,11 +351,13 @@ Find the cause, correct it and preserve the evidence.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/debug` | `/autofix-pr`, `/code-review --fix`, `/security-review --fix`, `/simplify --fix`, `sentry`, `hr-diagnosing-bugs` (experimental, opt-in) | built-in + install + project | `/autofix-pr` is a cloud/GitHub workflow; mutation and external comments need authority | Reproduce failures, trace runtime evidence, and prepare a reviewed fix |
-| Codex | `$gh-fix-ci` | `$gh-address-comments`, `codex-security` fix pipeline, `sentry`/`posthog` plugins, `hr-diagnosing-bugs` (experimental, opt-in) | install + ⚠️ gated + project | GitHub skills require repository access; Codex Security requires separately provisioned access | Diagnose CI, review, security, and production signals and prepare remediation |
-| Antigravity | `/boost` | `/codesearch`, `research`/`browser` subagents, MCP, Artifacts, `hr-diagnosing-bugs` (experimental, opt-in) | built-in + install + ⚠️ gated + project | `/boost` is paid; external incident data requires MCP or another integration | Reproduce failures, compare hypotheses, verify a correction, and preserve evidence |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/debug` | `/autofix-pr`, `/code-review --fix`, `/security-review --fix`, `/simplify --fix`, `sentry`, `hr-diagnosing-bugs` (experimental, opt-in) | built-in + install + project; `/autofix-pr` is a cloud/GitHub workflow; mutation and external comments need authority |
+| [Codex](agents/codex.md) | `$gh-fix-ci` | `$gh-address-comments`, `codex-security` fix pipeline, `sentry`/`posthog` plugins, `hr-diagnosing-bugs` (experimental, opt-in) | install + ⚠️ gated + project; GitHub skills require repository access; Codex Security requires separately provisioned access |
+| [Antigravity](agents/antigravity.md) | `/boost` | `/codesearch`, `research`/`browser` subagents, MCP, Artifacts, `hr-diagnosing-bugs` (experimental, opt-in) | built-in + install + ⚠️ gated + project; `/boost` is paid; external incident data requires MCP or another integration |
+| [Cursor](agents/cursor.md) | Agent diagnosis | /review-bugbot; hr-diagnosing-bugs | built-in + project; Reproduce the failure; review findings alone do not identify root cause |
+| [Kiro](agents/kiro.md) | Bugfix Spec + execution | hr-diagnosing-bugs; telemetry Power | built-in + project + install; Keep current/expected/unchanged behavior; verify in execution-capable mode |
 
 Feed incident findings into `work/<id>/findings.md`, tests, and checks. Do not leave the only causal
 record in a vendor conversation.
@@ -396,11 +380,13 @@ Improve the engineering system in response to observed friction.
 <details>
 <summary>Tools by agent — availability and constraints</summary>
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | `/doctor` | `/context`, `/memory`, `/reload-skills`, `/reload-plugins`, `/claude-api prompt-audit`, `/claude-api cost-optimize` | built-in | Availability varies; terminal-dialog commands are not on every surface | Audit setup and loaded context, trim instructions, reload extensions, and inspect prompt/cost drift |
-| Codex | `codex doctor` | `codex debug prompt-input`, plugin/hooks/features inspection, Scheduled Tasks | built-in | `codex doctor` covers startup/connectivity/performance, not Claude's instruction-trimming workflow | Diagnose client health and manually audit what is installed, enabled, and model-visible |
-| Antigravity | `/learn` | `/skills`, `/agents`, `/hooks`, `/mcp`, `/config`, `/usage` | built-in | No documented doctor command; `/learn` output path conflicts across official pages | Convert repeated corrections into Rules/Skills and manually audit loaded extensions and quotas |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | `/doctor` | `/context`, `/memory`, `/reload-skills`, `/reload-plugins`, `/claude-api prompt-audit`, `/claude-api cost-optimize` | built-in; Availability varies; terminal-dialog commands are not on every surface |
+| [Codex](agents/codex.md) | `codex doctor` | `codex debug prompt-input`, plugin/hooks/features inspection, Scheduled Tasks | built-in; `codex doctor` covers startup/connectivity/performance, not Claude's instruction-trimming workflow |
+| [Antigravity](agents/antigravity.md) | `/learn` | `/skills`, `/agents`, `/hooks`, `/mcp`, `/config`, `/usage` | built-in; No documented doctor command; `/learn` output path conflicts across official pages |
+| [Cursor](agents/cursor.md) | Customize inventory | /update-cli-config, /update-cursor-settings; workflow status | built-in + project; IDE settings and agent CLI settings are different surfaces |
+| [Kiro](agents/kiro.md) | Agent Steering & Skills | CLI /guide; agent/profile configuration; workflow status | built-in + project; Guide is CLI-only; inspect effective resources before changing configuration |
 
 Move procedures out of always-loaded instruction files and into project-prefixed skills. Use
 scheduled audits only when their output has an owner and a durable destination.
@@ -416,11 +402,13 @@ scheduled audits only when their output has an owner and a durable destination.
 Use host permissions and protected CI for enforceable controls. A third-party or project skill
 can describe a procedure; it does not create a cross-agent permission boundary.
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | permission rules | hooks, sandbox, managed settings | built-in | Hooks are often fail-open; the OS sandbox covers Bash descendants but is unavailable on native Windows. See the canonical inventory's enforcement boundary | Separate advisory instructions from enforceable tool and OS boundaries |
-| Codex | permission profiles | hooks, native sandbox, `requirements.toml`, project trust | built-in | Native Windows has OS-level sandboxing; an untrusted project skips project `.codex/` layers; full access flips web search to live, while apps bypass the command-network proxy/allowlist | Bound tools, filesystem/network access, escalation, and organization policy |
-| Antigravity | Deny/Ask/Allow permissions | Terminal Sandbox, hooks, project settings, artifact review | built-in | `Deny > Ask > Allow`; sandbox is opt-in/preview. CLI Features says Windows `AppContainer`, while the dedicated Sandbox pages omit Windows | Bound files, commands, URLs, MCP tools, host escape, and review points |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | permission rules | hooks, sandbox, managed settings | built-in; Hooks are often fail-open; the OS sandbox covers Bash descendants but is unavailable on native Windows. See the canonical inventory's enforcement boundary |
+| [Codex](agents/codex.md) | permission profiles | hooks, native sandbox, `requirements.toml`, project trust | built-in; Native Windows has OS-level sandboxing; an untrusted project skips project `.codex/` layers; full access flips web search to live, while apps bypass the command-network proxy/allowlist |
+| [Antigravity](agents/antigravity.md) | Deny/Ask/Allow permissions | Terminal Sandbox, hooks, project settings, artifact review | built-in; `Deny > Ask > Allow`; sandbox is opt-in/preview. CLI Features says Windows `AppContainer`, while the dedicated Sandbox pages omit Windows |
+| [Cursor](agents/cursor.md) | Permission configuration | hooks and scoped CLI rules | built-in + project; Hook coverage differs in cloud; hook failure can be fail-open |
+| [Kiro](agents/kiro.md) | Agent permissions | tools/resources; PreToolUse hooks | built-in + project; Use the active surface/schema; a permission allowlist is not a tool inventory |
 
 Model prompts express intent; they are not the security boundary. On native Windows, Codex has a
 documented OS command sandbox, Claude Code does not, and Antigravity's official pages conflict over
@@ -433,11 +421,13 @@ Use an existing durable work record when another session must continue, fix or v
 The optional [work artifact pilot](../templates/work/README.md) illustrates the required pointers;
 a repository-visible handoff must still be transferred to a new checkout or host.
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | Git + CI + `work/<id>/` | project tests/checks | project | **N/A** for a purpose-built agent-configuration evaluation suite | Preserve decisions, changes, verification, and operational findings outside the conversation |
-| Codex | Git + CI + `work/<id>/` | project tests/checks | project | **N/A** for a purpose-built agent-configuration evaluation suite | Preserve decisions, changes, verification, and operational findings outside the conversation |
-| Antigravity | Git + CI + `work/<id>/` | Artifacts, project tests/checks | project + built-in | Artifacts improve review but are not the repository's durable system of record by default | Preserve decisions, changes, verification, and operational findings outside the conversation |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | Git + CI + `work/<id>/` | project tests/checks | project; **N/A** for a purpose-built agent-configuration evaluation suite |
+| [Codex](agents/codex.md) | Git + CI + `work/<id>/` | project tests/checks | project; **N/A** for a purpose-built agent-configuration evaluation suite |
+| [Antigravity](agents/antigravity.md) | Git + CI + `work/<id>/` | Artifacts, project tests/checks | project + built-in; Artifacts improve review but are not the repository's durable system of record by default |
+| [Cursor](agents/cursor.md) | Git + workflow state | logs, revision hashes and work records | project; Record explicit runtime load traces; files alone do not prove discovery |
+| [Kiro](agents/kiro.md) | Git + workflow state | Spec artifacts, logs and resource settings | project + built-in; Preserve portable outputs; do not treat machine-local state as transferred |
 
 Build project-specific CI for agent configuration where its behavior matters. A deterministic gate
 provides a guarantee only when the current agent cannot modify, disable, or bypass that gate.
@@ -450,11 +440,13 @@ only its encoded contract; it does not replace independent review.
 Questionnaires, explanation and learning procedures may help the people making decisions.
 They are optional support, not required lifecycle gates.
 
-| Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
-|---|---|---|---|---|---|
-| Claude Code | **N/A by design** | permissions, hooks, review, deployment approvals | N/A | Intent acceptance, authority maps, production approval, and accountability stay human-owned | Enforce a human decision without transferring responsibility to the tool |
-| Codex | **N/A by design** | permissions, hooks, review, deployment approvals | N/A | Intent acceptance, authority maps, production approval, and accountability stay human-owned | Enforce a human decision without transferring responsibility to the tool |
-| Antigravity | **N/A by design** | permissions, Artifact Review, hooks, deployment approvals | N/A | `/goal`, `/boost`, and teams expand execution, not accountability | Enforce a human decision without transferring responsibility to the tool |
+| Agent / inventory | Start with | Optional support | Availability / surface |
+|---|---|---|---|
+| [Claude Code](agents/claude-code.md) | **N/A by design** | permissions, hooks, review, deployment approvals | N/A; Intent acceptance, authority maps, production approval, and accountability stay human-owned |
+| [Codex](agents/codex.md) | **N/A by design** | permissions, hooks, review, deployment approvals | N/A; Intent acceptance, authority maps, production approval, and accountability stay human-owned |
+| [Antigravity](agents/antigravity.md) | **N/A by design** | permissions, Artifact Review, hooks, deployment approvals | N/A; `/goal`, `/boost`, and teams expand execution, not accountability |
+| [Cursor](agents/cursor.md) | Accountable owner | permission controls and reviewed release process | project + built-in; Native automation does not authorize publication or deployment |
+| [Kiro](agents/kiro.md) | Accountable owner | Spec decisions and permission controls | project + built-in; Quick Spec convenience does not replace business acceptance |
 
 Tools can enforce an authority decision; they cannot supply the accountable owner.
 Scope authority by blast radius and reversibility, not by model capability. A stronger model may

@@ -32,6 +32,25 @@ For a bug fix, include the original reproduction and relevant regression checks.
 For a spec/plan correction, inspect the changed clause against the source requirement; do not
 substitute a software test for a document-level decision.
 
+## Resource use (optional)
+
+Use for costly runs or comparisons; omit for a small routine check. Record the budget before
+execution, then actual use. This is a record, not an enforced spending cap.
+
+| Field | Value |
+|---|---|
+| Budget / stop condition | <time, model attempts or observable allowance; agreed scope> |
+| Model / effort / billing mode | <configured and observed, or unknown; subscription/API/credits> |
+| Attempts / elapsed time | <include failed attempts; define wall time versus summed worker time> |
+| Usage / source / scope | <raw token or credit fields and log reference; per-turn/session/account> |
+| Money | <observed amount and currency, separately labelled estimate, or unknown> |
+| Limit snapshots, if used | <timestamps, window/reset times, before/after, other activity unknown/known> |
+
+Preserve the producer's field semantics: do not add cached/reasoning subcounts to totals unless
+the format defines them as separate. Deduplicate cumulative snapshots. Missing counters stay
+unknown. Never convert subscription percentages into tokens or money. Compare task outcomes
+alongside usage; failed or blocked attempts do not disappear from the comparison.
+
 ## Outcome
 
 pass | fail | blocked

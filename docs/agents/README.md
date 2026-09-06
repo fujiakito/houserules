@@ -30,6 +30,11 @@ at a time.
 
 > **Adding an agent adds a file. It must never widen a table.**
 
+Complete the change across the inventory, every GUIDE stage/concern table and MATRIX before
+calling the agent mapped. Record surface, built-in versus installable status, source/date and
+remaining runtime checks. `tests/test_documentation.py` guards GUIDE coverage; it cannot verify
+vendor claims. See the [documentation map](../README.md) for the other consumers.
+
 A column per agent stops being readable at about four. A row, or a file, does not. That rule is the
 whole reason for this directory.
 
@@ -40,9 +45,11 @@ whole reason for this directory.
 | [`claude-code.md`](claude-code.md) | Claude Code — CLI, desktop, mobile, IDE, web, SDK, Chrome |
 | [`codex.md`](codex.md) | Codex — CLI, desktop app, IDE extension, cloud, mobile/Remote |
 | [`antigravity.md`](antigravity.md) | Google Antigravity — four core products plus Remote Control, managed API and Enterprise; documentation inventory with installed 2.0/IDE presence, no capability execution |
+| [`cursor.md`](cursor.md) | Cursor — IDE/CLI/cloud; documented capabilities, measured IDE launcher and Python installer acceptance |
+| [`kiro.md`](kiro.md) | Kiro — IDE/CLI/Web/Mobile; documented capabilities, measured IDE launcher and unresolved custom-resource inheritance |
 | [`_TEMPLATE.md`](_TEMPLATE.md) | copy this to add an agent |
 
-**These three are the canonical inventories for this project.** Everything established about an
+**These five are the canonical inventories for this project.** Everything established about an
 agent lives in its file — surfaces, built-ins, installables, extension points, limits, and the
 traps. Nothing else in the repository duplicates them; `../GUIDE.md` links into them per stage and
 `../../research/MATRIX.md` compares one mechanism at a time across all eight agents.
@@ -56,7 +63,11 @@ Claude Code and Codex are `tested`; Antigravity is explicitly `documented`, not 
 inventory exists because it records the official surface split, source-level conflicts, and the
 exact local test still required — not because a documentation pass counts as support.
 
-Not yet written: Cursor, Copilot, Kiro, Goose, OpenCode. They remain surveyed in
+Cursor and Kiro have documentation inventories as of 2026-09-06. Their local version and installer
+checks do not establish native discovery or execution; see the shared
+[acceptance record](../../tests/workflows/cursor-kiro/README.md).
+
+Not yet written: Copilot, Goose, OpenCode. They remain surveyed in
 `../../research/MATRIX.md`. Before promoting one, either install and enumerate it or preserve the
 same visible documentation-only boundary used by Antigravity.
 
@@ -70,6 +81,8 @@ for it:
 | **Codex** | `System` | `Personal` |
 | **Claude Code** | bare name — `code-review` | `plugin:skill` — `anthropic-skills:pdf` |
 | **Antigravity** | lower bound: 2.0 **Antigravity Guide**; CLI `antigravity_guide`, `migrate-workflows` | enabled Google bundles and user plugins/skills |
+| **Cursor** | documented native review and extension-authoring skills | plugins, user/project skills and MCP; [dated inventory](cursor.md) |
+| **Kiro** | Default/Plan agents and Specs, not relabeled as skills | Powers, user/project skills and MCP; [dated inventory](kiro.md) |
 | **this project** | **built-in** | **installable** |
 
 "Agent X has a PDF skill" and "Agent X ships with a PDF skill" are different claims, and only the

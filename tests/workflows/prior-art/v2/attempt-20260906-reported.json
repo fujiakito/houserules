@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "status": "reviewer-reported-completed-pair; incomplete primary evidence",
+  "recorded_date": "2026-09-06",
+  "source": "review.md R-009 section 2",
+  "source_sha256": "707b6e163d19d76836c0a4e730e3164f837a9f103cb23222cd9c60eace66940a",
+  "surface_reported": "Claude Code CLI 2.1.251 on Windows",
+  "model_reported": "claude-sonnet-5",
+  "provider": null,
+  "utc_start": null,
+  "utc_end": null,
+  "argv": null,
+  "timeout_seconds": null,
+  "working_directory": null,
+  "configuration_reported": {
+    "sequential": true,
+    "fresh_session_per_arm": true,
+    "known_flags": [
+      "--tools",
+      "",
+      "--strict-mcp-config"
+    ],
+    "tools_reported": []
+  },
+  "input_hashes_current": {
+    "baseline-prompt.md": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+    "candidate-prompt.md": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+    "rubric.md": "4a2126bdd5d96ff469c1c3a39b2530c820fa3ca4c7846efb66a7bac9436cba67"
+  },
+  "arms": [
+    {
+      "arm": "baseline",
+      "status_reported": "completed",
+      "exit_code": null,
+      "timed_out": null,
+      "elapsed_seconds_reported": 12.1,
+      "output_path": null,
+      "diagnostic_path": null,
+      "usage_reported": {
+        "input_tokens": 2,
+        "cache_read_input_tokens": 3289,
+        "output_tokens": 691
+      },
+      "billed_cost": null,
+      "score_reported": 3.5,
+      "score_max": 4
+    },
+    {
+      "arm": "candidate",
+      "status_reported": "completed",
+      "exit_code": null,
+      "timed_out": null,
+      "elapsed_seconds_reported": 10.2,
+      "output_path": null,
+      "diagnostic_path": null,
+      "usage_reported": {
+        "input_tokens": 2,
+        "cache_read_input_tokens": 3289,
+        "output_tokens": 616
+      },
+      "billed_cost": null,
+      "score_reported": 3.5,
+      "score_max": 4
+    }
+  ],
+  "reviewer_excerpt": "attempt-20260906-reviewer-excerpt.md",
+  "grader_context": "Reviewer raised F-001 and shaped v2; shared context, not blinded",
+  "limitations": [
+    "Full argv, timestamps, deadline and working directory are not present in the available review account.",
+    "Original outputs and traces were not located in repository work files; quotations are not complete outputs.",
+    "No independent regrading or measured billing comparison; no promotion evidence."
+  ]
+}

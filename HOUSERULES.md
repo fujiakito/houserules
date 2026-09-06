@@ -3,6 +3,15 @@
 Start with this project's AGENTS.md and existing task instructions.
 This page lists installed choices; it does not authorize external actions.
 
+## Start a task
+
+Tell your agent: **Read `.houserules/START.md` and use it for this task: <outcome>.**
+The [short execution protocol](.houserules/START.md) uses the installed
+[workflow tool](.houserules/workflow.py) to bound command attempts and execution time,
+save logs and detect stale verification. It does not cap surrounding chat usage.
+To load this protocol on relevant tasks automatically, install with --activate-workflow;
+that explicitly appends a small trigger to AGENTS.md, preserving existing content.
+
 ## Installed skills
 
 Ask your agent to use a skill by name, or open its local SKILL.md below.

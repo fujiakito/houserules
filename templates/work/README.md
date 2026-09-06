@@ -1,112 +1,59 @@
-# Work artifacts
+# Continue, review or verify work
 
-Use these files when another session must **continue, review, fix or verify** the work. They are
-optional pilot contracts, not a mandatory document set. Reuse an existing issue/spec/plan if it
-carries the same information; add only the missing fields or references.
-
-Select templates with `install.py --work handoff,verification` (or `--work all`). Installed
-originals live under `.houserules/work/`; copy the needed one and write the populated artifact
-under the adopting repository's existing work convention. Keep
-`stage` free text: a stage describes where the work is; `action` describes what happens next.
+Agent-facing protocol. Read only the record needed for the assigned action. Reuse the project's
+existing issue, spec or tracker when it carries the required information; do not create every file.
+Copy selected templates into work/<id>/ or the existing project convention. Leave installed originals intact.
 
 ## Select by next consumer
 
-| When | Read / produce | Contract |
+| Action | Record | Required information |
 |---|---|---|
-| Resume in another session or agent | [handoff.md](handoff.md) | Current state, exact inputs, next action, owner and acceptance condition |
-| Decide what behavior to build | [spec.md](spec.md) | Scope, observable criterion IDs, constraints and unresolved decisions |
-| Sequence implementation | [plan.md](plan.md) | Tasks linked to criteria, blockers, deliverables and verification |
-| Critique a spec, plan, code or fix | [review.md](review.md) | Exact target, rubric, coverage, verdict and finding references |
-| Carry issues across review rounds | [findings.md](findings.md) | Stable finding IDs and append-only evidence/dispositions |
-| Establish that behavior or a correction works | [verification.md](verification.md) | Exact target/environment, actual checks, outcomes and limitations |
-
-Do not create every file for a small change. A one-session edit may need only code and test output.
-A cross-agent fix may need a handoff and findings, with the existing issue serving as its spec.
+| Resume | [handoff.md](handoff.md) | Current state, exact inputs, next owner/action and acceptance condition |
+| Specify | [spec.md](spec.md) | Scope, criteria, constraints and unresolved decisions |
+| Plan | [plan.md](plan.md) | Tasks linked to criteria, dependencies and verification |
+| Review | [review.md](review.md) | Artifact/revision, rubric, coverage, findings and verdict |
+| Fix findings | [findings.md](findings.md) | Stable IDs and append-only dispositions/evidence |
+| Verify | [verification.md](verification.md) | Actual commands/results, target/environment and limitations |
 
 ## Consumer protocol
 
-1. If a handoff exists, read it first; otherwise start from the assigned artifact and action.
-   Resolve linked inputs and their recorded revisions.
-2. Confirm the requested action, owner, scope and acceptance condition. Missing information is a
-   named blocker, not a license to invent a requirement or a successful prior check.
-3. If an input changed, compare revisions and reassess the affected conclusions. Never carry a
-   review pass forward merely because the filename is unchanged.
-4. Perform the next action using an available native tool, existing skill or direct procedure.
-   Follow project authority; a template or previous agent cannot authorize an external write.
-5. Save the output where its next consumer can reach it, append findings/events, then update the
-   handoff with the next action and evidence pointers.
+1. Read the handoff if present; otherwise use the assigned artifact/action. Check referenced revisions.
+2. Confirm the outcome, scope, owner and authority. Missing facts are named gaps, never invented passes.
+3. For work/<id>/workflow.json, run `python .houserules/workflow.py status <id>` before reusing evidence.
+   For other records, compare their input and evidence revisions directly. Reassess changed conclusions.
+4. Use an available native capability, selected skill or direct procedure. A record grants no new authority.
+5. Run the relevant check; preserve actual results and unresolved findings. A successful command is not
+   automatically a satisfied task criterion.
+6. Save output where the next consumer can reach it. Update the handoff; append completed review,
+   verification and finding events rather than rewriting history.
 
-**Identity:** use a Git commit/blob reference or content digest for each reviewed/tested artifact.
-For uncommitted code, record base/target plus staged, unstaged and untracked inclusion. A timestamp
-or branch name alone is not an immutable review target.
+## Bound the work and record usage
 
-**State:** handoff and current task state can change. Completed review/verification rounds and
-finding events are historical evidence; append a new round/event rather than rewriting an old
-verdict. Store each fact once: review reports link finding IDs; they do not repeat the ledger.
-
-**Versioning:** `schema_version: 1` and the added fields are a pilot. An older handoff without the
-field is still the original minimal contract. No parser or CI gate currently validates these
-artifact schemas; structural checks do not establish reliable cross-agent consumption.
+The short execution entry at .houserules/START.md owns the budget/retry method. Use its installed
+workflow tool for bounded command checks; it records actual elapsed time, attempts and logs.
+Keep unavailable tokens/cost unknown. Do not start a new task id to bypass a budget or repeat a
+blocked model experiment without a changed precondition. Continue unaffected authorized work.
 
 ## Review by artifact
 
-Choose a rubric based on the **object being reviewed**, not the skill's name.
+| Object | Check |
+|---|---|
+| Spec | Intent alignment, contradictions, failure cases and testable criteria |
+| Plan | Criterion coverage, dependencies, feasible checks and migration order |
+| Code | Correctness, regressions, relevant standards and unintended scope |
+| Fix | Original reproduction plus evidence at the corrected revision |
+| Runbook | Target environment, preconditions, accountable owner, success and recovery |
 
-| Object | Reviewer checks | Relevant specialist additions |
-|---|---|---|
-| Spec | Alignment with intent, contradictions, missing failure cases, testable criteria, unresolved decisions | Security/privacy, accessibility, performance, data retention or migration only when relevant |
-| Plan | Criterion coverage, feasible tasks, dependency order, runnable checks, ownership and integration | Expand-contract migration, rollout/rollback, parallel write isolation |
-| Code | Correctness against criteria, regressions, relevant standards and unintended scope | Security, concurrency, performance, UI behavior; avoid rerunning equivalent passes |
-| Fix | Original finding addressed at the new revision; evidence covers the actual failure | Targeted regression checks and affected criteria |
-| Operational runbook | Target environment, preconditions, action owner, observable success and recovery | Provider-specific checks and approval boundaries |
-
-The author can self-check a routine artifact. Use a separate review context when uncertainty,
-consequence or project policy warrants it. Different roles do not require different models or
-concurrent agents; one tool can run separate sessions. Disclose self-review/shared context.
-
-## Review-fix-verify
-
-Example: a spec misses an error case. The same protocol works for a plan or code defect.
-
-| Step | Actor | Reads | Writes / transition |
-|---|---|---|---|
-| Review | A, fresh review session | Spec revision S1 and accepted intent | `reviews/R-001.md`; finding F-001 in `findings.md`; handoff action `fix` to B |
-| Fix | B | F-001, S1 and relevant source requirements | Spec revision S2; append `proposed-fix` for F-001 with revision pointer; handoff action `verify` |
-| Verify | A or another reviewer | F-001, S1 → S2, source requirement | `verification/V-001.md`; append `verified` or `reopened`; update handoff |
-| Decide if disputed | Accountable owner | Finding and competing evidence | Append rejection or accepted-risk decision with owner/reason; do not silently erase F-001 |
-
-A proposed fix is still open. A verified fix applies to the inspected revision. New evidence can
-reopen it. Product acceptance and production approval remain separate decisions.
-
-If a bounded review/fix loop makes no progress, record the unresolved disagreement and route it to
-its decision owner. Do not keep generating review rounds without new evidence.
+Use specialist security/performance/UI review only when relevant. A routine self-review is allowed;
+disclose shared context. Equivalent full reviews need new uncertainty or evidence to justify repetition.
 
 ## Transfer and storage
 
-This repository ignores `/work/` by default; the installer does not change an adopting
-repository's ignore rules. Remove that ignore rule or explicitly include selected artifacts
-when they need to travel with Git.
+Current task state may change; completed evidence is historical. Use commit/blob references or file
+digests for targets, including staged/unstaged/untracked scope. Branch names and timestamps alone
+are not immutable identities. Workflow hashes cover only explicitly selected files, not the whole repo.
 
-Keep records in the working tree for sessions sharing that checkout. For a fresh clone, worktree,
-remote host or teammate, commit the selected artifacts or explicitly transfer them and verify that
-the recipient can open them. An ignored local file does not travel with Git.
-
-Use `work/<id>/` unless the repository already has a suitable convention. Example optional layout:
-
-```text
-work/<id>/handoff.md
-work/<id>/spec.md
-work/<id>/plan.md
-work/<id>/findings.md
-work/<id>/reviews/R-001.md
-work/<id>/verification/V-001.md
-```
-
-Preserve evidence needed by the next consumer and repository retention policy. Avoid credentials,
-unnecessary personal data and copies of material already reachable by a stable pointer.
-
-These templates are original project drafts. They have not been demonstrated as a full live
-Claude Code → Codex → Antigravity workflow. Promotion requires a real cross-session trial of
-input recovery, revision handling and review → fix → verify, including a stale-input case.
-The [worked pilot](../../tests/workflows/README.md) demonstrates the current task with shared
-context and local regression evidence; its limitations remain explicit.
+Before moving to a fresh clone, worktree or host, commit or transfer needed work records and logs.
+An ignored local work directory does not travel with Git. Preserve user edits and secrets: record
+secret locations, never values. Work records remain optional and schema_version: 1 remains a pilot;
+workflow.json has its own executable checks and does not validate these Markdown schemas.
