@@ -24,6 +24,11 @@ class DocumentationTests(unittest.TestCase):
                     self.assertEqual(len(cells), 4, 'Keep the human guide narrow')
                     self.assertTrue(all(cell.strip() for cell in cells))
 
+    def test_first_party_skill_notice_matches_the_project_license(self):
+        """hr-onboard is copied on its own, so its notice must not drift from the root one."""
+        self.assertEqual((ROOT / 'templates/skills/hr-onboard/LICENSE').read_bytes(),
+                         (ROOT / 'LICENSE').read_bytes())
+
     def test_short_agent_entry_does_not_expand_the_research_bundle(self):
         entry = (ROOT / 'templates/START.md').read_text(encoding='utf-8')
         self.assertLess(len(entry.split()), 400, 'Keep the routine execution entry small')

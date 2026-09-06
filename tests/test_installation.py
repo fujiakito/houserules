@@ -71,7 +71,7 @@ class InstallationTests(unittest.TestCase):
 
     def test_source_upgrade_requires_all_recorded_paths(self):
         source = Path(tempfile.mkdtemp(prefix="houserules-upgrade-source-"))
-        for name in ["install.py", "check.py"]:
+        for name in ["install.py", "check.py", "LICENSE"]:
             shutil.copy2(install.HERE / name, source / name)
         shutil.copytree(install.HERE / "templates", source / "templates")
         self.installer = source / "install.py"
@@ -299,7 +299,8 @@ class InstallationTests(unittest.TestCase):
         self.install_ok("--agents", "codex", "--skills", "none", "--work", "none")
         self.assertEqual(set(check.read_manifest(self.repo)["skills"]), {"hr-tdd", "hr-code-review"})
         self.assertEqual(set(check.read_assets(self.repo)["files"]),
-                         {"HOUSERULES.md", ".houserules/START.md", ".houserules/workflow.py", ".houserules/work/README.md",
+                         {"HOUSERULES.md", ".houserules/LICENSE", ".houserules/START.md",
+                          ".houserules/workflow.py", ".houserules/work/README.md",
                           ".houserules/work/handoff.md", ".houserules/work/review.md"})
 
     def test_unknown_selection_and_list_write_nothing(self):
@@ -362,7 +363,7 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(check.tree_hash(self.repo), before)
         self.install_ok(*args)
         self.assertEqual(self.run_install(*args, "--check").returncode, 0)
-        self.assertEqual(len(check.read_assets(self.repo)["files"]), 10)
+        self.assertEqual(len(check.read_assets(self.repo)["files"]), 11)
         report = check.Report()
         check.check_assets(self.repo, report)
         self.assertFalse(report.failed)
@@ -370,7 +371,7 @@ class InstallationTests(unittest.TestCase):
     def test_untouched_work_assets_upgrade_from_recorded_baseline(self):
         source = self.repo / "distribution"
         source.mkdir()
-        for name in ("install.py", "check.py"):
+        for name in ("install.py", "check.py", "LICENSE"):
             shutil.copy2(install.HERE / name, source / name)
         shutil.copytree(install.HERE / "templates", source / "templates")
         self.installer = source / "install.py"
@@ -385,6 +386,43 @@ class InstallationTests(unittest.TestCase):
         report = check.Report()
         check.check_assets(self.repo, report)
         self.assertFalse(report.failed)
+
+    def test_first_party_notice_installs_without_touching_the_project_license(self):
+        """MIT requires the notice to travel with the copies the installer makes."""
+        own = self.repo / "LICENSE"
+        own.write_bytes(b"Copyright (c) 2026 the adopting project. All rights reserved.\n")
+        self.install_ok("--agents", "codex")
+        notice = self.repo / ".houserules/LICENSE"
+        self.assertEqual(notice.read_bytes(), (install.HERE / "LICENSE").read_bytes())
+        self.assertEqual(own.read_bytes(), b"Copyright (c) 2026 the adopting project. All rights reserved.\n")
+        # hr-onboard is first-party and is also copied on its own, outside .houserules/.
+        self.assertTrue((self.repo / ".agents/skills/hr-onboard/LICENSE").is_file())
+        manifest = json.loads((self.repo / check.ASSET_MANIFEST).read_text(encoding="utf-8"))
+        self.assertIn(".houserules/LICENSE", manifest["files"])
+        report = check.Report()
+        check.check_assets(self.repo, report)
+        self.assertFalse(report.failed)
+
+    def test_untouched_notice_upgrades_and_a_modified_one_blocks_writes(self):
+        source = self.repo / "distribution"
+        source.mkdir()
+        for name in ("install.py", "check.py", "LICENSE"):
+            shutil.copy2(install.HERE / name, source / name)
+        shutil.copytree(install.HERE / "templates", source / "templates")
+        self.installer = source / "install.py"
+        self.install_ok("--agents", "codex")
+        upstream = source / "LICENSE"
+        upstream.write_bytes(upstream.read_bytes() + b"\nRelicensed line\n")
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 1)
+        self.install_ok("--agents", "codex")
+        self.assertEqual((self.repo / ".houserules/LICENSE").read_bytes(), upstream.read_bytes())
+        # A notice the adopter edited is preserved, and stops every write like any managed asset.
+        target = self.repo / ".houserules/LICENSE"
+        target.write_bytes(target.read_bytes() + b"\nLocal edit\n")
+        before = check.tree_hash(self.repo)
+        for flags in [(), ("--check",), ("--force",)]:
+            self.assertEqual(self.run_install("--agents", "claude", *flags).returncode, 1)
+            self.assertEqual(check.tree_hash(self.repo), before)
 
     def test_modified_assets_block_all_writes_even_force(self):
         self.install_ok("--agents", "codex", "--work", "handoff")

@@ -22,12 +22,18 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # README claims Python 3.9+. A single-version job cannot support that claim, so the
+    # floor, a current version and the newest release each run the same three gates.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11', '3.13']
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
 
       # No dependencies: both scripts are standard library only, on purpose. A check that
       # needs an install step is a check that gets skipped.

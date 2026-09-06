@@ -167,7 +167,8 @@ MANIFEST = ".houserules/skills.json"
 SHIPPED_SKILL_NAMES = {"hr-onboard", "hr-tdd", "hr-diagnosing-bugs", "hr-code-review"}
 ASSET_MANIFEST = ".houserules/assets.json"
 WORK_NAMES = {"handoff", "spec", "plan", "review", "findings", "verification"}
-ASSET_PATHS = {"HOUSERULES.md", ".houserules/START.md", ".houserules/workflow.py", ".houserules/work/README.md"} | {
+ASSET_PATHS = {"HOUSERULES.md", ".houserules/LICENSE", ".houserules/START.md",
+               ".houserules/workflow.py", ".houserules/work/README.md"} | {
     f".houserules/work/{name}.md" for name in WORK_NAMES
 }
 

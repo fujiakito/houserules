@@ -23,6 +23,8 @@ For test-first work use hr-tdd; for diagnosis use hr-diagnosing-bugs;
 for code review use hr-code-review, **only if listed above**. Matt Pocock adaptations
 carry their own NOTICE.md and MIT LICENSE beside SKILL.md. No companion skills,
 tracker account or parallel agents are required.
+houserules' own installed files are MIT; the notice is at
+[.houserules/LICENSE](.houserules/LICENSE) and your project's root LICENSE is untouched.
 
 ## Carry work forward
 

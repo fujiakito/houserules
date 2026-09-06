@@ -76,6 +76,7 @@ to hr-onboard. Agent paths previously selected are retained.
 | AGENTS.md and the CLAUDE.md import | Project instructions; existing content preserved, optional workflow rule appended |
 | Selected agent skill directories | Agent-discoverable procedures; foreign skills preserved |
 | HOUSERULES.md | Human entry linking the actual installation |
+| .houserules/LICENSE | The MIT notice for the first-party files installed above; your own root LICENSE is untouched |
 | .houserules/START.md | Short agent execution instructions |
 | .houserules/workflow.py | Local bounded command execution and evidence freshness checks |
 | .houserules/work/ | Selected template originals and their consumer protocol |
@@ -99,6 +100,24 @@ conflicts; it does not provide rollback for filesystem errors or concurrent edit
 There is no uninstaller. Inspect the ownership records and remove only the specific installed
 files you no longer need. Preserve your own instruction content and task evidence; remove only
 the houserules import/routing blocks from shared instruction files.
+
+## License and attribution
+
+houserules is MIT licensed — see [LICENSE](LICENSE).
+
+`hr-tdd`, `hr-diagnosing-bugs` and `hr-code-review` are adaptations of Matt Pocock's MIT-licensed
+skills. Each ships the upstream LICENSE and a NOTICE.md recording source, pinned revision,
+retrieval date and the changes made, and the installer copies both into your project alongside
+SKILL.md. Keep them together. [THIRD-PARTY.md](THIRD-PARTY.md) summarises every upstream source.
+
+The first-party files the installer writes — check.py, workflow.py, START.md, the work templates
+and hr-onboard — arrive with this project's MIT notice at `.houserules/LICENSE`. Your own root
+LICENSE is never read or written.
+
+Changes go through [CONTRIBUTING](CONTRIBUTING.md); the three gates and the evidence conventions
+are in [AGENTS.md](AGENTS.md). Suspected vulnerabilities go through [SECURITY](SECURITY.md), which
+also lists the designed behaviors that are not vulnerabilities — the installer writes where you
+point it, and an installed skill is model-directed text from whatever source you took it from.
 
 ## What has been verified
 

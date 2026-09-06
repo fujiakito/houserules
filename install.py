@@ -144,7 +144,10 @@ def start_page(skills: dict, work: set[str]) -> bytes:
     lines += ["", "For test-first work use hr-tdd; for diagnosis use hr-diagnosing-bugs;",
               "for code review use hr-code-review, **only if listed above**. Matt Pocock adaptations",
               "carry their own NOTICE.md and MIT LICENSE beside SKILL.md. No companion skills,",
-              "tracker account or parallel agents are required.", "", "## Carry work forward", ""]
+              "tracker account or parallel agents are required.",
+              "houserules' own installed files are MIT; the notice is at",
+              "[.houserules/LICENSE](.houserules/LICENSE) and your project's root LICENSE is untouched.",
+              "", "## Carry work forward", ""]
     if work:
         lines += ["Read the [consumer protocol](.houserules/work/README.md) when passing work between sessions.",
                   "Copy only the needed template into the project's existing work location",
@@ -167,7 +170,16 @@ def start_page(skills: dict, work: set[str]) -> bytes:
 
 
 def plan_assets(repo: Path, previous: dict, skills: dict, work: set[str]) -> dict[str, bytes]:
+    # MIT requires the notice to travel with copies. check.py, workflow.py, START.md and
+    # hr-onboard are first-party, so an installation without this file would ship substantial
+    # portions of the software with no notice. It is installed inside .houserules/ on purpose:
+    # the adopting project's own root LICENSE is theirs and is never touched.
+    notice = HERE / 'LICENSE'
+    if not notice.is_file():
+        raise ValueError("distribution is missing LICENSE; installing first-party files without "
+                         "the notice would break the terms they ship under")
     files = {"HOUSERULES.md": start_page(skills, work),
+             ".houserules/LICENSE": notice.read_bytes(),
              ".houserules/START.md": (HERE / 'templates/START.md').read_bytes(),
              ".houserules/workflow.py": (HERE / 'templates/workflow.py').read_bytes()}
     if work:
