@@ -216,3 +216,15 @@ is not implemented. No Linux CI run or fresh-agent skill loading was observed in
 See the [paired artifact-consumption smoke trial](prior-art/README.md) for its frozen
 packets, outcome rubric, execution status and limitations. This is separate from the historical
 author-only pilot above; neither upgrades untested vendor surfaces.
+
+
+## Public-repository adoption walkthrough
+
+[Bottle adoption](bottle-adoption/README.md) records a real clone/install/bug-fix walkthrough,
+installer preservation, manual workflow gaps and its shared-context evidence limits.
+
+
+## Selectable toolkit acceptance
+
+[Toolkit adoption](toolkit-adoption/README.md) covers the implemented local entry, optional Matt
+skills and work templates, preservation tests, and the explicit native-loading limitation.

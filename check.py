@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -163,7 +164,12 @@ SKILL_DIRS = [".claude/skills", ".agents/skills", ".cursor/skills",
 MANIFEST = ".houserules/skills.json"
 # Standalone check.py cannot discover templates in adopting repositories. This catalogue
 # detects ambiguous legacy installs, not ownership; tests keep it aligned with shipped sources.
-SHIPPED_SKILL_NAMES = {"hr-onboard"}
+SHIPPED_SKILL_NAMES = {"hr-onboard", "hr-tdd", "hr-diagnosing-bugs", "hr-code-review"}
+ASSET_MANIFEST = ".houserules/assets.json"
+WORK_NAMES = {"handoff", "spec", "plan", "review", "findings", "verification"}
+ASSET_PATHS = {"HOUSERULES.md", ".houserules/work/README.md"} | {
+    f".houserules/work/{name}.md" for name in WORK_NAMES
+}
 
 FAIL, WARN, OK = "FAIL", "warn", "ok"
 
@@ -244,8 +250,17 @@ def check_size(repo: Path, r: Report) -> None:
     # "In each directory along the path, it checks for AGENTS.override.md, then AGENTS.md."
     # The override replaces the plain file at ITS OWN level only; the chain continues past it.
     # Scanning only AGENTS.md makes a repository built on overrides look empty.
-    dirs = {p.parent for name in INSTRUCTION_FILENAMES for p in repo.rglob(name)
-            if ".git" not in p.parts and "templates" not in p.relative_to(repo).parts}
+    dirs = set()
+    for root, children, files in os.walk(repo, followlinks=False):
+        directory = Path(root)
+        # Independent clones/submodules/worktrees have their own instruction root.
+        # A .git file is a boundary too. Prune before visiting their descendants.
+        children[:] = [name for name in children
+                       if name not in {".git", "templates"}
+                       and not (directory / name).is_symlink()
+                       and not (directory / name / ".git").exists()]
+        if any(name in files for name in INSTRUCTION_FILENAMES):
+            dirs.add(directory)
     if not dirs:
         return
 
@@ -440,6 +455,75 @@ def check_sync(repo: Path, r: Report) -> None:
               f"{copies} managed copy/copies match installed source; foreign skills excluded")
 
 
+def content_hash(content: bytes) -> str:
+    """Normalize text checkout conversion; retain binary bytes."""
+    if b"\0" not in content:
+        try:
+            content.decode("utf-8")
+        except UnicodeDecodeError:
+            pass
+        else:
+            content = content.replace(b"\r\n", b"\n")
+    return hashlib.sha256(content).hexdigest()
+
+
+def asset_path(repo: Path, rel: str) -> Path:
+    """Only known local asset files; never traverse a symlink in their ancestry."""
+    if rel not in ASSET_PATHS | {ASSET_MANIFEST}:
+        raise ValueError(f"invalid asset path: {rel}")
+    path = repo / rel
+    # Also catches Windows junctions, which need not be reported as symlinks.
+    if not path.resolve().is_relative_to(repo.resolve()):
+        raise ValueError(f"asset escapes repository: {rel}")
+    current = repo
+    for part in Path(rel).parts:
+        current /= part
+        if current.is_symlink():
+            raise ValueError(f"symlink asset path: {rel}")
+        if current != path and current.exists() and not current.is_dir():
+            raise ValueError(f"non-directory asset parent: {current}")
+    return path
+
+
+def read_assets(repo: Path) -> dict:
+    path = asset_path(repo, ASSET_MANIFEST)
+    if not path.exists():
+        return {"schema_version": 1, "files": {}}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if (not isinstance(data, dict) or data.get("schema_version") != 1
+                or not isinstance(data.get("files"), dict)):
+            raise ValueError("expected schema_version 1 and files object")
+        for rel, digest in data["files"].items():
+            if rel not in ASSET_PATHS:
+                raise ValueError(f"invalid managed asset: {rel}")
+            asset_path(repo, rel)
+            if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+                raise ValueError(f"invalid digest for {rel}")
+        return data
+    except (OSError, UnicodeError, ValueError) as exc:
+        raise ValueError(f"{ASSET_MANIFEST}: {exc}") from exc
+
+
+def check_assets(repo: Path, r: Report) -> None:
+    try:
+        manifest = read_assets(repo)
+        problems = []
+        for rel, digest in manifest["files"].items():
+            path = asset_path(repo, rel)
+            if not path.is_file() or content_hash(path.read_bytes()) != digest:
+                problems.append(f"{rel} missing or modified")
+        if problems:
+            r.add(FAIL, "work assets", " / ".join(problems)
+                  + " — preserve edits; reconcile with the installer before updating")
+        elif manifest["files"]:
+            r.add(OK, "work assets", f"{len(manifest['files'])} managed file(s) intact")
+        elif (repo / "HOUSERULES.md").exists():
+            r.add(WARN, "work assets", "ownership unknown; HOUSERULES.md is not enrolled")
+    except (OSError, ValueError) as exc:
+        r.add(FAIL, "work assets", str(exc))
+
+
 def check_frontmatter(repo: Path, r: Report) -> None:
     """description is the trigger condition an agent matches on. Without it the skill
     is invisible to implicit invocation."""
@@ -593,6 +677,7 @@ def main() -> int:
     check_empty_sections(repo, r)
     check_names(repo, r)
     check_sync(repo, r)
+    check_assets(repo, r)
     check_frontmatter(repo, r)
     check_reserved_drift(repo, r)
 

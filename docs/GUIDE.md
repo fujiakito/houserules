@@ -17,8 +17,9 @@ skill, or a deterministic check, expressed as a trigger rather than background p
 inventories for evidence grade, install state, feature flags, provider, version, plan, and surface
 restrictions.
 
-**Mapping checked 2026-09-04.** Claude Code and Codex are locally tested; Antigravity is official-
-documentation-only. The inventories retain the surface versions and retrieval date for each claim.
+**Native mapping checked 2026-09-04; project-skill routing updated 2026-09-06.**
+Claude Code and Codex are locally tested; Antigravity is official-documentation-only.
+The inventories retain the surface versions and retrieval date for each claim.
 Recheck policy is in `../research/MATRIX.md`.
 
 ## Choose the next action
@@ -47,8 +48,11 @@ a skill does not add it to the project's supported or recommended set. Project-o
 also justify their value and coexist with the user's choices. New research should improve a task
 contract or validate a specific gap; it should not automatically expand this guide's tool list.
 
-The project covers the full SDLC through contracts, with optional fallbacks admitted only for
-[evaluated gaps](../research/PORTABILITY.md#fallback-admission-criteria). A stage does not require
+The project covers the full SDLC through contracts. Recommended/default fallbacks require
+[evaluated gaps](../research/PORTABILITY.md#fallback-admission-criteria); experimental candidates
+can be explicitly selected before promotion. The
+[candidate comparison](../research/PORTABILITY.md#experimental-candidate-comparison--2026-09-06)
+records alternatives and open evidence requirements. A stage does not require
 its own skill, and missing native tooling does not prevent using a direct procedure.
 
 The [work artifact templates](../templates/work/README.md) are optional pilot drafts.
@@ -63,6 +67,11 @@ Use your existing spec, plan or review format when it carries the information th
 | ⚠️ **gated** | also requires account, plan, provider, or organization provisioning |
 | **project** | supplied by this repository or the target repository |
 | **N/A** | no purpose-built capability for this purpose; the general agent can still do the work |
+
+The three optional `hr-` candidates below are experimental and off by default.
+Select them with the [installer](../README.md); use the installed `HOUSERULES.md` for local paths.
+Their table placement does not establish native loading on each surface; see the
+[acceptance record](../tests/workflows/toolkit-adoption/README.md).
 
 Mixed rows list every applicable type. Assume one agent, not a combination: each stage must work
 with whichever inventoried agent is active. Agents without a capability inventory are omitted
@@ -199,9 +208,9 @@ Implement the chosen task using the runtime and isolation your current host prov
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
-| Claude Code | `/batch` | `/subtask`, `/background`, `/worktree`, LSP plugins | built-in + install | `/batch` requires Git; plugin language servers are separately installed and unavailable in cloud sessions | Implement in isolated units with optional language-server feedback |
-| Codex | `codex exec` + Git worktrees | managed Worktrees, `/new playground worktree`, subagents, Local Environments | built-in | `codex exec` is CLI/non-interactive; managed Worktrees, the slash command, and Local Environments are desktop capabilities | Isolate parallel changes, reproduce setup, and automate bounded implementation tasks across surfaces |
-| Antigravity | `/goal` | worktree subagents, `/teamwork-preview`, `agy -p`, Remote Control | built-in + ⚠️ gated | `/teamwork-preview` is paid/preview; headless CLI is scriptable; Remote Control drives a host session rather than supplying another runtime | Implement interactively, in isolated parallel children, headlessly, or through a remote host control channel |
+| Claude Code | `/batch` | `/subtask`, `/background`, `/worktree`, LSP plugins, `hr-tdd` (experimental, opt-in) | built-in + install + project | `/batch` requires Git; plugin language servers are separately installed and unavailable in cloud sessions | Implement in isolated units with optional language-server feedback |
+| Codex | `codex exec` + Git worktrees | managed Worktrees, `/new playground worktree`, subagents, Local Environments, `hr-tdd` (experimental, opt-in) | built-in + project | `codex exec` is CLI/non-interactive; managed Worktrees, the slash command, and Local Environments are desktop capabilities | Isolate parallel changes, reproduce setup, and automate bounded implementation tasks across surfaces |
+| Antigravity | `/goal` | worktree subagents, `/teamwork-preview`, `agy -p`, Remote Control, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project | `/teamwork-preview` is paid/preview; headless CLI is scriptable; Remote Control drives a host session rather than supplying another runtime | Implement interactively, in isolated parallel children, headlessly, or through a remote host control channel |
 
 Use one worktree per parallel write stream. All three agents can coordinate concurrent work; none
 is limited to a single isolated chat.
@@ -226,9 +235,9 @@ Produce evidence that the changed behavior works.
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
-| Claude Code | `/verify` | `/run`, `/run-skill-generator`, Bash | built-in | Availability and launch-recipe path are disputed across official pages; confirm on the active surface before relying on them | Build and run the changed system, then capture a reusable launch recipe |
-| Codex | **N/A — no dedicated verify command** | shell, Local Environments, `@Browser`, `$playwright` | N/A + built-in + install | Local Environments and Browser are desktop-specific; Playwright is installable | Execute project tests and runtime checks through general tools |
-| Antigravity | `/boost` | shell, `/browser`, Artifacts | built-in + ⚠️ gated | `/boost` explicitly documents tests and independent verification but requires a paid plan; sandbox is opt-in | Run tests and UI checks, then expose results as reviewable artifacts |
+| Claude Code | `/verify` | `/run`, `/run-skill-generator`, Bash, `hr-tdd` (experimental, opt-in) | built-in + project | Availability and launch-recipe path are disputed across official pages; confirm on the active surface before relying on them | Build and run the changed system, then capture a reusable launch recipe |
+| Codex | **N/A — no dedicated verify command** | shell, Local Environments, `@Browser`, `$playwright`, `hr-tdd` (experimental, opt-in) | N/A + built-in + install + project | Local Environments and Browser are desktop-specific; Playwright is installable | Execute project tests and runtime checks through general tools |
+| Antigravity | `/boost` | shell, `/browser`, Artifacts, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project | `/boost` explicitly documents tests and independent verification but requires a paid plan; sandbox is opt-in | Run tests and UI checks, then expose results as reviewable artifacts |
 
 A tool invocation is not evidence by itself. Record the command, surface, version, result, and
 relevant artifact. If Claude's launch skill is unavailable, an existing project procedure can
@@ -259,9 +268,9 @@ Choose the question the review must answer. Add specialist passes only for relev
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
-| Claude Code | `/code-review` | `/security-review`, `/simplify` | built-in | Interactive-first; `--fix` mutates and `--comment` posts externally | Review correctness, security, and unnecessary complexity before integration |
-| Codex | `/code review`, `codex review` | `review-agent`, `codex-security` plugin (`$security-scan`) | built-in + install + ⚠️ gated | App and CLI surfaces differ; `review-agent` is delegated internally; Codex Security needs access beyond installation | Review interactively or in CI, with an optional staged security pipeline |
-| Antigravity | **N/A — no dedicated code-review command** | `/diff`, Artifact Review, custom `code-auditor` agent/skill, `/boost` | N/A + built-in + project + ⚠️ gated | `/diff` is a viewer, not a reviewer; `/boost` is paid | Inspect changes and delegate review, then bind recurring findings in tests/checks |
+| Claude Code | `/code-review` | `/security-review`, `/simplify`, `hr-code-review` (experimental, opt-in) | built-in + project | Interactive-first; `--fix` mutates and `--comment` posts externally | Review correctness, security, and unnecessary complexity before integration |
+| Codex | `/code review`, `codex review` | `review-agent`, `codex-security` plugin (`$security-scan`), `hr-code-review` (experimental, opt-in) | built-in + install + ⚠️ gated + project | App and CLI surfaces differ; `review-agent` is delegated internally; Codex Security needs access beyond installation | Review interactively or in CI, with an optional staged security pipeline |
+| Antigravity | **N/A — no dedicated code-review command** | `/diff`, Artifact Review, custom `code-auditor` agent/skill, `/boost`, `hr-code-review` (experimental, opt-in) | N/A + built-in + project + ⚠️ gated | `/diff` is a viewer, not a reviewer; `/boost` is paid | Inspect changes and delegate review, then bind recurring findings in tests/checks |
 
 Use review to find issues; move requirements that must bind into deterministic CI checks.
 
@@ -362,9 +371,9 @@ Find the cause, correct it and preserve the evidence.
 
 | Agent | Primary tool | Supporting tools | Type | Surface / constraint | Purpose |
 |---|---|---|---|---|---|
-| Claude Code | `/debug` | `/autofix-pr`, `/code-review --fix`, `/security-review --fix`, `/simplify --fix`, `sentry` | built-in + install | `/autofix-pr` is a cloud/GitHub workflow; mutation and external comments need authority | Reproduce failures, trace runtime evidence, and prepare a reviewed fix |
-| Codex | `$gh-fix-ci` | `$gh-address-comments`, `codex-security` fix pipeline, `sentry`/`posthog` plugins | install + ⚠️ gated | GitHub skills require repository access; Codex Security requires separately provisioned access | Diagnose CI, review, security, and production signals and prepare remediation |
-| Antigravity | `/boost` | `/codesearch`, `research`/`browser` subagents, MCP, Artifacts | built-in + install + ⚠️ gated | `/boost` is paid; external incident data requires MCP or another integration | Reproduce failures, compare hypotheses, verify a correction, and preserve evidence |
+| Claude Code | `/debug` | `/autofix-pr`, `/code-review --fix`, `/security-review --fix`, `/simplify --fix`, `sentry`, `hr-diagnosing-bugs` (experimental, opt-in) | built-in + install + project | `/autofix-pr` is a cloud/GitHub workflow; mutation and external comments need authority | Reproduce failures, trace runtime evidence, and prepare a reviewed fix |
+| Codex | `$gh-fix-ci` | `$gh-address-comments`, `codex-security` fix pipeline, `sentry`/`posthog` plugins, `hr-diagnosing-bugs` (experimental, opt-in) | install + ⚠️ gated + project | GitHub skills require repository access; Codex Security requires separately provisioned access | Diagnose CI, review, security, and production signals and prepare remediation |
+| Antigravity | `/boost` | `/codesearch`, `research`/`browser` subagents, MCP, Artifacts, `hr-diagnosing-bugs` (experimental, opt-in) | built-in + install + ⚠️ gated + project | `/boost` is paid; external incident data requires MCP or another integration | Reproduce failures, compare hypotheses, verify a correction, and preserve evidence |
 
 Feed incident findings into `work/<id>/findings.md`, tests, and checks. Do not leave the only causal
 record in a vendor conversation.

@@ -255,5 +255,141 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(check.tree_hash(self.repo), before)
 
 
+    def test_optional_selection_and_local_entry(self):
+        self.install_ok("--agents", "codex")
+        self.assertEqual(set(check.read_manifest(self.repo)["skills"]), {"hr-onboard"})
+        self.assertFalse((self.repo / ".agents/skills/hr-tdd").exists())
+        self.install_ok("--agents", "codex", "--skills", "hr-tdd,hr-code-review",
+                        "--work", "handoff,verification")
+        self.assertEqual(set(check.read_manifest(self.repo)["skills"]),
+                         {"hr-onboard", "hr-tdd", "hr-code-review"})
+        for name in ["SKILL.md", "LICENSE", "NOTICE.md", "tests.md", "mocking.md"]:
+            self.assertTrue((self.repo / ".agents/skills/hr-tdd" / name).is_file())
+        entry = (self.repo / "HOUSERULES.md").read_text(encoding="utf-8")
+        self.assertIn(".agents/skills/hr-tdd/SKILL.md", entry)
+        self.assertIn(".houserules/work/handoff.md", entry)
+        self.assertFalse((self.repo / ".houserules/work/spec.md").exists())
+        protocol = (self.repo / ".houserules/work/README.md").read_text(encoding="utf-8")
+        self.assertNotIn("](spec.md)", protocol)
+        self.assertNotIn("../../tests/workflows", protocol)
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
+
+    def test_selection_is_additive_and_none_does_not_uninstall(self):
+        self.install_ok("--agents", "codex", "--skills", "hr-tdd", "--work", "handoff")
+        self.install_ok("--agents", "claude", "--skills", "hr-code-review", "--work", "review")
+        self.install_ok("--agents", "codex", "--skills", "none", "--work", "none")
+        self.assertEqual(set(check.read_manifest(self.repo)["skills"]), {"hr-tdd", "hr-code-review"})
+        self.assertEqual(set(check.read_assets(self.repo)["files"]),
+                         {"HOUSERULES.md", ".houserules/work/README.md",
+                          ".houserules/work/handoff.md", ".houserules/work/review.md"})
+
+    def test_unknown_selection_and_list_write_nothing(self):
+        before = check.tree_hash(self.repo)
+        for args in [("--skills", "tdd"), ("--work", "../spec"), ("--skills", "")]:
+            self.assertEqual(self.run_install(*args).returncode, 2)
+        self.assertEqual(self.run_install("--list").returncode, 0)
+        self.assertEqual(check.tree_hash(self.repo), before)
+
+    def test_work_preview_is_read_only_then_converges(self):
+        before = check.tree_hash(self.repo)
+        args = ("--agents", "codex", "--skills", "all", "--work", "all")
+        self.assertEqual(self.run_install(*args, "--check").returncode, 1)
+        self.assertEqual(check.tree_hash(self.repo), before)
+        self.install_ok(*args)
+        self.assertEqual(self.run_install(*args, "--check").returncode, 0)
+        self.assertEqual(len(check.read_assets(self.repo)["files"]), 8)
+        report = check.Report()
+        check.check_assets(self.repo, report)
+        self.assertFalse(report.failed)
+
+    def test_untouched_work_assets_upgrade_from_recorded_baseline(self):
+        source = self.repo / "distribution"
+        source.mkdir()
+        for name in ("install.py", "check.py"):
+            shutil.copy2(install.HERE / name, source / name)
+        shutil.copytree(install.HERE / "templates", source / "templates")
+        self.installer = source / "install.py"
+        self.install_ok("--agents", "codex", "--work", "handoff")
+        template = source / "templates/work/handoff.md"
+        template.write_bytes(template.read_bytes() + b"\nUpstream extension\n")
+        before = (self.repo / ".houserules/work/handoff.md").read_bytes()
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 1)
+        self.assertEqual((self.repo / ".houserules/work/handoff.md").read_bytes(), before)
+        self.install_ok("--agents", "codex")
+        self.assertEqual((self.repo / ".houserules/work/handoff.md").read_bytes(), template.read_bytes())
+        report = check.Report()
+        check.check_assets(self.repo, report)
+        self.assertFalse(report.failed)
+
+    def test_modified_assets_block_all_writes_even_force(self):
+        self.install_ok("--agents", "codex", "--work", "handoff")
+        target = self.repo / ".houserules/work/handoff.md"
+        target.write_bytes(target.read_bytes() + b"\nUser customization\n")
+        report = check.Report()
+        check.check_assets(self.repo, report)
+        self.assertTrue(report.failed)
+        before = check.tree_hash(self.repo)
+        for flags in [(), ("--check",), ("--force",)]:
+            result = self.run_install("--agents", "claude", "--skills", "hr-tdd", *flags)
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertEqual(check.tree_hash(self.repo), before)
+        self.assertFalse((self.repo / ".claude/skills/hr-tdd").exists())
+
+    def test_entry_collision_preserves_foreign_content(self):
+        (self.repo / "HOUSERULES.md").write_text("Owned by user", encoding="utf-8")
+        before = check.tree_hash(self.repo)
+        self.assertEqual(self.run_install().returncode, 1)
+        self.assertEqual(check.tree_hash(self.repo), before)
+
+    def test_asset_manifest_rejects_escape_and_file_parent(self):
+        parent = self.repo / ".houserules"
+        parent.mkdir()
+        manifest = parent / "assets.json"
+        manifest.write_text(json.dumps({"schema_version": 1,
+                                       "files": {"../outside": "a" * 64}}))
+        before = check.tree_hash(self.repo)
+        self.assertEqual(self.run_install().returncode, 2)
+        self.assertEqual(check.tree_hash(self.repo), before)
+        manifest.write_text(json.dumps({"schema_version": 1, "files": {}}))
+        (parent / "work").write_text("not a directory")
+        before = check.tree_hash(self.repo)
+        self.assertEqual(self.run_install("--work", "all").returncode, 1)
+        self.assertEqual(check.tree_hash(self.repo), before)
+
+    def test_asset_checkout_conversion_and_missing_file(self):
+        self.install_ok("--agents", "codex", "--work", "handoff")
+        target = self.repo / ".houserules/work/handoff.md"
+        target.write_bytes(target.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
+        # One explicit fixture file only; no directory cleanup.
+        target.unlink()
+        report = check.Report()
+        check.check_assets(self.repo, report)
+        self.assertTrue(report.failed)
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 1)
+        self.install_ok("--agents", "codex")
+        self.assertTrue(target.is_file())
+
+    def test_nested_git_boundaries_do_not_hide_real_instruction_chains(self):
+        (self.repo / "AGENTS.md").write_text("root rule")
+        for name, gitfile in [("clone", False), ("worktree", True)]:
+            nested = self.repo / name
+            nested.mkdir()
+            if gitfile:
+                (nested / ".git").write_text("gitdir: /elsewhere")
+            else:
+                (nested / ".git").mkdir()
+            (nested / "AGENTS.md").write_text("x" * check.MAX_INSTRUCTION_BYTES)
+        report = check.Report()
+        check.check_size(self.repo, report)
+        self.assertFalse(report.failed)
+        local = self.repo / "local"
+        local.mkdir()
+        (local / "AGENTS.md").write_text("x" * check.MAX_INSTRUCTION_BYTES)
+        report = check.Report()
+        check.check_size(self.repo, report)
+        self.assertTrue(report.failed)
+
+
 if __name__ == "__main__":
     unittest.main()

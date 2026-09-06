@@ -4,8 +4,9 @@ Use these files when another session must **continue, review, fix or verify** th
 optional pilot contracts, not a mandatory document set. Reuse an existing issue/spec/plan if it
 carries the same information; add only the missing fields or references.
 
-`install.py` does not install these templates. Select the needed template from this directory and
-write the populated artifact under the adopting repository's existing work convention. Keep
+Select templates with `install.py --work handoff,verification` (or `--work all`). Installed
+originals live under `.houserules/work/`; copy the needed one and write the populated artifact
+under the adopting repository's existing work convention. Keep
 `stage` free text: a stage describes where the work is; `action` describes what happens next.
 
 ## Select by next consumer

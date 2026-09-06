@@ -134,7 +134,7 @@ assertions are sufficient, and it does not replace independent review.
 
 ### Fallback admission criteria
 
-Before adding an optional `hr-` skill, record:
+Before promoting an optional `hr-` skill to recommended/default status, record:
 
 1. **Concrete gap:** target operation/artifact, agent surface/version, expected contract and an
    observed failure. Missing from an inventory means unknown, not absent. An equivalent built-in
@@ -153,9 +153,37 @@ Before adding an optional `hr-` skill, record:
    preserved user skills, upstream revision/license notices for adapted material, and a maintainer
    and recheck trigger. Promote only where the evidence supports it.
 
-These are project design decisions, not a claim of a universally optimal architecture. No new
-fallback or routing skill is adopted by this scope change. Capability facts stay in `docs/agents/`;
+Experimental candidates may be packaged for explicit opt-in before comparative promotion, with
+provenance, declared dependencies and installation/usage checks. The three Matt Pocock adaptations
+follow that path; see README for selections. They are not recommended replacements for native tools.
+These are project design decisions, not a universally optimal architecture. Capability facts stay in `docs/agents/`;
 dated research snapshots are revisited only when evaluating a concrete candidate.
+
+### Experimental candidate comparison — 2026-09-06
+
+Source review, not comparative execution. Native options below come from the dated
+[Claude Code](../docs/agents/claude-code.md), [Codex](../docs/agents/codex.md) and
+[Antigravity](../docs/agents/antigravity.md) inventories (retrieved through 2026-09-04).
+This comparison does not refresh those vendor claims. Missing inventory entries do not
+establish missing capability. Matt Pocock is the user's selected third-party baseline;
+each candidate's NOTICE links the upstream source, pinned revision and retrieval date.
+
+| Candidate / intended output | Existing choices and overlap | Candidate tradeoff / evaluation question |
+|---|---|---|
+| [hr-code-review](../templates/skills/hr-code-review/NOTICE.md): separate Standards and Spec findings bound to a revision | Claude Code's inventoried code-review and Codex's app/CLI review already inspect changes. Antigravity's inventory routes review through artifacts, custom agents and boost; no dedicated command is recorded. Matt's upstream procedure uses parallel reviewers and a tracker | Uses ordinary records and no mandatory tracker or subagents. A custom procedure may help on Antigravity, but no observed failure establishes a gap. Compare actionable findings, missed defects, false positives and cost against each target's available review workflow |
+| [hr-tdd](../templates/skills/hr-tdd/NOTICE.md): a behavioral red/green regression plus implementation | All three can edit code and execute project tests. No dedicated TDD skill is recorded in these inventories; that is not proof of absence. Matt's upstream procedure includes companion-skill and seam-confirmation requirements | Retains vertical slices while reusing existing interface/task authorization. Compare regression quality, implementation correctness and cost against upstream and direct test-first instructions; lack of a named command alone earns no benefit |
+| [hr-diagnosing-bugs](../templates/skills/hr-diagnosing-bugs/NOTICE.md): reproduced cause, correction and regression | Claude Code's debug overlaps directly. Codex's inventoried CI/incident integrations and Antigravity's general research/test tools cover parts of diagnosis. Matt's upstream procedure supplies a more prescriptive investigation workflow | Removes a mandatory Bash harness and condenses the procedure. Compare correct root cause, regression coverage, unnecessary changes and cost on the actual failure type; CI-specific tooling is not automatically a general-debugging substitute |
+
+For every row, include a **direct-procedure arm**: ask for the same outcome using the project's
+existing tests and ordinary files, without installing a skill. Compare identical task facts and
+authority; candidate instructions grant no extra mutation, publishing or delegation permission.
+Native options retain their own dependencies and surface restrictions from the inventories.
+The candidates require the project's normal tools, not an additional execution runtime.
+
+This records criterion 2's initial source comparison only. Criteria 1 and 5 remain open:
+the Bottle walkthrough is shared-context acceptance, not evidence of superiority. Start a future
+trial with hr-tdd as a bounded test-design experiment; evaluate review against the native option
+on each claimed surface, not against all vendors simultaneously. No trial is scheduled here.
 
 ## 5. The handoff contract
 

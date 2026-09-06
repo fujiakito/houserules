@@ -4,9 +4,9 @@
 die when you switch.**
 
 **Scope: the full SDLC, through portable contracts and optional, evaluated fallback skills.**
-Today the installer supplies repository instructions, `hr-onboard`, `check.py` and its ownership
-record. Six optional work templates are available separately as pilots; no new fallback skill
-has been shipped or evaluated yet.
+The installer supplies repository instructions, `hr-onboard`, `check.py`, ownership records and
+a local `HOUSERULES.md` entry point. Select six optional work templates and three experimental
+Matt Pocock adaptations when useful; nothing requires a full document set or stage-by-stage workflow.
 Coverage means each stage can communicate its inputs, outputs, evidence and next action when the
 agent changes. Capability availability varies by surface; use the implementation that fits the task.
 The shared layer carries:
@@ -49,6 +49,34 @@ python check.py --repo /path/to/your-project
 Omit `--repo` to act on the current directory. **Do not copy these files in by hand** — the
 installer is what avoids overwriting an `AGENTS.md`, a `CLAUDE.md` or a skill you already have.
 
+To choose additional material (all selections are additive):
+
+```bash
+python install.py --list
+python install.py --repo /path/to/your-project --agents codex --skills all --work all --check
+python install.py --repo /path/to/your-project --agents codex --skills all --work all
+```
+
+Or select only what you need: `--skills hr-tdd,hr-diagnosing-bugs --work handoff,verification`.
+Omitting `--skills` selects `hr-onboard` plus previously installed catalog skills; omitting
+`--work` keeps previous work selections. `none` adds nothing; it does not uninstall prior choices.
+The default does not add the three experimental skills. Existing agent/path selections are retained.
+
+**In the adopting project, open `HOUSERULES.md`.** It links the actual installed skills and
+selected templates. Use them locally without returning here; only installation/updates need this
+distribution. User work belongs outside the installed originals. Work assets have a separate
+`.houserules/assets.json` ownership/digest record; modified files stop installation before writes,
+even with `--force`. Untouched managed work assets may update when the distribution changes.
+
+| Optional skill | Purpose | Source / status |
+|---|---|---|
+| `hr-tdd` | One meaningful red-green slice at a public interface | [Matt adaptation](templates/skills/hr-tdd/NOTICE.md), experimental |
+| `hr-diagnosing-bugs` | Reproduction, falsifiable diagnosis and verified fix | [Matt adaptation](templates/skills/hr-diagnosing-bugs/NOTICE.md), experimental |
+| `hr-code-review` | Separate Standards and Spec review of a pinned change | [Matt adaptation](templates/skills/hr-code-review/NOTICE.md), experimental |
+
+Each adaptation carries the upstream MIT license and revision. They do not require a tracker,
+companion skill, Bash harness or parallel agents. Their availability is not a superiority claim.
+
 Then, inside your agent — `/hr-onboard` on Claude Code; **`$hr-onboard` on Codex**, which uses `$`
 for skills and `/` for session commands; or mention `hr-onboard` by name on Antigravity 2.0/IDE
 so progressive disclosure can load it. The installer does not create Antigravity CLI's flat-`.md`
@@ -72,7 +100,8 @@ Linux, `python3` may be the name.
 
 There is no uninstaller, because there is nothing to unwind: delete `AGENTS.md`, the `@AGENTS.md`
 line from `CLAUDE.md`, `check.py`, and the `hr-onboard` directory under each agent's skills path.
-Also remove `.houserules/skills.json` when removing the managed layer. Preserve your own content
+Also remove the managed `HOUSERULES.md` and selected `.houserules/work/` files, and their
+ownership records, when removing the layer. Inspect `.houserules/assets.json` for the exact files. Preserve your own content
 in files you have edited. Everything this installs is a plain file (or an optional skill symlink).
 </details>
 
@@ -82,9 +111,12 @@ in files you have edited. Everything this installs is a plain file (or an option
 |---|---|
 | `AGENTS.md` | read natively by every surveyed agent **except Claude Code**. Verified by running Codex and Claude Code; the rest from official documentation, retrieved 2026-09-01 |
 | `CLAUDE.md` containing `@AGENTS.md` | **required, not an adapter.** Without it Claude Code ignores `AGENTS.md` and raises no error |
-| `hr-onboard` skill, in documented nested-Skill paths | one source is copied to each configured path. Antigravity CLI's documented flat `.md` variant is not synthesized; the current coverage and open test live in [`research/MATRIX.md` §2](research/MATRIX.md#2-skills--the-same-standard-three-different-paths) |
+| Selected skills, in documented nested-Skill paths | one source is copied to each configured path. Antigravity CLI's documented flat `.md` variant is not synthesized; the current coverage and open test live in [`research/MATRIX.md` §2](research/MATRIX.md#2-skills--the-same-standard-three-different-paths) |
 | `check.py` | the only portable enforcement: a script with an exit code binds regardless of which agent, or human, made the change |
 | `.houserules/skills.json` | managed skill names, selected project paths and source digests; commit it with the installed layer |
+| `HOUSERULES.md` | local entry point linking only the installed choices |
+| `.houserules/work/` (selected with `--work`) | template originals and consumer protocol; populate copies in your project's work location |
+| `.houserules/assets.json` | ownership and digests for the entry and selected work assets |
 
 Skill sync checks only those recorded copies. Foreign skills are preserved; local name and
 frontmatter checks still apply. Digests normalize CRLF/LF in UTF-8 text so ordinary Git checkout
@@ -104,14 +136,16 @@ previously recorded paths for that skill. Partial upgrades stop before writes, i
 `--force`; select agents covering those paths (or `--agents all`) and inspect content conflicts.
 The installer does not automatically distinguish a safe old-version upgrade from user edits.
 
-## What it deliberately does not install
+## What remains optional or outside installation
 
 Vendor hooks, subagent definitions, plugin bundles and a mandatory skill for every stage. Use your
 preferred native, third-party or project capability when it satisfies the contract. Researching an
 external skill does not make it a dependency or recommendation.
 
-`hr-onboard` is the only shipped skill today. The [work templates](templates/work/README.md) are
-optional pilots; full SDLC is the design scope, not a claim that every workflow has been validated.
+`hr-onboard` is the default skill. The [work templates](templates/work/README.md) and three
+Matt adaptations are opt-in; full SDLC is the design scope, not a claim that every workflow has
+been validated. The full research inventory and GUIDE stay here; selected consumer guidance
+travels with the templates and local entry point.
 
 ## The rule everything follows
 
@@ -125,6 +159,7 @@ See the [enforcement map](docs/ENFORCEMENT.md) for what current checks establish
 
 ```
 docs/ENFORCEMENT.md        current mechanical checks, review responsibilities and limits
+HOUSERULES.md              generated entry for this repository's installed choices
 docs/GUIDE.md              the AI-native SDLC: 12 stages + 3 cross-cutting concerns — for you
 docs/agents/claude-code.md the full Claude Code inventory: surfaces, bundled skills, subagents,
                            hooks, permission modes, artifacts, scheduling, plugins, limits
@@ -136,8 +171,8 @@ research/MATRIX.md         8 agents x 6 extension mechanisms, with check dates a
 research/PORTABILITY.md    what dies on a switch, and what the portable layer must therefore carry
 templates/AGENTS.md        mostly empty, with the inclusion test that keeps it that way
 templates/CLAUDE.md        the required import line
-templates/work/            optional handoff, spec, plan, review, findings and verification contracts
-templates/skills/          hr-onboard — discovery by attempting, not by scanning
+templates/work/            selectively installed handoff, spec, plan, review, findings and verification contracts
+templates/skills/          hr-onboard plus three opt-in, attributed Matt Pocock adaptations
 install.py                 one source of truth into every agent's path
 check.py                   checks instruction integrity, skill names/frontmatter, sync and inventory drift
 tests/                     installer/coexistence regressions and a worked contract pilot

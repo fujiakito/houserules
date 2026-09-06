@@ -47,6 +47,13 @@ redirected to Devin Desktop Cascade documentation on 2026-09-05; the supplementa
 that source observation, not a verified product identity. Remaining mechanisms and runtime
 behavior are backlog.
 
+**2026-09-06 supplemental observation:** a reviewer reports successful explicit invocation of the
+three optional toolkit skills in Claude Code CLI 2.1.251, with empty-repository and `.agents`-only
+negative controls. The [acceptance record](../tests/workflows/toolkit-adoption/README.md#subsequent-reviewer-reported-claude-loading--2026-09-06)
+preserves the results and the unresolved tool-isolation evidence. This is reviewer-reported
+execution, not an independently checked expansion of the `tested` claims below; implicit triggering,
+comparative effectiveness and loading of these candidates on other surfaces remain unverified.
+
 ---
 
 ## 1. Instruction file — what each agent reads

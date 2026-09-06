@@ -20,7 +20,7 @@
 
 ## Do not
 
-- Do not add a skill merely to fill a stage or mirror a built-in. A fallback needs a demonstrated
+- Do not add a skill merely to fill a stage or mirror a built-in. A recommended/default fallback needs a demonstrated
   gap on the target surface and comparative evaluation; a built-in on another surface does not
   disqualify it. Apply the admission criteria in `research/PORTABILITY.md` section 4.
 - Do not cite the "repository overviews are not helpful" result as settled. Table 7 (Appendix B)

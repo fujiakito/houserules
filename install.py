@@ -28,7 +28,9 @@ Successful installs record owned names, selected paths and source digests in
 .houserules/skills.json. Later agent selections are additive; foreign skills are not enrolled.
 Known conflicts are checked across all selected destinations before any installation write.
 
-This script installs the complete layer. The default `python check.py` path only reads;
+The default installs hr-onboard and a local HOUSERULES.md entry. --skills and --work select
+additional material; existing selections remain installed. --list shows the offline catalog.
+The default `python check.py` path only reads;
 `check.py --fix` is an explicit local repair mode and must not be used as a CI gate.
 
 Paths verified 2026-09-01. Re-check them when an agent releases; see the recheck policy in
@@ -44,7 +46,8 @@ import shutil
 import sys
 from pathlib import Path
 
-from check import MANIFEST, read_manifest, tree_hash
+from check import (MANIFEST, ASSET_MANIFEST, WORK_NAMES, read_manifest, tree_hash,
+                   read_assets, asset_path, content_hash)
 
 HERE = Path(__file__).resolve().parent
 SKILL_SRC = HERE / "templates" / "skills"
@@ -80,6 +83,87 @@ def discover_skills() -> list[Path]:
     if not SKILL_SRC.is_dir():
         return []
     return sorted(p for p in SKILL_SRC.iterdir() if (p / "SKILL.md").is_file())
+
+
+def choose(value: str | None, available: set[str], default: set[str]) -> set[str]:
+    if value is None:
+        return default
+    if value == "all":
+        return available
+    if value == "none":
+        return set()
+    selected = {part.strip() for part in value.split(",") if part.strip()}
+    if not selected or selected - available:
+        raise ValueError("choose from " + ", ".join(sorted(available)) + ", all or none")
+    return selected
+
+
+def start_page(skills: dict, work: set[str]) -> bytes:
+    """Generated local entry point; no upstream checkout or network needed at use time."""
+    lines = ["# Using houserules in this project", "",
+             "Start with this project's AGENTS.md and existing task instructions.",
+             "This page lists installed choices; it does not authorize external actions.", "",
+             "## Installed skills", "",
+             "Ask your agent to use a skill by name, or open its local SKILL.md below.",
+             "Actual native discovery must be checked on your agent surface; files alone are not proof.", ""]
+    for name, entry in sorted(skills.items()):
+        links = ", ".join(f"[{rel}]({rel}/{name}/SKILL.md)" for rel in entry["paths"])
+        state = "core" if name == "hr-onboard" else "optional / experimental"
+        lines.append(f"- **{name}** ({state}): {links}")
+    if not skills:
+        lines.append("No skills selected.")
+    lines += ["", "For test-first work use hr-tdd; for diagnosis use hr-diagnosing-bugs;",
+              "for code review use hr-code-review, **only if listed above**. Matt Pocock adaptations",
+              "carry their own NOTICE.md and MIT LICENSE beside SKILL.md. No companion skills,",
+              "tracker account or parallel agents are required.", "", "## Carry work forward", ""]
+    if work:
+        lines += ["Read the [consumer protocol](.houserules/work/README.md) when passing work between sessions.",
+                  "Copy only the needed template into the project's existing work location",
+                  "(or work/<task-id>/); fill it there, leaving the installed originals intact.", ""]
+        lines += [f"- [{name}](.houserules/work/{name}.md)" for name in sorted(work)]
+    else:
+        lines.append("No work templates selected. Use existing project records; templates are an optional install choice.")
+    lines += ["", "A small task needs no document set. Record the target, next action and actual verification",
+              "when another session needs them. Commit or explicitly transfer records to a fresh checkout;",
+              "ignored local files do not travel automatically.", "", "## Verify and maintain", "",
+              "Run `python check.py` here after installation or changes. It checks managed copies,",
+              "instruction structure and selected work assets, not semantic correctness or runtime loading.",
+              "Run this project's tests separately. Keep existing project-owned files and foreign skills.", "",
+              "Re-run the houserules installer from its distribution for updates or additional selections;",
+              "preview first with --check. Nothing updates over the network in the background.",
+              "Keep HOUSERULES.md, .houserules manifests and installed material in Git; record your",
+              "customizations in project work files. Modified managed files are reported and preserved",
+              "until you reconcile them. Hooks and MCP connections are not installed by this layer.", ""]
+    return "\n".join(lines).encode("utf-8")
+
+
+def plan_assets(repo: Path, previous: dict, skills: dict, work: set[str]) -> dict[str, bytes]:
+    files = {"HOUSERULES.md": start_page(skills, work)}
+    if work:
+        for name in work | {"README"}:
+            content = (HERE / "templates/work" / f"{name}.md").read_bytes()
+            if name == "README":
+                text = content.decode("utf-8")
+                for omitted in WORK_NAMES - work:
+                    text = text.replace(f"[{omitted}.md]({omitted}.md)", f"{omitted} (not selected)")
+                text = text.replace("[worked pilot](../../tests/workflows/README.md)", "worked pilot in the houserules distribution")
+                content = text.encode("utf-8")
+            files[f".houserules/work/{name}.md"] = content
+    # Every path and current user edit is checked before any installation write, even with --force.
+    for rel, content in files.items():
+        path = asset_path(repo, rel)
+        for parent in path.parents:
+            if parent == repo:
+                break
+            if parent.exists() and not parent.is_dir():
+                raise ValueError(f"CONFLICT - non-directory asset parent: {parent}")
+        if path.exists():
+            if not path.is_file():
+                raise ValueError(f"CONFLICT - asset is not a file: {rel}")
+            current = content_hash(path.read_bytes())
+            if current not in {content_hash(content), previous["files"].get(rel)}:
+                raise ValueError(f"CONFLICT - preserve modified/unowned {rel}; reconcile it before retrying")
+    return files
 
 
 def same_tree(src: Path, dst: Path) -> bool:
@@ -186,11 +270,22 @@ def main() -> int:
     ap.add_argument("--repo", default=".", help="target repository (default: current directory)")
     ap.add_argument("--agents", default="all",
                     help="comma-separated: " + ",".join(AGENT_SKILL_PATHS) + ", or 'all'")
+    ap.add_argument("--skills", help="comma-separated skill names, all or none; default: hr-onboard and previously selected skills")
+    ap.add_argument("--work", help="comma-separated work templates, all or none; default: keep previous selection")
+    ap.add_argument("--list", action="store_true", help="list available skills and work templates; write nothing")
     ap.add_argument("--link", action="store_true", help="symlink instead of copy where possible")
     ap.add_argument("--check", action="store_true", help="report only; write nothing")
     ap.add_argument("--force", action="store_true",
                     help="overwrite an existing skill directory of the same name (destructive)")
     a = ap.parse_args()
+
+    catalog = {p.name: p for p in discover_skills()}
+    if a.list:
+        print("Skills (optional skills require explicit selection):")
+        for name in catalog:
+            print(f"  {name}: " + ("core" if name == "hr-onboard" else "Matt Pocock adaptation; experimental; MIT; see NOTICE.md"))
+        print("Work templates: " + ", ".join(sorted(WORK_NAMES)))
+        return 0
 
     repo = Path(a.repo).resolve()
     if not repo.is_dir():
@@ -211,11 +306,17 @@ def main() -> int:
         return 2
     try:
         previous = read_manifest(repo)
+        assets = read_assets(repo)
+        skill_names = choose(a.skills, set(catalog),
+                             {"hr-onboard"} | (set((previous or {}).get("skills", {})) & set(catalog)))
+        prior_work = {Path(rel).stem for rel in assets["files"]
+                      if rel.startswith(".houserules/work/") and Path(rel).stem in WORK_NAMES}
+        work = prior_work | choose(a.work, WORK_NAMES, set())
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    skills = discover_skills()
+    skills = [catalog[name] for name in sorted(skill_names)]
     # Validate the intended ownership record before touching the target repository.
     if any(not re.fullmatch(r"hr-[a-z0-9]+(?:-[a-z0-9]+)*", s.name) for s in skills):
         print("error: shipped skill names must use the hr- prefix", file=sys.stderr)
@@ -227,6 +328,19 @@ def main() -> int:
     # One source digest covers every recorded path. Do not advance it while leaving an
     # unselected path on an older source, even with --force. Ownership remains additive.
     selected = {AGENT_SKILL_PATHS[n] for n in names}
+    manifest = previous or {"schema_version": 1, "skills": {}}
+    # Construct the prospective page/record without mutating the previous state used for checks.
+    future_skills = {name: dict(entry) for name, entry in manifest["skills"].items()}
+    for skill in skills:
+        future_skills[skill.name] = {
+            "paths": sorted(set(future_skills.get(skill.name, {}).get("paths", [])) | selected),
+            "sha256": tree_hash(skill),
+        }
+    try:
+        asset_files = plan_assets(repo, assets, future_skills, work)
+    except (OSError, ValueError) as exc:
+        print(f"Installation stopped before writes: {exc}")
+        return 1
     partial_upgrades = []
     for skill in skills:
         entry = (previous or {}).get("skills", {}).get(skill.name)
@@ -307,7 +421,6 @@ def main() -> int:
     # A conflict must never bless a different user's skill. Preflight prevents known
     # partial writes; this guard also covers preview conflicts and a concurrent change.
     if not conflicts:
-        manifest = previous or {"schema_version": 1, "skills": {}}
         for skill in skills:
             prior_paths = manifest["skills"].get(skill.name, {}).get("paths", [])
             manifest["skills"][skill.name] = {
@@ -326,13 +439,39 @@ def main() -> int:
             outcome = "recorded managed skills"
         results.append(outcome)
         print(f"{MANIFEST} : {outcome}")
+        for rel, content in sorted(asset_files.items()):
+            path = asset_path(repo, rel)
+            if path.is_file() and content_hash(path.read_bytes()) == content_hash(content):
+                outcome = "unchanged"
+            elif a.check:
+                outcome = "would update" if path.exists() else "would create"
+            else:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+                outcome = "written"
+            results.append(outcome)
+            print(f"{rel} : {outcome}")
+        content = json.dumps({"schema_version": 1, "files": {
+            rel: content_hash(data) for rel, data in asset_files.items()
+        }}, indent=2, sort_keys=True) + "\n"
+        path = asset_path(repo, ASSET_MANIFEST)
+        if path.is_file() and path.read_text(encoding="utf-8") == content:
+            outcome = "unchanged"
+        elif a.check:
+            outcome = "would record work assets"
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+            outcome = "recorded work assets"
+        results.append(outcome)
+        print(f"{ASSET_MANIFEST} : {outcome}")
+        print("\nStart here: HOUSERULES.md")
     if a.check:
         print()
         print("Nothing was written. Re-run without --check to apply.")
 
     print()
-    print("This reports what INSTALLING would change. To verify the layer is intact"
-          " afterwards - size, collisions with\nbuilt-in names, missing skill descriptions,"
+    print("To verify the installed layer - size, collisions with\nbuilt-in names, missing skill descriptions,"
           " drift - run check.py. Its default path is read-only; in CI, run it without"
           " --fix so the gate reports drift instead of repairing it.")
     # Exit non-zero for ANY pending change, not conflicts alone. A location that was never
