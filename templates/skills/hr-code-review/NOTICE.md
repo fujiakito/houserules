@@ -11,5 +11,9 @@ optional local artifact guidance; no mandatory external tracker, companion skill
 or parallel agents. Tests and real use establish only the reported surface/operation, not
 comparative superiority. Status: experimental, explicitly selected by the adopter.
 
+2026-09-07 local refinement: use the project's severity scale or the selected findings
+template's vocabulary, and define consequence-based labels when neither exists. Work templates
+remain optional; no upstream files added.
+
 Maintainer: houserules maintainers. Recheck on an upstream update proposed for adoption or a
 reported behavior failure. No background downloads or updates are performed.

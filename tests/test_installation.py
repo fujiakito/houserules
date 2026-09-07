@@ -69,6 +69,34 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(paths, [".agents/skills", ".claude/skills"])
         self.assertFalse(self.sync().failed)
 
+    def test_omitted_agents_adds_all_paths(self):
+        self.install_ok('--agents', 'claude')
+        before = check.tree_hash(self.repo)
+        preview = self.run_install('--check')
+        self.assertEqual(preview.returncode, 1)
+        self.assertEqual(check.tree_hash(self.repo), before)
+        self.install_ok()
+        self.assertEqual(set(check.read_manifest(self.repo)['skills']['hr-onboard']['paths']),
+                         set(install.AGENT_SKILL_PATHS.values()))
+
+    def test_managed_conflict_message_requires_recorded_path(self):
+        self.install_ok('--agents', 'claude')
+        owned = self.repo / '.claude/skills/hr-onboard/SKILL.md'
+        owned.write_bytes(owned.read_bytes() + b'\nLocal edit\n')
+        foreign = self.repo / '.agents/skills/hr-onboard/SKILL.md'
+        foreign.parent.mkdir(parents=True)
+        foreign.write_bytes(b'Foreign skill')
+        before = check.tree_hash(self.repo)
+        for flags in [('--check',), ()]:
+            result = self.run_install('--agents', 'claude,codex', *flags)
+            self.assertEqual(result.returncode, 1)
+            lines = result.stdout.splitlines()
+            self.assertTrue(any('.claude/skills/hr-onboard: CONFLICT - recorded installed copy'
+                                in line for line in lines))
+            self.assertTrue(any('.agents/skills/hr-onboard: CONFLICT - a different skill'
+                                in line for line in lines))
+            self.assertEqual(check.tree_hash(self.repo), before)
+
     def test_source_upgrade_requires_all_recorded_paths(self):
         source = Path(tempfile.mkdtemp(prefix="houserules-upgrade-source-"))
         for name in ["install.py", "check.py", "LICENSE"]:
@@ -86,6 +114,10 @@ class InstallationTests(unittest.TestCase):
             self.assertIn(".agents/skills", result.stdout)
             self.assertEqual(check.tree_hash(self.repo), before)
             self.assertFalse(self.sync().failed)  # v1 baseline remains valid
+        result = self.run_install('--agents', 'codex', '--check')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('recorded installed copy differs from current source', result.stdout)
+        self.assertEqual(check.tree_hash(self.repo), before)
         # An operator reconciles the one known fixture file with the new source. No force,
         # directory replacement or recursive deletion is used to exercise the full upgrade.
         (self.repo / ".agents/skills/hr-onboard/SKILL.md").write_bytes(skill.read_bytes())
@@ -143,6 +175,7 @@ class InstallationTests(unittest.TestCase):
         before = check.tree_hash(self.repo)
         result = self.run_install("--agents", "claude", "--check")
         self.assertEqual(result.returncode, 1)
+        self.assertIn('a different skill of this name', result.stdout)
         self.assertEqual(check.tree_hash(self.repo), before)
         content = foreign.read_bytes()
         result = self.run_install("--agents", "claude")

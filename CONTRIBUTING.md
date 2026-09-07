@@ -44,6 +44,7 @@ the documentation conformance test checks link targets and stage coverage.
 | Change | Also required |
 |---|---|
 | A new agent surface | Inventory from `docs/agents/_TEMPLATE.md`, every `docs/GUIDE.md` stage and concern table, a `research/MATRIX.md` row |
+| A new or changed shipped skill | Canonical `templates/skills/<name>/` source, admission status/evidence, README and relevant GUIDE choices, installation/drift tests and upstream notices/THIRD-PARTY when applicable. Installer discovery is automatic; keep `check.py`'s explicit `SHIPPED_SKILL_NAMES` set in sync when names change (an installation test checks equality). Inspect installer listing/generated-page wording for assumptions about the current set. Regenerate owned copies/manifests through the installer; never hand-edit digests. |
 | A capability claim | Named surface and version for a local observation, or a source and retrieval date, or an `(unverified)` tag |
 | Installer or checker behavior | A regression test in `tests/`, and a `docs/ENFORCEMENT.md` row if it changes what a pass establishes |
 | Files under `tests/workflows/prior-art/` | These are frozen bytes referenced by SHA-256 records. `.gitattributes` pins their line endings. Append a new dated run; do not edit a recorded one |

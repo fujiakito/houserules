@@ -11,5 +11,9 @@ optional local artifact guidance; no mandatory external tracker, companion skill
 or parallel agents. Tests and real use establish only the reported surface/operation, not
 comparative superiority. Status: experimental, explicitly selected by the adopter.
 
+2026-09-07 local refinement: after repeated unsuccessful fixes, reassess causal/design
+assumptions and require new evidence for another attempt within existing task limits;
+clarify escalation for missing input or authority. No fixed retry count or upstream files added.
+
 Maintainer: houserules maintainers. Recheck on an upstream update proposed for adoption or a
 reported behavior failure. No background downloads or updates are performed.

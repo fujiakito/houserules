@@ -66,8 +66,9 @@ these outperform a built-in; [admission criteria](research/PORTABILITY.md#fallba
 govern recommendation and default promotion.
 
 Selections are additive. `--skills all` / `--work all` select the catalog; `none` adds nothing and
-does not uninstall prior selections. Omitted options retain existing choices; skills also default
-to hr-onboard. Agent paths previously selected are retained.
+does not uninstall prior selections. Omitted `--skills` and `--work` retain existing choices;
+skills also default to hr-onboard. Omitted `--agents` means `all`, including on updates.
+Repeat your original agent selection to avoid adding paths. Previously recorded paths are retained.
 
 ## What arrives in your project
 
@@ -93,6 +94,12 @@ Run the same installer with `--check` before updating. Modified managed work ass
 writes, including with `--force`; unchanged owned assets can update. Root check.py differences
 and skill conflicts require reconciliation before installation. Skill source updates must cover
 all previously recorded paths. See [enforcement boundaries](docs/ENFORCEMENT.md).
+
+For example, if you originally selected `claude,codex`, preview with
+`python install.py --repo /path/to/your-project --agents claude,codex --check`.
+Compare conflicting copies with the current source and preserve any local changes. Once reviewed,
+use the same command without `--check`, adding `--force` only if replacement is needed.
+`--force` can overwrite selected conflicting skills and root check.py; it does not merge changes.
 
 Keep filled task artifacts outside the installed originals. Preview/preflight prevents known
 conflicts; it does not provide rollback for filesystem errors or concurrent edits.
