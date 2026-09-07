@@ -6,27 +6,46 @@ and the standard library.
 
 ## Install
 
-From this repository, preview the files for your project:
+Run these from this repository. Add `--check` to either one to preview without writing: exit 1
+means changes are needed, exit 0 means no drift.
+
+**Minimal** — project instructions, the `hr-onboard` skill, and the local checker and workflow
+tool under `.houserules/`:
 
 ```bash
-python install.py --repo /path/to/your-project --agents cursor --work handoff,verification --activate-workflow --check
+python install.py --repo /path/to/your-project --agents cursor
 ```
 
-Replace `cursor` with `claude`, `codex`, `antigravity`, `kiro`, a comma-separated selection,
-or `all`. Preview writes nothing: exit 1 means changes are needed; exit 0 means no drift.
-Apply the same selection by removing `--check`:
+**Everything** — the same, plus the three optional skills and all six work templates; it also
+appends the workflow routing rule to AGENTS.md and adds a CI workflow that runs the checker:
 
 ```bash
-python install.py --repo /path/to/your-project --agents cursor --work handoff,verification --activate-workflow
+python install.py --repo /path/to/your-project --agents cursor --skills all --work all --activate-workflow --ci
+```
+
+The minimal command still installs `hr-onboard`, the default. What it leaves out is the three
+*optional* skills — `hr-tdd`, `hr-diagnosing-bugs` and `hr-code-review`, **experimental
+adaptations rather than a quality upgrade** — and the work templates, which are simply optional.
+A later run without `--skills` or `--work` keeps whatever you selected before.
+
+The other two flags are independent of those selections and of each other. `--activate-workflow`
+appends a short routing rule to AGENTS.md, preserving its existing bytes; omit it and point your
+agent at `.houserules/START.md` when it is needed. `--ci` adds a GitHub Actions gate. Neither
+starts a hook or a background process.
+
+Replace `cursor` with `claude`, `codex`, `antigravity`, `kiro`, a comma-separated selection,
+or `all`. Repeat the same `--agents` selection on every later run — omitting it means `all`,
+which installs for every agent.
+
+Then verify the result:
+
+```bash
 python check.py --repo /path/to/your-project
 ```
 
-Open **HOUSERULES.md in your project**. It links your installed skills, templates and workflow
-instructions. You do not need to return here for everyday work.
-
-`--activate-workflow` appends a short routing rule to AGENTS.md while preserving its existing bytes.
-Omit it to leave existing instructions untouched and explicitly point your agent to
-`.houserules/START.md` when needed. Activation is an instruction, not a background hook.
+Open **HOUSERULES.md in your project**. It states the first action for the state that project is
+actually in, what was *not* installed and the command that adds it, which route fits which
+situation, and what the workflow tool does. You do not need to return here for everyday work.
 
 If `python` is unavailable, use `py` on Windows, `python3` where available, or your interpreter's full path.
 Omitting `--repo` targets the current directory.
@@ -60,6 +79,7 @@ python install.py --repo /path/to/your-project --agents codex --skills hr-tdd,hr
 | hr-diagnosing-bugs | Reproduce, diagnose and verify a fix | Experimental, opt-in; [provenance](templates/skills/hr-diagnosing-bugs/NOTICE.md) |
 | hr-code-review | Review a pinned change against standards and intent | Experimental, opt-in; [provenance](templates/skills/hr-code-review/NOTICE.md) |
 | Work templates | Handoff, spec, plan, review, findings, verification | Select with --work; copy only useful artifacts |
+| CI workflow | A GitHub Actions gate that runs the installed checker | Select with --ci; it cannot gate template drift, because the installer is never copied into your project |
 
 The three adaptations include upstream licenses and revisions. Availability is not evidence that
 these outperform a built-in; [admission criteria](research/PORTABILITY.md#fallback-admission-criteria)
@@ -81,7 +101,8 @@ Repeat your original agent selection to avoid adding paths. Previously recorded 
 | .houserules/START.md | Short agent execution instructions |
 | .houserules/workflow.py | Local bounded command execution and evidence freshness checks |
 | .houserules/work/ | Selected template originals and their consumer protocol |
-| check.py | Instruction, skill and managed-file checks |
+| .houserules/check.py | Instruction, skill and managed-file checks; run it from the project root, or pass `--repo` |
+| .github/workflows/houserules.yml | Only with `--ci`: GitHub Actions gate running the installed checker; your other workflows are untouched |
 | .houserules/skills.json and assets.json | Ownership records for drift detection; commit with the installed layer |
 
 GUIDE and research remain distribution references. Hooks, MCP servers and plugins need separate
@@ -90,16 +111,34 @@ The [documentation map](docs/README.md) explains each document's reader, action 
 
 ## Update or remove
 
-Run the same installer with `--check` before updating. Modified managed work assets stop all
-writes, including with `--force`; unchanged owned assets can update. Root check.py differences
-and skill conflicts require reconciliation before installation. Skill source updates must cover
+Run the same installer with `--check` before updating. Modified managed assets — the installed
+checker included — stop all writes, including with `--force`; unchanged owned assets can update.
+Skill conflicts require reconciliation before installation, and skill source updates must cover
 all previously recorded paths. See [enforcement boundaries](docs/ENFORCEMENT.md).
+
+Installations made before the checker moved left a `check.py` at the project root, and **upgrading
+breaks it**. Its asset allowlist predates `.houserules/check.py`, so it rejects the new manifest
+with `invalid managed asset: .houserules/check.py` and exits 1 — a CI job still running it fails on
+its next build. Preserving the file's bytes does not preserve its behaviour.
+
+So an upgrade stops before writing until you confirm you have dealt with it:
+
+```bash
+python install.py --repo /path/to/your-project --agents cursor --migrate-checker
+```
+
+Before passing that flag, repoint any job at `.houserules/check.py` (run from the project root, or
+pass `--repo`), or delete the root file. The installer never deletes it for you — nothing recorded
+who wrote it, so an old copy of ours and a script of yours are indistinguishable. A *first* install
+into a project that already has its own root `check.py` is unaffected: that file is yours, nothing
+of yours changes, and the run proceeds.
 
 For example, if you originally selected `claude,codex`, preview with
 `python install.py --repo /path/to/your-project --agents claude,codex --check`.
 Compare conflicting copies with the current source and preserve any local changes. Once reviewed,
 use the same command without `--check`, adding `--force` only if replacement is needed.
-`--force` can overwrite selected conflicting skills and root check.py; it does not merge changes.
+`--force` can overwrite a selected conflicting skill directory; it does not merge changes,
+and it does not override a modified managed asset.
 
 Keep filled task artifacts outside the installed originals. Preview/preflight prevents known
 conflicts; it does not provide rollback for filesystem errors or concurrent edits.

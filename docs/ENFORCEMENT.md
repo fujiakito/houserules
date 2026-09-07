@@ -11,7 +11,9 @@ work contracts inspected 2026-09-06. Mechanical success is limited to the predic
 | Skill trigger metadata | `check.py`: description-field pattern near the start of SKILL.md | Not a complete YAML/schema validator or a trigger-quality eval |
 | Managed copies and ownership | `check.py`: manifest/digests; `install.py --check`: installation drift; installer preflight | Files on disk do not establish loaded capability; preflight is not transactional rollback |
 | Documented command inventory | `check.py`: one-way inventory-to-reserved-name comparison | Does not establish exhaustive or current vendor coverage |
-| Selected work assets | `check.py`: assets manifest/digests; installer preflight preserves modifications even with --force | Does not validate populated work records; untouched managed assets may update |
+| Selected work assets and the installed checker | `check.py`: assets manifest/digests; installer preflight preserves modifications even with --force | Does not validate populated work records; untouched managed assets may update |
+| Adopter CI gate | Opt-in `--ci` workflow runs the installed checker on push and pull request | Runs the checker only: `install.py --check` needs the distribution, which is never copied into an adopting project. Whether the job is a required check stays the adopter's branch-protection decision |
+| Installed-script placement | Installer writes both executables to `.houserules/`; a root `check.py` is never written, moved or deleted, and an upgrade past one stops until `--migrate-checker` | Provenance of that root file was never recorded, so nothing here can distinguish an old owned copy from a user script; removal stays manual. The flag records an acknowledgement, and does not verify that CI was repointed |
 | Workflow activation | Installer explicitly appends an idempotent AGENTS.md block with --activate-workflow | Routes an agent to START; does not prove it followed instructions or enable a hook |
 | Command attempt/time budgets | Installed workflow.py counts attempts and bounds total direct-command elapsed time | Only commands invoked through it; not chat/token/provider spend or detached process limits |
 | Repeated passing check | workflow.py refuses the same latest argv at unchanged selected targets/log | Does not deduplicate arbitrary commands or failed attempts; budget bounds retries |
@@ -22,6 +24,6 @@ work contracts inspected 2026-09-06. Mechanical success is limited to the predic
 | Review independence and authority | [Review protocol](../templates/work/README.md#review-by-artifact) and accountable owner | Identity labels do not authenticate sessions; evidence grade is separate |
 | Optional fallback admission | [Admission criteria](../research/PORTABILITY.md#fallback-admission-criteria) | Explicit experimental trial is allowed; comparative fresh-session evidence required for recommendation/default promotion |
 
-Run `python check.py` and `python install.py --check` before completing a change.
+In this repository run `python check.py` and `python install.py --check` before completing a change. In an adopting repository the same checker is `.houserules/check.py`, run from the project root or with an explicit `--repo`.
 Script/test changes additionally require `python -m unittest discover -s tests -v`.
 Neither command validates work-artifact semantics, authorizes release, or proves an agent loaded a skill.

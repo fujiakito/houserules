@@ -1,9 +1,10 @@
 {
   "files": {
     ".houserules/LICENSE": "4a01238bce19d4f28edecef41bf7597ece4f0e8b1c21e4800672db8aab4fe62b",
-    ".houserules/START.md": "20fc9677d19938508b2f1947f2451632c23888e97c9f216cdaaec64376422f2c",
+    ".houserules/START.md": "78f60291fe607a77df21e3b43ec00f7bd4dbe35c0825fc9865df11835373bc54",
+    ".houserules/check.py": "f93305f549d3a066c92d0cf6f316a9201cd7c07eba8c09bc0f1d186d7c9a2deb",
     ".houserules/workflow.py": "1b1cb10ce456141af5b05a1f26b8ef7c0a3ea95f27dcad25b4c6bc0adc5360e2",
-    "HOUSERULES.md": "e6f2f45f7b7f399d78117026a7a7a0562d7bbebf5cbf5d5e1f253d4cac22c6ba"
+    "HOUSERULES.md": "463d062ded3b88e93b49a919ea9be98b30092580ee873b5da31c14038ece696c"
   },
   "schema_version": 1
 }

@@ -20,6 +20,25 @@ Standard library only, in the scripts and in the tests. A contribution that adds
 dependency needs to argue why, because a check with an install step is a check that gets
 skipped.
 
+## Commit conventions
+
+Use [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+(retrieved 2026-09-07) for commits and PR titles:
+
+```text
+type(scope): short description
+```
+
+- Use `feat` for new behavior, `fix` for bug fixes, `docs` for documentation,
+  `test` for tests, `refactor` for restructuring, `ci` for CI, or `chore` for maintenance.
+- Scope is optional. Write a short imperative description: `fix(installer): preserve user files`.
+- Keep each commit focused on one coherent change. Use the body for the reason and validation.
+- For breaking changes, add `!` before `:` and a `BREAKING CHANGE:` footer explaining migration.
+- Work on a `codex/<topic>` branch and open a PR against `main`. Use squash merge with a
+  compliant PR title; retain any breaking-change footer in the final commit message.
+- Amend or rewrite published commits only when authorized; use `--force-with-lease` when pushing
+  an authorized rewrite.
+
 ## Proposing a skill
 
 A stage with no skill in it is not a gap, and a built-in on another surface does not
@@ -44,6 +63,7 @@ the documentation conformance test checks link targets and stage coverage.
 | Change | Also required |
 |---|---|
 | A new agent surface | Inventory from `docs/agents/_TEMPLATE.md`, every `docs/GUIDE.md` stage and concern table, a `research/MATRIX.md` row |
+| A changed installed asset (`templates/START.md`, `templates/work/*`, `templates/ci/*`, root `check.py`) | Its entry in `check.ASSET_PATHS`, a re-run of the installer against this repository so the digests in `.houserules/assets.json` advance, and any document naming the file. Adopters reconcile a modified copy by hand, so a rename is a migration, not an edit. |
 | A new or changed shipped skill | Canonical `templates/skills/<name>/` source, admission status/evidence, README and relevant GUIDE choices, installation/drift tests and upstream notices/THIRD-PARTY when applicable. Installer discovery is automatic; keep `check.py`'s explicit `SHIPPED_SKILL_NAMES` set in sync when names change (an installation test checks equality). Inspect installer listing/generated-page wording for assumptions about the current set. Regenerate owned copies/manifests through the installer; never hand-edit digests. |
 | A capability claim | Named surface and version for a local observation, or a source and retrieval date, or an `(unverified)` tag |
 | Installer or checker behavior | A regression test in `tests/`, and a `docs/ENFORCEMENT.md` row if it changes what a pass establishes |

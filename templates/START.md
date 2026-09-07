@@ -14,16 +14,17 @@ that will resume, use the local workflow tool:
    Inspect its log and exit status against the task criterion. Exit zero alone is not task acceptance.
 4. Before resuming or claiming a prior pass, run `python .houserules/workflow.py status <id>`.
    Changed tracked inputs or log bytes invalidate the recorded pass. Recheck affected behavior.
-5. On repeated blockers or exhausted budget, record what changed and the next owner/action in
-   the existing work record. Do not create another task id merely to evade the budget.
+5. Stop when the outcome has evidence tied to it, or when the budget is exhausted or you are
+   blocked twice on the same thing. Then record what changed and the next owner/action in the
+   existing work record. Do not create another task id to continue past a budget.
 
 Tie each completion claim to evidence for that criterion: tests, build, requirements or the original
 bug scenario. For executable claims, name the command and inspected result; reuse recorded runs
 only after checking freshness and relevant environment changes. A passing test does not by itself
 prove requirement coverage; identify the artifact or behavior inspected for non-executable criteria.
 
-workflow.json retains command attempts, target hashes, logs, elapsed time and raw reported usage.
-Unknown tokens/cost remain unknown. This tool bounds commands invoked through it; it does not
-meter the surrounding chat, prove semantic correctness, or enforce provider spending limits.
+workflow.json retains command attempts, target hashes, logs, elapsed time and raw reported usage;
+unknown tokens/cost stay unknown. It bounds only commands invoked through it, and does not meter
+the surrounding chat, prove semantic correctness, or enforce provider spending limits.
 Use short-lived checks: a timeout stops the direct child, not necessarily detached descendants.
 Do not put credentials in argv or logs. No background worker, hook, MCP or external write is enabled.

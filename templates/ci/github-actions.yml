@@ -1,0 +1,40 @@
+name: houserules layer
+
+# Written by `python install.py --ci`, and updated only by re-running the installer. It runs the
+# installed checker and nothing else.
+#
+# It cannot run the distributor's `install.py --check`: the installer never copies itself into an
+# adopting project, so drift between this repository's installed copies and the upstream templates
+# is not gateable from here. Preview that from the houserules distribution instead.
+#
+# Whether this becomes a required check is your decision, in this repository's branch protection
+# settings. Nothing in the installer changes them.
+
+# Unfiltered on purpose: this template does not know your default branch name, and a
+# `branches:` filter naming the wrong one would leave you with no push gate at all. Add one
+# here once you know it, if you would rather not run on every branch.
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  houserules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          # The checker supports Python 3.9+. Change this to whichever version this project
+          # already uses; no dependencies are installed, because it is standard library only.
+          python-version: '3.13'
+
+      # Run from the repository root: --repo defaults to the current directory, not to the
+      # script's own location. Never add --fix here - it mutates the repository, which would
+      # make the gate repair drift instead of reporting it.
+      - name: Installed agent layer is intact
+        run: python .houserules/check.py

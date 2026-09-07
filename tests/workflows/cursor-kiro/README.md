@@ -63,6 +63,18 @@ This is future work, not a completed checklist. Use a fresh, bounded session for
 5. Only after loading works, run one bounded task and inspect its result against existing tests.
    Explicit invocation, implicit triggering, task quality and cost are separate outcomes.
 
+### Preparation status, 2026-09-07
+
+Fixtures for the Kiro run are built and unused; **no observation has been made**. An agent session
+cannot perform step 2 here - Kiro is a desktop IDE with no headless CLI on this machine - so the
+prepared state is recorded and the invocation waits for the user.
+
+Three disposable fixtures (real install at Kiro's documented path, empty control, and the same body
+at a non-discovered path), each carrying a unique marker absent from the prompt. They are rebuilt by
+`work/native-acceptance-20260907/prepare.py`, with the empty result table in `record.md` beside it.
+That directory is git-ignored, so the fixtures do not travel; the script rebuilds them anywhere.
+The claim under test is one path on one surface, and a pass promotes that claim, not the platform.
+
 Stop a blocked experiment according to the installed budget guidance. Keep the two agents'
 capability grade documented until their named runtime passes; installer acceptance does not
 promote a platform. No permission relaxation, credential changes or paid-capacity enablement is

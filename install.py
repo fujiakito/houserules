@@ -16,12 +16,19 @@ error (research/MATRIX.md section 1, tested).
     python install.py --link            symlink instead of copy, where the OS allows it
     python install.py --force           replace an existing skill of the same name
 
-Three things land at the repository root as well: AGENTS.md, the CLAUDE.md import line, and
-check.py. They carry different overwrite rules, because they are different kinds of thing.
-AGENTS.md is a *scaffold* - a repository that has filled it in has not drifted, so an
-existing one is left alone unless --activate-workflow explicitly appends the routing block.
-An edited routing block is preserved and reported for reconciliation. check.py is a *shipped
-artifact* meant to be identical everywhere, so a byte difference is a conflict.
+Two things land at the repository root, because an agent has to find them there: AGENTS.md and
+the CLAUDE.md import line. Everything else this installer owns goes under .houserules/, including
+both executables - check.py and workflow.py. AGENTS.md is a *scaffold* - a repository that has
+filled it in has not drifted, so an existing one is left alone unless --activate-workflow
+explicitly appends the routing block. An edited routing block is preserved and reported for
+reconciliation. The rest are *managed assets*: an edited one stops every write, including with
+--force, and is reported for reconciliation instead of being overwritten.
+
+A root check.py from an installation made before the checker moved is reported and left alone.
+Its provenance was never recorded, so it is never deleted, moved or overwritten automatically -
+but a pre-move checker cannot read the manifest this installer writes, so on an upgrade the run
+stops until --migrate-checker says the adopter has repointed or removed it. A first install into
+a repository that has its own root check.py is unaffected: that file is theirs.
 
 An existing skill directory is never replaced without --force. Adopting this layer into a
 repository that already has its own skills must not cost the user one of them.
@@ -29,12 +36,15 @@ Successful installs record owned names, selected paths and source digests in
 .houserules/skills.json. Later agent selections are additive; foreign skills are not enrolled.
 Known conflicts are checked across all selected destinations before any installation write.
 
-The default installs hr-onboard, a local HOUSERULES.md entry, START.md and workflow.py.
+The default installs hr-onboard, a local HOUSERULES.md entry, START.md, check.py and
+workflow.py. --ci adds a GitHub Actions workflow that runs the installed checker; it writes only
+its own file, and cannot gate template drift because the installer is never copied into a project.
 --activate-workflow appends a short instruction trigger; no hook or background process starts.
 --skills and --work select
 additional material; existing selections remain installed. --list shows the offline catalog.
-The default `python check.py` path only reads;
-`check.py --fix` is an explicit local repair mode and must not be used as a CI gate.
+The default `python .houserules/check.py` path only reads; `--fix` is an explicit local repair
+mode and must not be used as a CI gate. It resolves --repo against the current directory, so run
+it from the adopting project's root or pass --repo explicitly.
 
 Paths verified 2026-09-01. Re-check them when an agent releases; see the recheck policy in
 research/MATRIX.md.
@@ -49,8 +59,8 @@ import shutil
 import sys
 from pathlib import Path
 
-from check import (MANIFEST, ASSET_MANIFEST, WORK_NAMES, read_manifest, tree_hash,
-                   read_assets, asset_path, content_hash)
+from check import (MANIFEST, ASSET_MANIFEST, WORK_NAMES, CI_WORKFLOW, INSTALLED_CHECKER,
+                   read_manifest, tree_hash, read_assets, asset_path, content_hash)
 
 HERE = Path(__file__).resolve().parent
 SKILL_SRC = HERE / "templates" / "skills"
@@ -120,47 +130,225 @@ def choose(value: str | None, available: set[str], default: set[str]) -> set[str
     return selected
 
 
-def start_page(skills: dict, work: set[str]) -> bytes:
-    """Generated local entry point; no upstream checkout or network needed at use time."""
+SCAFFOLD_MARKER = "Fill from observed repo friction using hr-onboard"
+# The generated page is committed by the adopter, so it must not carry the installing
+# machine's paths: this repository regenerates its own HOUSERULES.md in CI, and an absolute
+# path would be reported as drift on every other machine. The adopter fills this in once.
+DISTRIBUTION = "<houserules distribution>/install.py"
+
+
+def is_scaffold(repo: Path) -> bool:
+    """True when AGENTS.md still needs filling from real work.
+
+    Called before the scaffold is seeded, so a missing file counts as one: this same run
+    creates it. An unreadable file is treated as the adopter's own content, never as a
+    scaffold to give onboarding advice about.
+    """
+    path = repo / "AGENTS.md"
+    if not path.is_file():
+        return True
+    try:
+        return SCAFFOLD_MARKER in path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+
+
+def covering_agents(names: list[str], recorded: set[str]) -> list[str]:
+    """Agent labels whose skill paths cover every recorded install path.
+
+    A follow-up install that omits --agents defaults to every agent and silently widens the
+    installation; one that names too few paths cannot complete a later source upgrade, because
+    the recorded digest is shared across all of them. Keep this run's labels and add whatever
+    else is needed to reach the recorded paths.
+    """
+    chosen = set(names)
+    for rel in sorted(recorded - {AGENT_SKILL_PATHS[n] for n in chosen}):
+        chosen.add(next(n for n in AGENT_SKILL_PATHS if AGENT_SKILL_PATHS[n] == rel))
+    covered = {AGENT_SKILL_PATHS[n] for n in chosen}
+    # Collapse on the paths, not the labels: several agents share a directory, so naming a
+    # subset of them can still reach every path an install could write.
+    return ["all"] if covered == set(AGENT_SKILL_PATHS.values()) else sorted(chosen)
+
+
+def shell_quote(value: str) -> str:
+    """POSIX-style quoting, applied only where the value needs it.
+
+    The rendered commands sit in ```bash fences, so POSIX rules are the documented ones, and
+    under those rules a backslash is an escape character rather than a path separator: an
+    unquoted `C:\\Projects\\demo` parses as `C:Projectsdemo`. Every Windows path therefore gets
+    quoted, whether or not it also contains a space. Inside single quotes a backslash is
+    literal, which is what makes this correct rather than merely tidier.
+
+    Scope, so the claim stays as narrow as what is tested: POSIX shells. PowerShell agrees for
+    paths without an apostrophe, but escapes an embedded one by doubling it, not as `\'`;
+    cmd.exe does not read single quotes at all. Neither is claimed or tested here.
+    """
+    if value and not re.search(r"[^\w@%+=:,./-]", value):
+        return value
+    return "'" + value.replace("'", "'\\''") + "'"
+
+
+def follow_up(installer: str, repo: str, agents: str,
+              skills: list[str], work: list[str]) -> str:
+    """The exact command that adds unselected material, runnable where it is printed.
+
+    A distribution or project path containing a space is otherwise split by the shell into two
+    arguments, and the copied command targets the wrong directory or none.
+    """
+    command = f"python {shell_quote(installer)} --repo {shell_quote(repo)} --agents {agents}"
+    if skills:
+        command += " --skills " + ",".join(skills)
+    if work:
+        command += " --work " + ",".join(work)
+    return command
+
+
+def unselected(catalog: set[str], skills: dict, work: set[str]) -> tuple[list[str], list[str]]:
+    """What this installer ships and this repository does not have.
+
+    Computed from the retained selection rather than from one invocation, so an additive
+    second install and `--skills none` both report what is actually absent. It cannot see
+    global, user-scope or plugin skills, which is stated wherever the result is printed.
+    """
+    return sorted(catalog - set(skills)), sorted(WORK_NAMES - work)
+
+
+def start_page(skills: dict, work: set[str], catalog: set[str],
+               agents: list[str], scaffold: bool, ci: bool = False) -> bytes:
+    """Generated onboarding page: what to do now, not only what was installed.
+
+    No upstream checkout or network is needed at use time, and nothing machine-specific is
+    written, so the adopter can commit it.
+    """
+    agents_arg = ",".join(agents)
+    missing_skills, missing_work = unselected(catalog, skills, work)
+    add = follow_up(DISTRIBUTION, ".", agents_arg, missing_skills, missing_work)
     lines = ["# Using houserules in this project", "",
-             "Start with this project's AGENTS.md and existing task instructions.",
-             "This page lists installed choices; it does not authorize external actions.", "",
-             "## Start a task", "",
-             "Tell your agent: **Read `.houserules/START.md` and use it for this task: <outcome>.**",
-             "The [short execution protocol](.houserules/START.md) uses the installed",
-             "[workflow tool](.houserules/workflow.py) to bound command attempts and execution time,",
-             "save logs and detect stale verification. It does not cap surrounding chat usage.",
-             "To load this protocol on relevant tasks automatically, install with --activate-workflow;",
-             "that explicitly appends a small trigger to AGENTS.md, preserving existing content.", "",
-             "## Installed skills", "",
-             "Ask your agent to use a skill by name, or open its local SKILL.md below.",
-             "Actual native discovery must be checked on your agent surface; files alone are not proof.", ""]
+             "This page is generated by the installer and describes this repository only.",
+             "It lists installed choices; it does not authorize external actions.", "",
+             "## Start here", ""]
+    if "hr-onboard" in skills and scaffold:
+        lines += ["Ask your agent: **use the `hr-onboard` skill.**",
+                  "It fills AGENTS.md from friction it hits while attempting real work here, not from a",
+                  "description of the codebase. Everything below assumes AGENTS.md has been filled.", "",
+                  "Expect few rules. A well-documented project legitimately yields a short AGENTS.md, and a",
+                  "line describing what the project *is* fails the inclusion test while costing tokens on",
+                  "every session. Judge the result by the skill's report of accepted and rejected",
+                  "candidates, not by how much it wrote."]
+    elif "hr-onboard" in skills:
+        lines += ["AGENTS.md already holds this project's own instructions, so onboarding is done.",
+                  "Start your task from the map below.", "",
+                  "Run `hr-onboard` again only when an agent keeps repeating a mistake this repository",
+                  "never wrote down."]
+    else:
+        lines += ["`hr-onboard` was not selected, so nothing installed here fills AGENTS.md.",
+                  "Write this project's non-obvious rules into AGENTS.md yourself — the ones an agent",
+                  "cannot infer from the code — then start your task from the map below.", "",
+                  "To add the skill instead, run this from this project's root:", "",
+                  "```bash",
+                  follow_up(DISTRIBUTION, ".", agents_arg, ["hr-onboard"], []),
+                  "```"]
+    lines += ["", "## Add more later", ""]
+    if missing_skills or missing_work:
+        described = []
+        if missing_skills:
+            described.append("skills " + ", ".join(missing_skills)
+                             + " (optional and experimental — availability is not evidence that they"
+                               " beat your agent's own procedure)")
+        if missing_work:
+            described.append("work templates " + ", ".join(missing_work))
+        lines += ["Shipped by this installer and **not** installed here: " + "; ".join(described) + ".", "",
+                  "Selections are additive: this adds to what is here and uninstalls nothing. Run it from",
+                  "this project's root, replacing the placeholder with wherever you keep the houserules",
+                  "distribution. That path is local to whoever installed, so it is deliberately not",
+                  "recorded on a page you commit.", "",
+                  "```bash", add, "```", "",
+                  f"Keep `--agents {agents_arg}`. Omitting `--agents` installs for **every** supported agent."]
+    else:
+        lines += ["Everything this installer ships is already installed here.",
+                  "Re-run it from the distribution only to pick up newer versions of these files."]
+    lines += ["", "This covers what the installer ships. Skills your agent loads from a global, user-scope",
+              "or plugin location are outside its view and are not listed anywhere on this page.", "",
+              "## What to use, when", ""]
+    rows = [("An agent keeps repeating a mistake this repository never wrote down",
+             "hr-onboard", "Write the rule into AGENTS.md yourself, with a check where one is possible"),
+            ("New behaviour, and you want a test to define it",
+             "hr-tdd", "Write the failing test first, then run this project's own test command"),
+            ("A reported bug you cannot yet reproduce",
+             "hr-diagnosing-bugs", "Reproduce it, narrow to the smallest failing input, fix, then re-run it"),
+            ("Reviewing a change before it lands",
+             "hr-code-review", "Review against AGENTS.md and the task's stated criteria, not against taste")]
+    lines += ["| Situation | Use |", "|---|---|"]
+    for situation, skill, fallback in rows:
+        if skill in skills:
+            rel = sorted(skills[skill]["paths"])[0]
+            lines.append(f"| {situation} | [{skill}]({rel}/{skill}/SKILL.md) — ask your agent for it by name |")
+        else:
+            lines.append(f"| {situation} | Not installed. {fallback} |")
+    carry = ("[work templates](.houserules/work/README.md) — copy one into the task's own location"
+             if work else
+             "Record the target, the next action and the actual verification in this project's own records")
+    lines += [f"| Work resumes in another session, or another agent takes it over | {carry} |",
+              "| A claim that something passed has to survive later edits |"
+              " [the workflow tool](.houserules/workflow.py) — walkthrough below |",
+              "| Checking that the installed layer is still intact |"
+              " `python .houserules/check.py` from this project's root |", "",
+              "Your agent may have a **native** command for some of these, and a native route is",
+              "usually the better one where it exists. This page cannot say which: nothing installed",
+              "here inspects your agent. Check its own documentation; the houserules distribution",
+              "keeps a dated capability map in docs/GUIDE.md and inventories under docs/agents/.", "",
+              "## A first task, end to end", "",
+              "Run this from this project's root, substituting a real check of your own:", "",
+              "```bash",
+              "python .houserules/workflow.py start demo --task \"<the outcome you need>\""
+              " --target <a file that check reads>",
+              "python .houserules/workflow.py run demo -- <your test command>",
+              "python .houserules/workflow.py status demo",
+              "```", "",
+              "`run` saves that command's log, exit status and elapsed time under `work/demo/`.",
+              "`status` exits 0 while the recorded evidence still matches the tree. Now edit the file you",
+              "passed to `--target` and run `status demo` again: it exits **1**, because the recorded pass",
+              "no longer describes these files. That staleness signal is the point of the tool.", "",
+              "It bounds only the commands passed through `run` — three attempts and 300 seconds of command",
+              "time by default; set `--max-runs`/`--max-seconds` at `start`. It does not run an SDLC, choose",
+              "your tests, judge whether the outcome was met, or cap chat usage.", "",
+              "[.houserules/START.md](.houserules/START.md) is that same protocol written for the agent.",
+              "Point your agent at it for multi-step or resuming work; re-install with `--activate-workflow`",
+              "to have a small trigger appended to AGENTS.md instead.", "",
+              "## Installed skills", "",
+              "Files on disk are not proof of loading; check discovery on your own agent surface.", ""]
     for name, entry in sorted(skills.items()):
         links = ", ".join(f"[{rel}]({rel}/{name}/SKILL.md)" for rel in entry["paths"])
         state = "core" if name == "hr-onboard" else "optional / experimental"
         lines.append(f"- **{name}** ({state}): {links}")
     if not skills:
         lines.append("No skills selected.")
-    lines += ["", "For test-first work use hr-tdd; for diagnosis use hr-diagnosing-bugs;",
-              "for code review use hr-code-review, **only if listed above**. Matt Pocock adaptations",
-              "carry their own NOTICE.md and MIT LICENSE beside SKILL.md. No companion skills,",
-              "tracker account or parallel agents are required.",
+    lines += ["", "Matt Pocock adaptations carry their own NOTICE.md and MIT LICENSE beside SKILL.md.",
+              "No companion skills, tracker account or parallel agents are required.",
               "houserules' own installed files are MIT; the notice is at",
               "[.houserules/LICENSE](.houserules/LICENSE) and your project's root LICENSE is untouched.",
               "", "## Carry work forward", ""]
     if work:
-        lines += ["Read the [consumer protocol](.houserules/work/README.md) when passing work between sessions.",
-                  "Copy only the needed template into the project's existing work location",
-                  "(or work/<task-id>/); fill it there, leaving the installed originals intact.", ""]
+        lines += ["Copy a template into the task's own location — the project's existing one, or",
+                  "work/<task-id>/ — and fill it there, leaving these originals intact. The",
+                  "[consumer protocol](.houserules/work/README.md) says what each record must carry.", ""]
         lines += [f"- [{name}](.houserules/work/{name}.md)" for name in sorted(work)]
     else:
         lines.append("No work templates selected. Use existing project records; templates are an optional install choice.")
-    lines += ["", "A small task needs no document set. Record the target, next action and actual verification",
-              "when another session needs them. Commit or explicitly transfer records to a fresh checkout;",
-              "ignored local files do not travel automatically.", "", "## Verify and maintain", "",
-              "Run `python check.py` here after installation or changes. It checks managed copies,",
-              "instruction structure and selected work assets, not semantic correctness or runtime loading.",
+    lines += ["", "A small task needs no document set. Commit or explicitly transfer any records you do",
+              "keep: ignored local files do not travel to a fresh checkout.", "",
+              "## Verify and maintain", "",
+              "Run `python .houserules/check.py` from this project's root after installation or changes.",
+              "It checks managed copies, instruction structure and selected work assets, not semantic",
+              "correctness or runtime loading. `--repo` defaults to the current directory, so run it from",
+              "the root or pass `--repo <path>` explicitly.",
               "Run this project's tests separately. Keep existing project-owned files and foreign skills.", "",
+              ("The installed workflow at .github/workflows/houserules.yml runs that checker on"
+               " every push and pull request. Whether it becomes a *required* check is your"
+               " decision, in this repository's branch protection settings." if ci else
+               "No CI workflow was installed for it. Re-install with --ci for a GitHub Actions"
+               " workflow that runs the checker on every push and pull request; no existing"
+               " workflow is touched."), "",
               "Re-run the houserules installer from its distribution for updates or additional selections;",
               "preview first with --check. Nothing updates over the network in the background.",
               "Keep HOUSERULES.md, .houserules manifests and installed material in Git; record your",
@@ -169,7 +357,8 @@ def start_page(skills: dict, work: set[str]) -> bytes:
     return "\n".join(lines).encode("utf-8")
 
 
-def plan_assets(repo: Path, previous: dict, skills: dict, work: set[str]) -> dict[str, bytes]:
+def plan_assets(repo: Path, previous: dict, page: bytes, work: set[str],
+                ci: bool = False) -> dict[str, bytes]:
     # MIT requires the notice to travel with copies. check.py, workflow.py, START.md and
     # hr-onboard are first-party, so an installation without this file would ship substantial
     # portions of the software with no notice. It is installed inside .houserules/ on purpose:
@@ -178,9 +367,13 @@ def plan_assets(repo: Path, previous: dict, skills: dict, work: set[str]) -> dic
     if not notice.is_file():
         raise ValueError("distribution is missing LICENSE; installing first-party files without "
                          "the notice would break the terms they ship under")
-    files = {"HOUSERULES.md": start_page(skills, work),
+    # Both installed executables live in .houserules/. check.py is a managed asset like every
+    # other one here, so an adopter's edit to it is preserved and reported rather than
+    # overwritten, and the checker verifies its own installed copy's digest.
+    files = {"HOUSERULES.md": page,
              ".houserules/LICENSE": notice.read_bytes(),
              ".houserules/START.md": (HERE / 'templates/START.md').read_bytes(),
+             INSTALLED_CHECKER: (HERE / 'check.py').read_bytes(),
              ".houserules/workflow.py": (HERE / 'templates/workflow.py').read_bytes()}
     if work:
         for name in work | {"README"}:
@@ -192,6 +385,8 @@ def plan_assets(repo: Path, previous: dict, skills: dict, work: set[str]) -> dic
                 text = text.replace("[worked pilot](../../tests/workflows/README.md)", "worked pilot in the houserules distribution")
                 content = text.encode("utf-8")
             files[f".houserules/work/{name}.md"] = content
+    if ci:
+        files[CI_WORKFLOW] = (HERE / "templates/ci/github-actions.yml").read_bytes()
     # Every path and current user edit is checked before any installation write, even with --force.
     for rel, content in files.items():
         path = asset_path(repo, rel)
@@ -250,22 +445,30 @@ def place(src: Path, dst: Path, link: bool, check: bool, force: bool,
     return "copied"
 
 
-def place_file(src: Path, dst: Path, check: bool, force: bool) -> str:
-    """Install a single file, never clobbering a different one already at dst.
+def legacy_root_checker(repo: Path, upgrading: bool = False) -> str | None:
+    """Report, never touch, a `check.py` at the adopter's root.
 
-    Used for check.py, which is meant to be the same script in every repository that
-    adopts this layer — so a byte difference is a real conflict worth reporting.
+    Installations before the checker moved into .houserules/ left one there, and nothing
+    recorded its ownership - it was not in the asset manifest, so "same name" never meant
+    "ours". A file whose provenance is ambiguous is not deleted, moved or overwritten here.
+
+    Leaving the bytes alone is not the same as leaving the behaviour alone, which an earlier
+    version of this code claimed. A checker from before the move rejects the manifest this
+    installation writes - `invalid managed asset: .houserules/check.py`, reproduced against the
+    8ae9d31 checker on 2026-09-07 - so a CI job still invoking it goes red on its next build.
+    On an upgrade that is a blocking migration, handled by the caller; on a first install the
+    root file is the adopter's own and nothing of theirs is about to change.
     """
-    if dst.is_file() and dst.read_bytes() == src.read_bytes():
-        return "unchanged"
-    if dst.exists() and not force:
-        return ("CONFLICT - a different file of this name is already here; "
-                "keep yours, or pass --force to overwrite it")
-    if check:
-        return "would replace (--force)" if dst.exists() else "would create"
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
-    return "copied"
+    path = repo / "check.py"
+    if not (path.is_file() or path.is_symlink()) or repo == HERE:
+        return None  # In the distribution itself that root file is the source, not a leftover.
+    if not upgrading:
+        return ("left untouched - it is yours. The installed checker is .houserules/check.py,"
+                " which does not replace or read this file.")
+    return ("left untouched - the installed checker is now .houserules/check.py. Nothing"
+            " records who wrote this root file, so it is never removed automatically."
+            " A pre-move checker FAILS against the manifest written below; repoint or delete"
+            " it.")
 
 
 def seed_file(src: Path, dst: Path, check: bool) -> str:
@@ -322,6 +525,10 @@ def main() -> int:
     ap.add_argument("--work", help="comma-separated work templates, all or none; default: keep previous selection")
     ap.add_argument("--list", action="store_true", help="list available skills and work templates; write nothing")
     ap.add_argument("--activate-workflow", action="store_true", help="append an idempotent execution trigger to AGENTS.md; preserve existing bytes")
+    ap.add_argument("--ci", action="store_true",
+                    help="add a GitHub Actions workflow running the installed checker; other workflows are untouched")
+    ap.add_argument("--migrate-checker", action="store_true",
+                    help="confirm that a root check.py left by an earlier install has been repointed or removed")
     ap.add_argument("--link", action="store_true", help="symlink instead of copy where possible")
     ap.add_argument("--check", action="store_true", help="report only; write nothing")
     ap.add_argument("--force", action="store_true",
@@ -361,6 +568,8 @@ def main() -> int:
         prior_work = {Path(rel).stem for rel in assets["files"]
                       if rel.startswith(".houserules/work/") and Path(rel).stem in WORK_NAMES}
         work = prior_work | choose(a.work, WORK_NAMES, set())
+        # Retained like every other selection: once added it stays until the adopter removes it.
+        ci = a.ci or CI_WORKFLOW in assets["files"]
         activation = workflow_activation(repo) if a.activate_workflow else None
     except (ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -386,8 +595,12 @@ def main() -> int:
             "paths": sorted(set(future_skills.get(skill.name, {}).get("paths", [])) | selected),
             "sha256": tree_hash(skill),
         }
+    agent_labels = covering_agents(names, {rel for entry in future_skills.values()
+                                           for rel in entry["paths"]})
     try:
-        asset_files = plan_assets(repo, assets, future_skills, work)
+        page = start_page(future_skills, work, set(catalog), agent_labels,
+                          is_scaffold(repo), ci)
+        asset_files = plan_assets(repo, assets, page, work, ci)
     except (OSError, ValueError) as exc:
         print(f"Installation stopped before writes: {exc}")
         return 1
@@ -406,8 +619,30 @@ def main() -> int:
               " then inspect and reconcile any content conflicts before retrying.")
         return 1
 
-    # Both modes preflight the full selection, including the shipped root checker. A preview
-    # must describe the same refusal as installation, not advertise writes that will not run.
+    # An upgrade out of the pre-move layout leaves that root checker broken - silently as far
+    # as this run is concerned, loudly on the adopter's next CI build. Refuse until they say
+    # they have dealt with it.
+    #
+    # "Pre-move" is a recorded fact, not a guess: a manifest that already names the installed
+    # checker was written after the move, so its migration is done and this must never fire
+    # again. A first install is exempt too - there is no manifest, so that root file is the
+    # adopter's own and nothing of theirs is about to change.
+    installed = (repo / ASSET_MANIFEST).is_file() or previous is not None
+    upgrading = installed and INSTALLED_CHECKER not in assets["files"]
+    if upgrading and legacy_root_checker(repo, True) and not a.migrate_checker:
+        print("Installation stopped before writes: root check.py needs migrating first.")
+        print("  This installation records .houserules/check.py in the asset manifest. A checker"
+              " from before the move rejects that manifest outright - it reports"
+              " 'invalid managed asset: .houserules/check.py' and exits 1 - so any CI job still"
+              " running root check.py fails on its next build.")
+        print("  Repoint that job at .houserules/check.py (run from the project root, or pass"
+              " --repo), or delete the root file. Then re-run with --migrate-checker.")
+        print("  Nothing at your root is deleted by this installer, with or without that flag.")
+        return 1
+
+    # Both modes preflight the full selection. A preview must describe the same refusal as
+    # installation, not advertise writes that will not run. The installed checker is preflighted
+    # with the other managed assets in plan_assets above, which already returned.
     # This prevents known conflicts; it is not rollback for I/O errors or concurrent edits.
     conflicts = []
     for rel in sorted(selected):
@@ -416,19 +651,10 @@ def main() -> int:
             outcome = place(skill, repo / rel / skill.name, a.link, True, a.force, managed)
             if outcome.startswith("CONFLICT"):
                 conflicts.append(f"{rel}/{skill.name}: {outcome}")
-    outcome = place_file(HERE / "check.py", repo / "check.py", True, a.force)
-    root_conflict = outcome.startswith("CONFLICT")
-    if root_conflict:
-        conflicts.append(f"check.py: {outcome}")
     if conflicts:
         print("\n".join(conflicts))
-        if root_conflict:
-            print("Installation stopped before writes. Review root check.py and reconcile it"
-                  " with the shipped source before retrying. Changing --agents cannot resolve"
-                  " this root-file conflict.")
-        else:
-            print("Installation stopped before writes. Resolve conflicts or select only"
-                  " the intended non-conflicting agents.")
+        print("Installation stopped before writes. Resolve conflicts or select only"
+              " the intended non-conflicting agents.")
         return 1
 
     results: list[str] = []
@@ -465,9 +691,9 @@ def main() -> int:
             outcome = 'appended workflow trigger'
         results.append(outcome)
         print(f"    workflow activation          {outcome}")
-    outcome = place_file(HERE / "check.py", repo / "check.py", a.check, a.force)
-    results.append(outcome)
-    print(f"    {'check.py':<28} {outcome}")
+    legacy = legacy_root_checker(repo, upgrading)
+    if legacy:
+        print(f"    {'check.py':<28} {legacy}")
     print()
 
     outcome = ensure_claude_import(repo, a.check, agents_pending)
@@ -525,6 +751,28 @@ def main() -> int:
             outcome = "recorded work assets"
         results.append(outcome)
         print(f"{ASSET_MANIFEST} : {outcome}")
+        # Naming only the entry page let an adopter finish an install without ever learning
+        # that --skills and --work exist. The same retained selection drives the generated
+        # page, so stdout and HOUSERULES.md cannot disagree. Here the real paths are printed:
+        # this text is not committed anywhere, so it can be pasted as-is.
+        missing_skills, missing_work = unselected(set(catalog), future_skills, work)
+        print()
+        if missing_skills or missing_work:
+            described = []
+            if missing_skills:
+                described.append("skills " + ", ".join(missing_skills)
+                                 + " (optional, experimental)")
+            if missing_work:
+                described.append("work templates " + ", ".join(missing_work))
+            print("Not installed: " + "; ".join(described)
+                  + ". Selections are additive; this uninstalls nothing:")
+            print("  " + follow_up(str(HERE / "install.py"), str(repo),
+                                   ",".join(agent_labels), missing_skills, missing_work))
+            print(f"  Keep --agents {','.join(agent_labels)}."
+                  " Omitting --agents installs for every supported agent.")
+            print("  Global, user-scope and plugin skills are outside this installer's view.")
+        else:
+            print("Everything this installer ships is selected here.")
         print("\nStart here: HOUSERULES.md")
     if a.check:
         print()
@@ -532,8 +780,9 @@ def main() -> int:
 
     print()
     print("To verify the installed layer - size, collisions with\nbuilt-in names, missing skill descriptions,"
-          " drift - run check.py. Its default path is read-only; in CI, run it without"
-          " --fix so the gate reports drift instead of repairing it.")
+          " drift - run .houserules/check.py from the project root. Its default path is"
+          " read-only; in CI, run it without --fix so the gate reports drift instead of"
+          " repairing it.")
     # Exit non-zero for ANY pending change, not conflicts alone. A location that was never
     # installed reports "would create", which is not a conflict but still means the layer is
     # incomplete — and reporting success there let a repository missing a whole skill

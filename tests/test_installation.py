@@ -4,14 +4,18 @@ Fixtures are retained in the OS temp directory; no recursive cleanup is performe
 """
 from __future__ import annotations
 
+import io
 import json
 import os
+import re
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 
 import check
 import install
@@ -127,7 +131,7 @@ class InstallationTests(unittest.TestCase):
                          check.tree_hash(skill.parent))
         self.assertEqual(self.run_install("--agents", "codex,claude", "--check").returncode, 0)
         result = subprocess.run(
-            [sys.executable, str(self.repo / "check.py"), "--repo", str(self.repo)],
+            [sys.executable, str(self.repo / ".houserules/check.py"), "--repo", str(self.repo)],
             capture_output=True, text=True, encoding="utf-8",
             env={**os.environ, "PYTHONIOENCODING": "utf-8"},
         )
@@ -198,19 +202,244 @@ class InstallationTests(unittest.TestCase):
         self.assertIn("Installation stopped before writes", outcomes[0])
         self.assertNotIn("would create", outcomes[0])
 
-    def test_root_file_conflict_stops_before_skill_writes(self):
-        (self.repo / "check.py").write_text("# user checker\n", encoding="utf-8")
+    def test_root_check_py_is_reported_and_never_touched(self):
+        """The migration rule for a root check.py of ambiguous provenance: report, never write.
+
+        Nothing recorded who wrote it - it was never in the asset manifest - so an old owned
+        copy, a locally modified one and an unrelated user script are indistinguishable. All
+        three take the same path: the file survives byte for byte, whatever CI runs it keeps
+        working, and the installer says so once per run.
+        """
+        shipped = (install.HERE / "check.py").read_bytes()
+        # In the distribution itself the root file is the source, not a leftover install.
+        self.assertIsNone(install.legacy_root_checker(install.HERE))
+        for kind, content in [("unrelated", b"# user checker\n"),
+                              ("owned old copy", shipped),
+                              ("modified old copy", shipped + b"\n# local edit\n")]:
+            with self.subTest(kind=kind):
+                self.repo = Path(tempfile.mkdtemp(prefix="houserules-test-"))
+                root = self.repo / "check.py"
+                root.write_bytes(content)
+                result = self.run_install("--agents", "codex", "--check")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("left untouched", result.stdout)
+                self.assertEqual(root.read_bytes(), content)
+                self.install_ok("--agents", "codex")
+                self.assertEqual(root.read_bytes(), content)
+                self.assertTrue((self.repo / ".houserules/check.py").is_file())
+                self.assertNotIn("check.py", check.read_manifest(self.repo)["skills"])
+                self.assertIn(".houserules/check.py", check.read_assets(self.repo)["files"])
+                # None of this is a pre-move installation, so a repeat run is ordinary and
+                # the file at the root stays exactly as the adopter left it.
+                repeat = self.run_install("--agents", "codex")
+                self.assertEqual(repeat.returncode, 0, repeat.stdout)
+                self.assertIn("left untouched", repeat.stdout)
+                self.assertEqual(root.read_bytes(), content)
+
+    def test_pre_move_checker_fails_against_the_new_manifest(self):
+        """The concrete break the migration gate exists for, run with a real old checker.
+
+        Preserving the root file's bytes does not preserve its behavior: its asset allowlist
+        predates `.houserules/check.py`, so it rejects the manifest and exits 1. Asserted here
+        rather than assumed, because an earlier version of this layer promised the opposite.
+        """
+        old = self.repo / "old_check.py"
+        # The last revision before the checker moved. Skipped rather than faked where the
+        # object is unreachable - a synthesized "old" checker would prove nothing.
+        show = subprocess.run(["git", "-C", str(install.HERE), "show", "8ae9d31:check.py"],
+                              capture_output=True, encoding="utf-8", errors="replace")
+        if show.returncode != 0:
+            self.skipTest("pre-move checker revision 8ae9d31 is not reachable here")
+        old.write_text(show.stdout, encoding="utf-8", newline="\n")
+        self.install_ok("--agents", "codex")
+        result = subprocess.run([sys.executable, str(old), "--repo", str(self.repo)],
+                                capture_output=True, text=True, encoding="utf-8",
+                                env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("invalid managed asset: .houserules/check.py", result.stdout)
+        # The checker shipped with this change reads the same repository without complaint.
+        current = subprocess.run([sys.executable, str(self.repo / ".houserules/check.py"),
+                                  "--repo", str(self.repo)], capture_output=True, text=True,
+                                 encoding="utf-8",
+                                 env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+        self.assertEqual(current.returncode, 0, current.stdout + current.stderr)
+
+    def pre_move_distribution(self):
+        """A real pre-move distribution, extracted from the last revision before the move.
+
+        Skipped rather than synthesized where that revision is unreachable: a hand-built "old"
+        installer would only test this code's idea of the old layout, not the old layout.
+        """
+        archive = subprocess.run(["git", "-C", str(install.HERE), "archive",
+                                  "--format=zip", "8ae9d31"], capture_output=True)
+        if archive.returncode != 0:
+            self.skipTest("pre-move revision 8ae9d31 is not reachable here")
+        source = Path(tempfile.mkdtemp(prefix="houserules-pre-move-"))
+        with zipfile.ZipFile(io.BytesIO(archive.stdout)) as bundle:
+            bundle.extractall(source)
+        return source / "install.py"
+
+    def test_migration_gate_fires_once_and_never_for_a_completed_install(self):
+        """The gate keys off recorded pre-move state, not off "a manifest exists".
+
+        Treating any manifest as pre-move blocked ordinary re-runs forever, including the run
+        immediately after a confirmed migration.
+        """
+        source = self.pre_move_distribution()
+        self.installer = source
+        self.install_ok("--agents", "codex")
+        root = self.repo / "check.py"
+        self.assertTrue(root.is_file(), "the pre-move installer places check.py at the root")
+        original = root.read_bytes()
+        self.assertNotIn(check.INSTALLED_CHECKER, check.read_assets(self.repo)["files"])
+
+        del self.installer
+        for flags in [("--check",), ()]:
+            result = self.run_install("--agents", "codex", *flags)
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("root check.py needs migrating first", result.stdout)
+
+        self.install_ok("--agents", "codex", "--migrate-checker", "--force")
+        self.assertIn(check.INSTALLED_CHECKER, check.read_assets(self.repo)["files"])
+        self.assertEqual(root.read_bytes(), original)
+
+        # Migration is recorded, so it must never be demanded again - not on a repeat preview,
+        # not on a later selection change, and not with the root file still sitting there.
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
+        self.install_ok("--agents", "codex", "--skills", "hr-tdd")
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
+        self.assertEqual(root.read_bytes(), original)
+
+    def test_unrelated_root_checker_never_triggers_the_migration_gate(self):
+        """No manifest means no pre-move installation, whatever sits at the root."""
+        root = self.repo / "check.py"
+        root.write_bytes(b"# my own project checker\n")
+        self.install_ok("--agents", "codex")
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
+        self.install_ok("--agents", "codex", "--work", "handoff")
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
+        self.assertEqual(root.read_bytes(), b"# my own project checker\n")
+
+    def test_rendered_paths_round_trip_under_the_documented_shell_rules(self):
+        """Backslashes are POSIX escapes, so a Windows path needs quoting with or without spaces."""
+        separator = chr(92)
+        cases = ["C:" + separator + "Projects" + separator + "demo",     # no space: the case
+                 "C:" + separator + "hr review" + separator + "x.py",    # space too
+                 "C:" + separator + "it's here" + separator + "x.py",    # embedded apostrophe
+                 "/home/user/houserules/install.py", ".",
+                 install.DISTRIBUTION]
+        for value in cases:
+            with self.subTest(path=value):
+                quoted = install.shell_quote(value)
+                self.assertEqual(shlex.split("python " + quoted)[1], value)
+        # Ordinary POSIX paths stay unquoted, so the common case remains readable.
+        self.assertEqual(install.shell_quote("/home/user/houserules/install.py"),
+                         "/home/user/houserules/install.py")
+        self.assertEqual(install.shell_quote("."), ".")
+        # PowerShell doubles an embedded apostrophe instead; that is not claimed or tested.
+        self.assertIn(separator + "''", install.shell_quote("C:" + separator + "it's here"))
+
+    def test_follow_up_command_survives_paths_containing_spaces(self):
+        """Rendered so a copy-paste reaches the intended directory, not two wrong ones."""
+        distribution = Path(tempfile.mkdtemp(prefix="hr dist "))
+        for name in ("install.py", "check.py", "LICENSE"):
+            shutil.copy2(install.HERE / name, distribution / name)
+        shutil.copytree(install.HERE / "templates", distribution / "templates")
+        self.repo = Path(tempfile.mkdtemp(prefix="hr target "))
+        self.installer = distribution / "install.py"
+        result = self.run_install("--agents", "kiro")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        line = next(l.strip() for l in result.stdout.splitlines()
+                    if l.strip().startswith("python "))
+        argv = shlex.split(line)
+        self.assertEqual(argv[1], str(distribution / "install.py"))
+        self.assertEqual(argv[argv.index("--repo") + 1], str(self.repo))
+        # The page's placeholder is quoted the same way, so filling it in keeps the command
+        # whole. Asserted before the follow-up runs, which is what empties that section.
+        self.assertIn("'<houserules distribution>/install.py'", self.page())
+        argv[0] = sys.executable
+        rerun = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
+                               env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+        self.assertEqual(rerun.returncode, 0, rerun.stdout + rerun.stderr)
+        self.assertEqual(set(check.read_manifest(self.repo)["skills"]),
+                         {"hr-onboard", "hr-tdd", "hr-diagnosing-bugs", "hr-code-review"})
+
+
+    def test_ci_workflow_triggers_match_what_the_page_promises(self):
+        template = (install.HERE / "templates/ci/github-actions.yml").read_text(encoding="utf-8")
+        triggers = template.split("on:", 1)[1].split("permissions:", 1)[0]
+        self.assertIn("pull_request:", triggers)
+        self.assertIn("push:", triggers)
+        # A branches: filter here would silently exclude any project whose default branch is
+        # named something else, while the generated page still promised every push.
+        self.assertNotIn("branches:", triggers)
+        self.install_ok("--agents", "codex", "--ci")
+        self.assertIn("every push and pull request", self.page())
+
+    def test_installed_checker_conflict_stops_before_skill_writes(self):
+        """A destination occupied by something the installer does not own blocks every write."""
+        (self.repo / ".houserules").mkdir()
+        (self.repo / ".houserules/check.py").write_text("# user checker\n", encoding="utf-8")
         before = check.tree_hash(self.repo)
         outcomes = []
         for args in [("--check",), ()]:
             result = self.run_install("--agents", "codex", *args)
             self.assertEqual(result.returncode, 1)
-            self.assertIn("Changing --agents cannot resolve", result.stdout)
-            self.assertNotIn("select only", result.stdout)
+            self.assertIn("preserve modified/unowned .houserules/check.py", result.stdout)
             outcomes.append(result.stdout.split("\n", 1)[1])
         self.assertEqual(outcomes[0], outcomes[1])
         self.assertEqual(check.tree_hash(self.repo), before)
         self.assertFalse((self.repo / ".agents").exists())
+
+    def test_installed_checker_runs_from_the_project_root(self):
+        """--repo resolves against the current directory, not against the script's location."""
+        self.install_ok("--agents", "codex")
+        checker = self.repo / ".houserules/check.py"
+        self.assertEqual((install.HERE / "check.py").read_bytes(), checker.read_bytes())
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONDONTWRITEBYTECODE": "1"}
+        from_root = subprocess.run([sys.executable, str(checker)], cwd=self.repo,
+                                   capture_output=True, text=True, encoding="utf-8", env=env)
+        self.assertEqual(from_root.returncode, 0, from_root.stdout + from_root.stderr)
+        # Run from inside .houserules/ it would check that directory instead, which is why the
+        # shipped text says to run it from the root or pass --repo. Both are honest options.
+        explicit = subprocess.run([sys.executable, "check.py", "--repo", str(self.repo)],
+                                  cwd=self.repo / ".houserules", capture_output=True,
+                                  text=True, encoding="utf-8", env=env)
+        self.assertEqual(explicit.returncode, 0, explicit.stdout + explicit.stderr)
+
+    def test_installed_checker_edit_is_preserved_and_reported(self):
+        self.install_ok("--agents", "codex")
+        checker = self.repo / ".houserules/check.py"
+        edited = checker.read_bytes() + b"\n# local edit\n"
+        checker.write_bytes(edited)
+        report = check.Report()
+        check.check_assets(self.repo, report)
+        self.assertTrue(report.failed)
+        before = check.tree_hash(self.repo)
+        for flags in [(), ("--check",), ("--force",)]:
+            result = self.run_install("--agents", "claude", *flags)
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertEqual(check.tree_hash(self.repo), before)
+        self.assertEqual(checker.read_bytes(), edited)
+
+    def test_installed_checker_destination_may_not_be_a_symlink(self):
+        elsewhere = self.repo / "user-checker.py"
+        elsewhere.write_text("# user checker\n", encoding="utf-8")
+        link = self.repo / ".houserules/check.py"
+        link.parent.mkdir(parents=True)
+        try:
+            link.symlink_to(elsewhere)
+        except OSError as exc:
+            if os.name == "nt" and getattr(exc, "winerror", None) == 1314:
+                self.skipTest(f"OS cannot create a symlink: {exc}")
+            raise
+        before = check.tree_hash(self.repo)
+        result = self.run_install("--agents", "codex")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("symlink asset path", result.stdout)
+        self.assertTrue(link.is_symlink())
+        self.assertEqual(check.tree_hash(self.repo), before)
 
     def test_missing_manifest_with_shipped_name_fails_without_claiming_ownership(self):
         self.foreign("hr-onboard")
@@ -326,6 +555,99 @@ class InstallationTests(unittest.TestCase):
         self.assertNotIn("../../tests/workflows", protocol)
         self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
 
+    def page(self):
+        return (self.repo / "HOUSERULES.md").read_text(encoding="utf-8")
+
+    def test_generated_page_gives_one_first_action_for_each_onboarding_state(self):
+        """The adopter reads their own repository, not the distribution, to know what to do."""
+        self.install_ok("--agents", "codex")
+        self.assertIn("use the `hr-onboard` skill", self.page())
+        self.assertNotIn("onboarding is done", self.page())
+
+        (self.repo / "AGENTS.md").write_text("# AGENTS.md\n\n## Commands\n\nmake test\n",
+                                             encoding="utf-8")
+        self.install_ok("--agents", "codex")
+        self.assertIn("onboarding is done", self.page())
+        self.assertNotIn("Ask your agent: **use the `hr-onboard` skill.**", self.page())
+
+        self.repo = Path(tempfile.mkdtemp(prefix="houserules-test-"))
+        self.install_ok("--agents", "codex", "--skills", "none")
+        self.assertIn("`hr-onboard` was not selected", self.page())
+        self.assertIn("--skills hr-onboard", self.page())
+
+    def test_generated_page_answers_a_stage_question_locally(self):
+        """A stage-level question is answered whether or not the skill for it was selected."""
+        self.install_ok("--agents", "codex")
+        for situation in ["New behaviour", "cannot yet reproduce", "before it lands",
+                          "another agent takes it over"]:
+            self.assertIn(situation, self.page())
+        self.assertIn("Not installed. Write the failing test first", self.page())
+        self.assertNotIn("(.agents/skills/hr-tdd/SKILL.md)", self.page())
+        self.install_ok("--agents", "codex", "--skills", "hr-tdd", "--work", "handoff")
+        self.assertIn("[hr-tdd](.agents/skills/hr-tdd/SKILL.md)", self.page())
+        self.assertNotIn("Not installed. Write the failing test first", self.page())
+        # The workflow walkthrough shows the loop, including the staleness signal.
+        for step in ["workflow.py start demo", "workflow.py run demo", "workflow.py status demo",
+                     "it exits **1**", "does not run an SDLC"]:
+            self.assertIn(step, self.page())
+
+    def test_generated_page_links_resolve_inside_the_adopting_repository(self):
+        self.install_ok("--agents", "claude", "--skills", "all", "--work", "all")
+        targets = re.findall(r"\]\(([^)\s]+)\)", self.page())
+        self.assertTrue(targets)
+        for target in targets:
+            with self.subTest(link=target):
+                self.assertTrue((self.repo / target.partition("#")[0]).exists(), target)
+
+    def test_generated_page_records_no_machine_specific_path(self):
+        """It is committed by the adopter and regenerated in this repository's own CI."""
+        self.install_ok("--agents", "codex")
+        self.assertNotIn(str(install.HERE), self.page())
+        self.assertNotIn(str(self.repo), self.page())
+        self.assertIn(install.DISTRIBUTION, self.page())
+
+    def test_omissions_are_reported_by_the_installer_and_the_page(self):
+        result = self.run_install("--agents", "kiro")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for expected in ["Not installed: skills hr-code-review, hr-diagnosing-bugs, hr-tdd",
+                         "work templates findings, handoff, plan, review, spec, verification",
+                         "--skills hr-code-review,hr-diagnosing-bugs,hr-tdd",
+                         "--work findings,handoff,plan,review,spec,verification",
+                         "Keep --agents kiro"]:
+            self.assertIn(expected, result.stdout)
+        self.assertIn(str(install.HERE / "install.py"), result.stdout)
+        self.assertIn("hr-tdd", self.page())
+        self.assertIn("Keep `--agents kiro`", self.page())
+
+        # Additive second install: what is already here drops out of both reports.
+        result = self.run_install("--agents", "claude", "--skills", "hr-tdd", "--work", "handoff")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Not installed: skills hr-code-review, hr-diagnosing-bugs"
+                      " (optional, experimental); work templates findings, plan, review,"
+                      " spec, verification", result.stdout)
+        # --agents must cover both recorded paths, or the next source upgrade cannot complete.
+        self.assertIn("Keep --agents claude,kiro", result.stdout)
+        self.assertIn("Keep `--agents claude,kiro`", self.page())
+
+        result = self.run_install("--agents", "claude,kiro", "--skills", "all", "--work", "all")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("Not installed:", result.stdout)
+        self.assertIn("Everything this installer ships is selected here.", result.stdout)
+        self.assertIn("Everything this installer ships is already installed here.", self.page())
+
+    def test_follow_up_agent_selection_covers_every_recorded_path(self):
+        self.assertEqual(install.covering_agents(["kiro"], {".kiro/skills"}), ["kiro"])
+        self.assertEqual(install.covering_agents(["kiro"], {".kiro/skills", ".claude/skills"}),
+                         ["claude", "kiro"])
+        # Every path covered means the shorthand is honest; anything less must be spelled out.
+        # "all" is claimed on paths covered, not labels named: several agents share a
+        # directory, so a subset of labels can already reach every path.
+        self.assertEqual(install.covering_agents(list(install.AGENT_SKILL_PATHS), set()), ["all"])
+        self.assertEqual(install.covering_agents(["claude"], set(install.AGENT_SKILL_PATHS.values())),
+                         ["all"])
+        self.assertEqual(install.covering_agents(["claude", "codex", "cursor", "kiro"], set()),
+                         ["claude", "codex", "cursor", "kiro"])
+
     def test_selection_is_additive_and_none_does_not_uninstall(self):
         self.install_ok("--agents", "codex", "--skills", "hr-tdd", "--work", "handoff")
         self.install_ok("--agents", "claude", "--skills", "hr-code-review", "--work", "review")
@@ -333,8 +655,53 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(set(check.read_manifest(self.repo)["skills"]), {"hr-tdd", "hr-code-review"})
         self.assertEqual(set(check.read_assets(self.repo)["files"]),
                          {"HOUSERULES.md", ".houserules/LICENSE", ".houserules/START.md",
-                          ".houserules/workflow.py", ".houserules/work/README.md",
+                          ".houserules/check.py", ".houserules/workflow.py",
+                          ".houserules/work/README.md",
                           ".houserules/work/handoff.md", ".houserules/work/review.md"})
+
+    def test_ci_template_is_opt_in_retained_and_leaves_other_workflows_alone(self):
+        mine = self.repo / ".github/workflows/release.yml"
+        mine.parent.mkdir(parents=True)
+        mine.write_text("name: release\n", encoding="utf-8")
+        self.install_ok("--agents", "codex")
+        self.assertFalse((self.repo / check.CI_WORKFLOW).exists())
+        self.assertIn("Re-install with --ci", self.page())
+
+        before = check.tree_hash(self.repo)
+        self.assertEqual(self.run_install("--agents", "codex", "--ci", "--check").returncode, 1)
+        self.assertEqual(check.tree_hash(self.repo), before)
+
+        self.install_ok("--agents", "codex", "--ci")
+        workflow = self.repo / check.CI_WORKFLOW
+        self.assertEqual(workflow.read_bytes(),
+                         (install.HERE / "templates/ci/github-actions.yml").read_bytes())
+        self.assertIn("python .houserules/check.py", workflow.read_text(encoding="utf-8"))
+        commands = [line for line in workflow.read_text(encoding="utf-8").splitlines()
+                    if line.strip().startswith("run:")]
+        self.assertTrue(commands)
+        self.assertFalse([line for line in commands if "--fix" in line],
+                         "--fix repairs instead of reporting; it must never be the gate")
+        self.assertIn(check.CI_WORKFLOW, check.read_assets(self.repo)["files"])
+        self.assertIn("branch protection settings", self.page())
+        self.assertEqual(mine.read_text(encoding="utf-8"), "name: release\n")
+
+        # Retained without the flag, and a repeat run is a no-op.
+        self.assertEqual(self.run_install("--agents", "codex", "--check").returncode, 0)
+        self.install_ok("--agents", "codex")
+        self.assertTrue(workflow.is_file())
+
+    def test_ci_path_conflict_stops_before_writes(self):
+        target = self.repo / check.CI_WORKFLOW
+        target.parent.mkdir(parents=True)
+        target.write_text("name: mine\n", encoding="utf-8")
+        before = check.tree_hash(self.repo)
+        for flags in [("--check",), (), ("--force",)]:
+            result = self.run_install("--agents", "codex", "--ci", *flags)
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("preserve modified/unowned .github/workflows/houserules.yml",
+                          result.stdout)
+            self.assertEqual(check.tree_hash(self.repo), before)
+        self.assertEqual(target.read_text(encoding="utf-8"), "name: mine\n")
 
     def test_unknown_selection_and_list_write_nothing(self):
         before = check.tree_hash(self.repo)
@@ -396,7 +763,7 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(check.tree_hash(self.repo), before)
         self.install_ok(*args)
         self.assertEqual(self.run_install(*args, "--check").returncode, 0)
-        self.assertEqual(len(check.read_assets(self.repo)["files"]), 11)
+        self.assertEqual(len(check.read_assets(self.repo)["files"]), 12)
         report = check.Report()
         check.check_assets(self.repo, report)
         self.assertFalse(report.failed)

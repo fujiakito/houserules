@@ -275,8 +275,11 @@ Prepare an identifiable release candidate and let repository policy decide readi
 | [Cursor](agents/cursor.md) | Git + review | /split-to-prs, /autopilot | built-in + project; Remote PR actions require repository access and task authority |
 | [Kiro](agents/kiro.md) | Git + project CI | custom delivery procedure | built-in + project; No atomic ship capability established; release decision remains separate |
 
-Wire `python check.py` and `python install.py --check` into CI for this repository. Convenience
-commands do not replace branch protection, release policy, or reproducible checks.
+Wire `python check.py` and `python install.py --check` into CI for this repository. In an adopting
+project, `install.py --ci` writes a GitHub Actions workflow running the installed
+`.houserules/check.py`; drift against the upstream templates is not gateable from there, because
+the installer is never copied into a project. Convenience commands do not replace branch
+protection, release policy, or reproducible checks.
 
 </details>
 

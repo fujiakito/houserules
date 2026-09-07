@@ -20,12 +20,13 @@ in the same commit; there is no embargo process to coordinate with.
 | Surface | Concern |
 |---|---|
 | `install.py` | Writing outside the target repository; following a symlink out of it; overwriting a file it does not own or has not recorded; preflight passing where a write then damages user content |
-| `check.py` | Reading outside the target repository; `--fix` repairing something it does not own |
+| `check.py` (installed as `.houserules/check.py`) | Reading outside the target repository; `--fix` repairing something it does not own |
 | `.houserules/workflow.py` | Shell injection through recorded argv; escaping the `cwd`; writing state or logs outside `work/`; a stale-evidence check reporting `verified` for evidence that has changed |
 | Ownership manifests | `skills.json` / `assets.json` content causing a write to an arbitrary path |
 
-Path containment is guarded at `install.py:82`, `check.py:476` and `workflow.py:18`
-(`safe_path`). Commands run through `subprocess.run(argv, shell=False, cwd=repo,
+Path containment is guarded in `install.py` (`workflow_activation`, and `plan_assets` via
+`asset_path`), `check.py` (`asset_path`) and `workflow.py` (`safe_path`). Named rather than
+numbered, because line numbers go stale silently. Commands run through `subprocess.run(argv, shell=False, cwd=repo,
 timeout=...)`. A way around any of those is a bug — report it.
 
 ## Out of scope: designed behavior, not vulnerabilities
