@@ -7,6 +7,7 @@
 
 ## Conventions
 
+- Before committing, follow the commit conventions in `CONTRIBUTING.md`.
 - Every external claim carries a source and a retrieval date, or is tagged `(unverified)`. A claim
   that is cheaply testable locally is **tested, not cited** — documentation in this field contradicts
   itself often enough that a citation is not evidence.

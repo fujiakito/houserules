@@ -1,10 +1,12 @@
 """Prevent an inventory addition from leaving the user-facing stage guide incomplete."""
 from pathlib import Path
 import re
+import sys
 import unittest
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 
 class DocumentationTests(unittest.TestCase):
@@ -28,6 +30,24 @@ class DocumentationTests(unittest.TestCase):
         """hr-onboard is copied on its own, so its notice must not drift from the root one."""
         self.assertEqual((ROOT / 'templates/skills/hr-onboard/LICENSE').read_bytes(),
                          (ROOT / 'LICENSE').read_bytes())
+
+    def test_scaffold_marker_still_identifies_an_unfilled_agents_file(self):
+        """The installer reads this marker to pick the first action it prints on the entry page.
+
+        Editing the scaffold's comment without it would silently turn every fresh install into
+        the "onboarding is done" branch, and nothing else would fail.
+        """
+        import install
+        template = (ROOT / 'templates/AGENTS.md').read_text(encoding='utf-8')
+        self.assertIn(install.SCAFFOLD_MARKER, template)
+        self.assertNotIn(install.SCAFFOLD_MARKER, (ROOT / 'AGENTS.md').read_text(encoding='utf-8'))
+
+    def test_agent_read_files_state_a_stop_condition(self):
+        """An ambiguity guard, not a behavioral one: it cannot establish what a weak model does."""
+        for rel, marker in [('templates/START.md', 'Stop when'),
+                            ('templates/work/README.md', 'Stop at step')]:
+            with self.subTest(file=rel):
+                self.assertIn(marker, (ROOT / rel).read_text(encoding='utf-8'))
 
     def test_short_agent_entry_does_not_expand_the_research_bundle(self):
         entry = (ROOT / 'templates/START.md').read_text(encoding='utf-8')

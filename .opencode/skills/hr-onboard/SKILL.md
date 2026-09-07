@@ -15,16 +15,14 @@ description: >-
 ## What this does not do
 
 **It does not scan the codebase and describe it.** A scan produces a repository overview, and an
-overview fails the third condition of the inclusion test below: the agent can read the directory tree
-itself. Writing down what the code already says is a recurring bill for no return — carrying a context
-file costs over 20% more inference unconditionally, and context files do not generally improve success
-rates (arXiv:2602.11988, established). Ablating the overview category directly (Table 7, Appendix B)
-moved accuracy 68.12%->62.32% (p=0.15) on CTXBench and 54.36%->54.20% (p=0.73) on SWE-bench -
-**not significant either way**, on one model and LLM-generated files only.
+overview fails the third condition of the inclusion test below: the agent can read the directory
+tree itself. Writing down what the code already says bills on every session and is not established
+to help (arXiv:2602.11988). The measurements, and the limits on what they establish, are recorded
+in the houserules distribution at `research/PORTABILITY.md`; do not restate them as settled.
 
-**This holds for a documented repository.** The same paper finds context files *do* act as effective
-overviews when the repo has no documentation. If this repo is thinly documented, an overview may
-earn its place - judge it, do not assume.
+**This holds for a documented repository.** The same paper finds context files *do* act as
+effective overviews when the repo has no documentation. If this repo is thinly documented, an
+overview may earn its place - judge it, do not assume.
 
 It also does not duplicate `/init`. If the host agent has an init command, that is a fine way to get
 a starting `CLAUDE.md`. This procedure produces something different: the **non-discoverable**
@@ -98,7 +96,8 @@ Order does not matter as much as brevity. Before writing each line, state which 
 conditions it satisfies. If you cannot state all three, do not write it.
 
 **Prefer a check over a sentence.** If a rule can be enforced by CI, a lint rule or a test, write
-that instead and leave the file shorter. `check.py` in this repository is where such checks go.
+that instead and leave the file shorter. Put it wherever this repository already runs checks — its
+test suite, linter config or CI workflow — not in a new file of your own.
 
 ## Step 5 — derive the host files
 
