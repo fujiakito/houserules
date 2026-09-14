@@ -1,8 +1,8 @@
 # Choose the next step
 
 Use this guide when deciding **what to do and which capability to use**. It covers Claude Code,
-Codex, Antigravity, Cursor and Kiro across all 12 stages. You do not need to run every stage or
-install every tool. Start with the current problem; expand its agent table only when needed.
+Codex, Antigravity, Cursor, Kiro and Devin across all 12 stages. You do not need to run every stage
+or install every tool. Start with the current problem; expand its agent table only when needed.
 
 ## Choose the next action
 
@@ -27,8 +27,11 @@ A skill describes a procedure; tools execute it; plugins/Powers package capabili
 
 Agent-name links open the canonical inventory for exact commands, sources, versions and constraints.
 Claude/Codex mappings retain their 2026-09-04 evidence; Cursor/Kiro mappings were checked against
-2026-09-06 official sources. Antigravity, Cursor and Kiro capability mappings are documented,
-not runtime-tested. A tool shown for one surface is not promised on every surface.
+2026-09-06 official sources; Devin mappings were checked against 2026-09-14 official sources
+reached through a documentation index rather than the pages themselves. Antigravity, Cursor, Kiro
+and Devin capability mappings are documented, not runtime-tested. A tool shown for one surface is
+not promised on every surface — for Devin nearly every extension row is sourced from the CLI's
+pages, so treat Desktop, Cloud and the JetBrains product as unconfirmed for those rows.
 
 ## Apply the method in your project
 
@@ -65,6 +68,7 @@ Create useful context and make setup reproducible.
 | [Antigravity](agents/antigravity.md) | `AGENTS.md` + Rules | `/learn`, `/skills`, `hr-onboard` | built-in + project; CLI documents `AGENTS.md`/`GEMINI.md`; `.agents/rules` adds activation modes; no local loading test |
 | [Cursor](agents/cursor.md) | AGENTS.md + rules | /create-rule, /create-skill, hr-onboard | built-in + project; IDE: Customize; CLI reads project rules; loading pending |
 | [Kiro](agents/kiro.md) | Steering + skills | Agent Steering & Skills, hr-onboard | built-in + project; IDE/CLI: verify the selected agent resources; inheritance disputed |
+| [Devin](agents/devin.md) | `AGENTS.md` + `.devin/rules/` | nested `AGENTS.md`; `devin rules list`; `hr-onboard` via `.agents/skills/` | built-in + project; `.devin/` precedes `.windsurf/` and legacy `.windsurfrules` is still read; subdirectory rules load lazily; no loading test |
 
 Run the native initializer, then `python install.py`. Use `hr-onboard` for knowledge that repository
 inspection cannot reveal, such as a command that only works from one directory or a test expected
@@ -95,6 +99,7 @@ Resolve what should be achieved before selecting a solution.
 | [Antigravity](agents/antigravity.md) | `/goal` | `/grill-me`, `/btw`, MCP | built-in; `/goal` continues autonomously; `/grill-me` is the explicit requirements interview |
 | [Cursor](agents/cursor.md) | Agent conversation | search; Atlassian plugin for issue context | built-in + install; IDE/CLI; plugin needs installation and provider access |
 | [Kiro](agents/kiro.md) | Feature Spec requirements | Plan agent; configured MCP | built-in + install; IDE/CLI; Plan reads context but excludes MCP/tools that mutate |
+| [Devin](agents/devin.md) | Agent conversation | MCP servers; server prompts appear as `/mcp__<server>__<prompt>` | built-in + install; no dedicated goal or interview command recorded; each MCP server needs its own setup and credentials |
 
 Record durable acceptance criteria in `work/<id>/`; a session goal is execution state, not the
 project's system of record.
@@ -125,6 +130,7 @@ Describe behavior and design decisions; use visual design only when the problem 
 | [Antigravity](agents/antigravity.md) | `/grill-me` | `/plan`, Artifacts, `/boost` | built-in + ⚠️ gated; `/boost` is paid; `/plan` produces a reviewable Implementation Plan, not a mandatory spec gate |
 | [Cursor](agents/cursor.md) | Agent design/planning | /canvas; relevant plugins | built-in + install; IDE: canvas is visual output, not a specification gate |
 | [Kiro](agents/kiro.md) | Feature Spec / Quick Spec | Figma Power for design context | built-in + install; IDE/CLI/Web workflows differ; Power needs installation/access |
+| [Devin](agents/devin.md) | Agent conversation scoped by `AGENTS.md` | plugin-supplied rules and subagent profiles | built-in + install + project; no spec gate recorded; a trusted plugin's rules load always-on, which is not a review step |
 
 Kiro offers native specification workflows; other agents can use existing specs or the optional
 template. Pick a format that serves the next consumer and keep business acceptance explicit.
@@ -154,6 +160,7 @@ Turn accepted decisions into work that can be picked up and verified.
 | [Antigravity](agents/antigravity.md) | `/plan` | Implementation Plan Artifact, subagents, `/boost` | built-in + ⚠️ gated; `/boost` is paid; children can inherit, branch into a worktree, or share storage |
 | [Cursor](agents/cursor.md) | Agent planning | /create-subagent; project plan | built-in + project; IDE/CLI; delegate only when authorized and independently useful |
 | [Kiro](agents/kiro.md) | Plan agent / Spec tasks | requirements and design artifacts | built-in; IDE/CLI: Plan is read-only; hand off accepted work for execution |
+| [Devin](agents/devin.md) | Agent conversation | `agents/<name>/AGENT.md` subagent profiles | built-in + install; no dedicated plan mode recorded; subagents arrive only inside a plugin bundle |
 
 Claude Code 2.1.251 plan mode was locally tested writing a machine-local file under
 `~/.claude/plans/` on 2026-09-03. Use `work/<id>/handoff.md` when the plan must be repository-visible,
@@ -183,6 +190,7 @@ Implement the chosen task using the runtime and isolation your current host prov
 | [Antigravity](agents/antigravity.md) | `/goal` | worktree subagents, `/teamwork-preview`, `agy -p`, Remote Control, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project; `/teamwork-preview` is paid/preview; headless CLI is scriptable; Remote Control drives a host session rather than supplying another runtime |
 | [Cursor](agents/cursor.md) | Agent implementation | /shell; hr-tdd | built-in + project; IDE/CLI/cloud have different execution environments; hr-tdd is opt-in |
 | [Kiro](agents/kiro.md) | Default agent / Spec tasks | hr-tdd; relevant technology Power | built-in + project + install; Use an execution-capable agent; Powers in CLI require v3 |
+| [Devin](agents/devin.md) | `devin -- <task>` | `--model`, `--permission-mode`, `--sandbox`; hr-tdd | built-in + project; arbitrated tools are `read`, `edit`, `grep`, `glob`, `exec`; sandbox and permission modes are CLI flags, not established for Desktop |
 
 Use one worktree per parallel write stream. Use the concurrency available on the active surface; a general
 capability does not establish permission to delegate or a benefit from doing so.
@@ -212,6 +220,7 @@ Produce evidence that the changed behavior works.
 | [Antigravity](agents/antigravity.md) | `/boost` | shell, `/browser`, Artifacts, `hr-tdd` (experimental, opt-in) | built-in + ⚠️ gated + project; `/boost` explicitly documents tests and independent verification but requires a paid plan; sandbox is opt-in |
 | [Cursor](agents/cursor.md) | Agent + project tests | hr-tdd; workflow run | built-in + project; IDE/CLI: preserve command output; cloud setup is separate |
 | [Kiro](agents/kiro.md) | Default agent + project tests | Postman Power; workflow run | built-in + project + install; Plan cannot execute checks; Power installation does not imply test success |
+| [Devin](agents/devin.md) | Project tests through `exec` | `PostToolUse` and `Stop` hooks; the local workflow tool | built-in + project; a hook binds only the agent that reads it, so keep the gate in CI |
 
 A tool invocation is not evidence by itself. Record the command, surface, version, result, and
 relevant artifact. If Claude's launch skill is unavailable, an existing project procedure can
@@ -247,6 +256,7 @@ Choose the question the review must answer. Add specialist passes only for relev
 | [Antigravity](agents/antigravity.md) | **N/A — no dedicated code-review command** | `/diff`, Artifact Review, custom `code-auditor` agent/skill, `/boost`, `hr-code-review` (experimental, opt-in) | N/A + built-in + project + ⚠️ gated; `/diff` is a viewer, not a reviewer; `/boost` is paid |
 | [Cursor](agents/cursor.md) | /review | /review-bugbot, /review-security; hr-code-review | built-in + project; Native review routing is documented; project alternative remains experimental |
 | [Kiro](agents/kiro.md) | Scoped review request | custom reviewer; hr-code-review | built-in + project; No dedicated review skill established here; capture actual findings and revision |
+| [Devin](agents/devin.md) | Scoped review request | Devin Review, named by the vendor but not inventoried here; hr-code-review | built-in + project + ⚠️ gated; no review command was documented in this pass; Review is a separate product surface |
 
 Use review to find issues; move requirements that must bind into deterministic CI checks.
 
@@ -274,6 +284,7 @@ Prepare an identifiable release candidate and let repository policy decide readi
 | [Antigravity](agents/antigravity.md) | **N/A — no built-in atomic ship command** | headless `agy -p`, custom Skills/Plugins, Git/CI | N/A + built-in + project; Headless mode is scriptable, but release policy and credentials remain external |
 | [Cursor](agents/cursor.md) | Git + review | /split-to-prs, /autopilot | built-in + project; Remote PR actions require repository access and task authority |
 | [Kiro](agents/kiro.md) | Git + project CI | custom delivery procedure | built-in + project; No atomic ship capability established; release decision remains separate |
+| [Devin](agents/devin.md) | Git + project CI | `/handoff` promotes the task to a cloud session | built-in + project; handoff packages conversation context and the current branch; it transfers work, it does not authorize a release |
 
 Wire `python check.py` and `python install.py --check` into CI for this repository. In an adopting
 project, `install.py --ci` writes a GitHub Actions workflow running the installed
@@ -305,6 +316,7 @@ Deploy through a provider or CI/CD identity with a known recovery path.
 | [Antigravity](agents/antigravity.md) | **N/A — no generic deploy command** | Firebase, Android, Data Agent Kit, Maps bundles; custom Skills/MCP | N/A + install; Google bundles must be enabled and authenticated; they are not fresh-install built-ins |
 | [Cursor](agents/cursor.md) | Project deployment command | provider MCP/plugin when configured | project + install; Use the target environment credentials and existing release gates |
 | [Kiro](agents/kiro.md) | Project deployment command | Netlify Power; configured provider tools | project + install; IDE/CLI v3/Web: install/connect Power; deploying still needs authority |
+| [Devin](agents/devin.md) | Project deployment command | configured MCP servers | project + install; no deployment capability recorded; deploying still needs separate authority and credentials |
 
 Production approval remains outside the agent. Prefer a CI/CD deployment identity and an explicit
 environment approval over credentials embedded in an interactive session.
@@ -333,6 +345,7 @@ Inspect signals and decide when action is needed.
 | [Antigravity](agents/antigravity.md) | `/schedule` | Sidecars, Remote Control notifications, MCP, SDK/API hooks, headless `agy -p` | built-in + install; Sidecars are off until enabled; Remote Control monitors host tasks; neither supplies telemetry storage or alert ownership |
 | [Cursor](agents/cursor.md) | Configured telemetry tools | Hex Canvas; /automate, /loop | install + built-in; Visualization and automation do not provide telemetry storage or credentials |
 | [Kiro](agents/kiro.md) | Configured telemetry tools | Datadog / Dynatrace Powers | install; Powers are catalog options; verify actual tools and account access |
+| [Devin](agents/devin.md) | Configured telemetry MCP servers | `/usage`, `/session-stats`, `/context` | install + built-in; session counters measure agent usage, not service health; each server needs its own account access |
 
 Monitoring must emit durable events or alerts. A recurring agent prompt is orchestration, not an
 observability backend.
@@ -361,6 +374,7 @@ Find the cause, correct it and preserve the evidence.
 | [Antigravity](agents/antigravity.md) | `/boost` | `/codesearch`, `research`/`browser` subagents, MCP, Artifacts, `hr-diagnosing-bugs` (experimental, opt-in) | built-in + install + ⚠️ gated + project; `/boost` is paid; external incident data requires MCP or another integration |
 | [Cursor](agents/cursor.md) | Agent diagnosis | /review-bugbot; hr-diagnosing-bugs | built-in + project; Reproduce the failure; review findings alone do not identify root cause |
 | [Kiro](agents/kiro.md) | Bugfix Spec + execution | hr-diagnosing-bugs; telemetry Power | built-in + project + install; Keep current/expected/unchanged behavior; verify in execution-capable mode |
+| [Devin](agents/devin.md) | Reproduce through `exec`, then correct | hr-diagnosing-bugs; `--sandbox` for a risky reproduction | built-in + project + install; no dedicated debug command recorded; keep current, expected and unchanged behavior explicit |
 
 Feed incident findings into `work/<id>/findings.md`, tests, and checks. Do not leave the only causal
 record in a vendor conversation.
@@ -390,6 +404,7 @@ Improve the engineering system in response to observed friction.
 | [Antigravity](agents/antigravity.md) | `/learn` | `/skills`, `/agents`, `/hooks`, `/mcp`, `/config`, `/usage` | built-in; No documented doctor command; `/learn` output path conflicts across official pages |
 | [Cursor](agents/cursor.md) | Customize inventory | /update-cli-config, /update-cursor-settings; workflow status | built-in + project; IDE settings and agent CLI settings are different surfaces |
 | [Kiro](agents/kiro.md) | Agent Steering & Skills | CLI /guide; agent/profile configuration; workflow status | built-in + project; Guide is CLI-only; inspect effective resources before changing configuration |
+| [Devin](agents/devin.md) | `devin skills list`, `devin rules list`, `devin mcp list` | `devin skills paths`; `devin plugins info` | built-in; these enumerate the running build and are the documented route out of `documented`; CLI-sourced, so confirm per surface |
 
 Move procedures out of always-loaded instruction files and into project-prefixed skills. Use
 scheduled audits only when their output has an owner and a durable destination.
@@ -412,6 +427,7 @@ can describe a procedure; it does not create a cross-agent permission boundary.
 | [Antigravity](agents/antigravity.md) | Deny/Ask/Allow permissions | Terminal Sandbox, hooks, project settings, artifact review | built-in; `Deny > Ask > Allow`; sandbox is opt-in/preview. CLI Features says Windows `AppContainer`, while the dedicated Sandbox pages omit Windows |
 | [Cursor](agents/cursor.md) | Permission configuration | hooks and scoped CLI rules | built-in + project; Hook coverage differs in cloud; hook failure can be fail-open |
 | [Kiro](agents/kiro.md) | Agent permissions | tools/resources; PreToolUse hooks | built-in + project; Use the active surface/schema; a permission allowlist is not a tool inventory |
+| [Devin](agents/devin.md) | Permission rules + `--permission-mode` | `PreToolUse` and `PermissionRequest` hooks; workspace trust | built-in + project; a handler returning `decision: block` refuses the action, but it binds only this agent and can fail open |
 
 Model prompts express intent; they are not the security boundary. On native Windows, Codex has a
 documented OS command sandbox, Claude Code does not, and Antigravity's official pages conflict over
@@ -431,6 +447,7 @@ a repository-visible handoff must still be transferred to a new checkout or host
 | [Antigravity](agents/antigravity.md) | Git + CI + `work/<id>/` | Artifacts, project tests/checks | project + built-in; Artifacts improve review but are not the repository's durable system of record by default |
 | [Cursor](agents/cursor.md) | Git + workflow state | logs, revision hashes and work records | project; Record explicit runtime load traces; files alone do not prove discovery |
 | [Kiro](agents/kiro.md) | Git + workflow state | Spec artifacts, logs and resource settings | project + built-in; Preserve portable outputs; do not treat machine-local state as transferred |
+| [Devin](agents/devin.md) | Git + `--export` | session resume with `-c` or `-r`; workflow state | built-in + project; an exported conversation and an ACU counter are records, not verification; keep portable outputs in the repository |
 
 Build project-specific CI for agent configuration where its behavior matters. A deterministic gate
 provides a guarantee only when the current agent cannot modify, disable, or bypass that gate.
@@ -450,6 +467,7 @@ They are optional support, not required lifecycle gates.
 | [Antigravity](agents/antigravity.md) | **N/A by design** | permissions, Artifact Review, hooks, deployment approvals | N/A; `/goal`, `/boost`, and teams expand execution, not accountability |
 | [Cursor](agents/cursor.md) | Accountable owner | permission controls and reviewed release process | project + built-in; Native automation does not authorize publication or deployment |
 | [Kiro](agents/kiro.md) | Accountable owner | Spec decisions and permission controls | project + built-in; Quick Spec convenience does not replace business acceptance |
+| [Devin](agents/devin.md) | Accountable owner | plugin trust prompt; organization ACU limits; governance configs | built-in + project + ⚠️ gated; one confirmation can admit rules, hooks, MCP servers and subagents together; a budget limit is not acceptance |
 
 Tools can enforce an authority decision; they cannot supply the accountable owner.
 Scope authority by blast radius and reversibility, not by model capability. A stronger model may

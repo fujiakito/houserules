@@ -170,7 +170,9 @@ point it, and an installed skill is model-directed text from whatever source you
 Claude Code and Codex have named local runtime observations in their [inventories](docs/agents/README.md);
 those observations do not certify every feature. Antigravity is documentation-based. Cursor and
 Kiro have dated capability maps and [local installer acceptance](tests/workflows/cursor-kiro/README.md),
-but native skill loading remains untested. Copilot, Goose and OpenCode are matrix-only.
+but native skill loading remains untested. Devin — formerly Windsurf — has a dated capability map
+only: nothing was installed or run, and its pages were reached through a documentation index rather
+than directly, which is recorded on the file itself. Copilot, Goose and OpenCode are matrix-only.
 
 External claims have sources and dates, or an unverified label. Runtime evidence names its surface
 and version. [MATRIX](research/MATRIX.md) tracks recheck dates; [workflow reports](tests/workflows/README.md)

@@ -47,12 +47,13 @@ whole reason for this directory.
 | [`antigravity.md`](antigravity.md) | Google Antigravity — four core products plus Remote Control, managed API and Enterprise; documentation inventory with installed 2.0/IDE presence, no capability execution |
 | [`cursor.md`](cursor.md) | Cursor — IDE/CLI/cloud; documented capabilities, measured IDE launcher and Python installer acceptance |
 | [`kiro.md`](kiro.md) | Kiro — IDE/CLI/Web/Mobile; documented capabilities, measured IDE launcher and unresolved custom-resource inheritance |
+| [`devin.md`](devin.md) | Devin, **formerly Windsurf** — Cloud/Desktop/CLI/Review plus Windsurf JetBrains; documentation inventory reached through an index, nothing installed or run |
 | [`_TEMPLATE.md`](_TEMPLATE.md) | copy this to add an agent |
 
-**These five are the canonical inventories for this project.** Everything established about an
+**These six are the canonical inventories for this project.** Everything established about an
 agent lives in its file — surfaces, built-ins, installables, extension points, limits, and the
 traps. Nothing else in the repository duplicates them; `../GUIDE.md` links into them per stage and
-`../../research/MATRIX.md` compares one mechanism at a time across all eight agents.
+`../../research/MATRIX.md` compares one mechanism at a time across all nine agents.
 
 **Every file carries an evidence grade per claim** — `tested`, `documented` with a retrieval date, ⚠️
 `disputed` where two official pages conflict, or `(unverified)`. The grades are not decoration: on
@@ -66,6 +67,13 @@ exact local test still required — not because a documentation pass counts as s
 Cursor and Kiro have documentation inventories as of 2026-09-06. Their local version and installer
 checks do not establish native discovery or execution; see the shared
 [acceptance record](../../tests/workflows/cursor-kiro/README.md).
+
+Devin is documented as of 2026-09-14 and is the **weakest-sourced** file here: no surface was
+installed, and the vendor's documentation host was unreachable from the authoring session, so every
+row came from a documentation index rather than the page itself. It is also the only subject that
+was **renamed mid-survey** — Windsurf became Devin Desktop — which is why [`devin.md`](devin.md)
+opens with a product-identity section instead of a command table, and why it corrects a
+`MATRIX.md` row recorded under the old name.
 
 Not yet written: Copilot, Goose, OpenCode. They remain surveyed in
 `../../research/MATRIX.md`. Before promoting one, either install and enumerate it or preserve the
@@ -83,6 +91,7 @@ for it:
 | **Antigravity** | lower bound: 2.0 **Antigravity Guide**; CLI `antigravity_guide`, `migrate-workflows` | enabled Google bundles and user plugins/skills |
 | **Cursor** | documented native review and extension-authoring skills | plugins, user/project skills and MCP; [dated inventory](cursor.md) |
 | **Kiro** | Default/Plan agents and Specs, not relabeled as skills | Powers, user/project skills and MCP; [dated inventory](kiro.md) |
+| **Devin** | **unknown** — no shipped-skill enumeration was retrieved, and `devin skills list` was not run; unknown is not none | plugins bundling skills, rules, hooks, MCP servers and subagents behind one trust prompt; [dated inventory](devin.md) |
 | **this project** | **built-in** | **installable** |
 
 "Agent X has a PDF skill" and "Agent X ships with a PDF skill" are different claims, and only the

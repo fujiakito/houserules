@@ -41,13 +41,17 @@ documentation disputes.
 Status: **Claude Code and Codex are `tested`** — real installations, surfaces and versions recorded
 (with any historical environment gap explicit), and the
 only two this project should be described as supporting. **Goose, Cursor, Copilot, OpenCode,
-Antigravity and Kiro are `documented`**: their rows cite official pages with retrieval dates, and
-native capability loading has not been run for those rows. Cursor and Kiro now have
+Antigravity, Kiro and Devin are `documented`**: their rows cite official pages with retrieval
+dates, and native capability loading has not been run for those rows. **Devin, added 2026-09-14,
+is the weakest-sourced of them** — its pages were unreachable from the authoring session and every
+row came through a documentation index; see the open items and the
+[Devin inventory](../docs/agents/devin.md). Cursor and Kiro now have
 [dated inventories](../docs/agents/README.md) and local launcher/installer checks (2026-09-06);
 these do not promote their capabilities to tested. Zed has supplemental documented skill-path coverage below. The Windsurf documentation URL
 redirected to Devin Desktop Cascade documentation on 2026-09-05; the supplemental row records
 that source observation, not a verified product identity. Remaining mechanisms and runtime
-behavior are backlog.
+behavior are backlog. That Windsurf row is **superseded as of 2026-09-14**: the product was renamed
+and the row is now a full Devin inventory, corrected — see section 2 and the revision log.
 
 **2026-09-06 supplemental observation:** a reviewer reports successful explicit invocation of the
 three optional toolkit skills in Claude Code CLI 2.1.251, with empty-repository and `.agents`-only
@@ -70,6 +74,7 @@ comparative effectiveness and loading of these candidates on other surfaces rema
 | **Kiro** | **`AGENTS.md`** | workspace root/subdirectories, plus global steering location | Custom-agent inheritance is disputed; see [Kiro inventory](../docs/agents/kiro.md#5-extension-points). [Steering](https://kiro.dev/docs/steering/), `documented`, retrieved 2026-09-06 |
 | **Antigravity** | **`AGENTS.md`** and `GEMINI.md` | ⚠️ **disputed:** CLI website says workspace root; installed 2.0 v2.11.0 built-in docs say walk from cwd to repository root; `~/.gemini/GEMINI.md` global | Neither discovery contract was exercised. `.agents/rules/*.md` adds Manual, Always On, Model Decision and Glob activation; `.agent/rules` is a legacy fallback. [Best Practices](https://antigravity.google/docs/cli/best-practices/), [Migration](https://antigravity.google/docs/gcli-migration), and [Rules](https://antigravity.google/docs/rules-workflows/), retrieved 2026-09-04; installed built-in `agy-customizations/docs/rules.md` inspected 2026-09-04. Precedence remains `(unverified)` |
 | **OpenCode** | **`AGENTS.md`** | project | Listed in section 2 as an `AGENTS.md` reader but omitted from this table until 2026-09-01. `documented`, retrieved 2026-09-01 |
+| **Devin** (formerly Windsurf) | **`AGENTS.md`** | project root, read automatically; nested `AGENTS.md` scopes instructions to a subtree | Also `.devin/rules/` — **preferred, and it takes precedence over `.windsurf/rules/`** — plus legacy `.windsurfrules` and imported `.cursor/rules`. Discovery walks workspace subdirectories up to the **git root**; root rules load at session start while subdirectory rules load **lazily** on first access. Rule frontmatter triggers: `always_on`, `manual`, `model_decision`, `agent`, `glob`. `documented`, retrieved 2026-09-14; see the [Devin inventory](../docs/agents/devin.md#5-extension-points) for the retrieval-channel limit |
 
 > **Finding — the cleanest result in this survey.** Every agent surveyed reads `AGENTS.md`
 > **except Claude Code.** Codex authored it; Cursor, Copilot, Kiro and Antigravity all read it;
@@ -97,38 +102,52 @@ one vendor's surfaces; the location is not portable either.**
 | **Cursor** | **`.agents/skills/`** and `.cursor/skills/` | **`~/.agents/skills/`**, `~/.cursor/skills/` | Also loads `.claude/skills/` and `.codex/skills/` for compatibility. Nested project skill directories are discovered and scoped to their subdirectory. Optional Cloud sync covers ~/.cursor/skills only; other local roots are not automatically copied. See [Cursor inventory](../docs/agents/cursor.md#7-surface-differences) and [skills source](https://cursor.com/docs/skills). `documented`, retrieved 2026-09-06; nested discovery rechecked, not runtime-tested |
 | **Kiro** | `.kiro/skills/` | project or global | Workspace/global skills are documented; custom-agent default inheritance differs between official pages. Explicit `skill://` resources are supported, not established as universally required. See [Kiro inventory](../docs/agents/kiro.md#5-extension-points). `documented` / disputed, retrieved 2026-09-06 |
 | **OpenCode** | `.opencode/skills/`, `.claude/skills/`, **`.agents/skills/`** | `~/.config/opencode/skills/`, `~/.claude/skills/`, **`~/.agents/skills/`** | Walks up to the git worktree, loading each match along the way. `documented`, retrieved 2026-09-01 |
+| **Devin** (formerly Windsurf) | **`.agents/skills/`**, `.devin/skills/`, `.windsurf/skills/` | **`~/.agents/skills/`**, `~/.config/devin/skills/`, `~/.codeium/<channel>/skills/` | Nested `<name>/SKILL.md` in all six. `<channel>` is a **variable** — `windsurf`, `windsurf-next` or `windsurf-insiders` — not the literal directory `windsurf`; on Windows the global root is `%APPDATA%\devin\skills\`. Frontmatter extends well past the portable core (`model`, `subagent`, `allowed-tools`, `permissions`, `triggers`). `devin skills paths` prints what a running build actually uses. `documented`, [CLI Skills](https://docs.devin.ai/cli/extensibility/skills), retrieved 2026-09-14. Same-name precedence across the three project roots is **`(unverified)`** |
 
 ### Supplemental skill-path coverage (2026-09-05)
 
 These are official-documentation observations, not additional tested agents or installer targets.
-The eight-agent comparison below retains its original denominator.
 
 | Surface | Project / user paths | Evidence and limit |
 |---|---|---|
 | Zed Agent | `.agents/skills/`; `~/.agents/skills/` | `documented`, [Skills](https://zed.dev/docs/ai/skills), retrieved 2026-09-05. Named directories with SKILL.md; project loading requires a trusted worktree. Does not establish external-agent behavior inside Zed |
-| Windsurf / current Devin Desktop Cascade docs | `.windsurf/skills/`; `~/.codeium/windsurf/skills/`; also `.agents/skills/` and `~/.agents/skills/` | `documented`, [Cascade Skills](https://docs.devin.ai/desktop/cascade/skills), retrieved 2026-09-05 via the redirected Windsurf documentation URL. Named directories with SKILL.md; no local runtime or historical-version claim |
+| ~~Windsurf / current Devin Desktop Cascade docs~~ | ~~`.windsurf/skills/`; `~/.codeium/windsurf/skills/`~~ | **Superseded 2026-09-14 — promoted to the main table above as Devin, and corrected.** The 2026-09-05 row was wrong in three ways, all of them the same mistake: it read one page and generalised. It named the **Desktop/Cascade** surface when the current source is the **CLI** extensibility section, it missed `.devin/skills/` and `~/.config/devin/skills/` entirely, and it recorded `~/.codeium/windsurf/skills/` as a literal path when `<channel>` is a variable. See the [Devin inventory](../docs/agents/devin.md#0-product-identity--read-this-before-the-paths) |
+
+> **Why that row was wrong is more useful than the correction.** It was written from the page a
+> redirect happened to land on. The vendor had renamed the product, moved the authoritative
+> extensibility documentation to a different surface's section, and added a native directory —
+> and a single-page read reproduced none of that. This is the same failure this file warns about
+> at the top: **reading is not running, and reading one page is not reading the documentation.**
 
 > **`.agents/skills/` has become the majority path — reversing what this section said before.**
-> Per official documentation retrieved through 2026-09-04, it is read by **Codex, Goose,
-> Antigravity 2.0/IDE,
-> Cursor, Copilot and OpenCode**; only **Claude Code** and **Kiro** do not.
+> Per official documentation retrieved through 2026-09-14, it is read by **Codex, Goose,
+> Antigravity 2.0/IDE, Cursor, Copilot, OpenCode and Devin**; only **Claude Code** and **Kiro**
+> do not. Devin is the newest row and reads it alongside two vendor-native project roots.
 >
-> **That is a vendor-level path count, not end-to-end surface coverage.** Six of the eight rows have
-> never been run here — only Codex and Claude Code have. Antigravity CLI documents the same
+> **That is a vendor-level path count, not end-to-end surface coverage.** Seven of the nine rows
+> have never been run here — only Codex and Claude Code have. Antigravity CLI documents the same
 > directory name but a flat `.md` layout, which this repository's nested `SKILL.md` installer does
 > not synthesize.
 >
-> **For the documented nested `SKILL.md` surfaces, the minimal covering set is three directories,
-> not five:**
+> **For the documented nested `SKILL.md` surfaces, the minimal covering set is still three
+> directories, and a ninth agent did not add a fourth:**
 >
 > | Directory | Covers |
 > |---|---|
-> | `.agents/skills/` | Codex, Goose, Antigravity 2.0/IDE, Cursor, Copilot, OpenCode |
+> | `.agents/skills/` | Codex, Goose, Antigravity 2.0/IDE, Cursor, Copilot, OpenCode, Devin |
 > | `.claude/skills/` | Claude Code (also read by Cursor, Copilot, OpenCode) |
 > | `.kiro/skills/` | Kiro |
 >
 > `.cursor/skills/` and `.opencode/skills/` are **redundant** — both agents read `.agents/skills/`.
 > `install.py` still writes all five. Antigravity CLI coverage is a separate open test below.
+>
+> **Devin was admitted as documentation only, with no installer target, and this table is the
+> reason.** Its native project root is `.devin/skills/` and it also reads the legacy
+> `.windsurf/skills/`, but it reads `.agents/skills/` as well — so the existing installation
+> already reaches it, and adding either directory would have widened what lands in adopters'
+> repositories to buy nothing. That is the same redundancy argument already standing against
+> `.cursor/` and `.opencode/`; it would be incoherent to act on it in one direction only.
+> Reaching a path is not loading a skill: nothing Devin-related has been run.
 >
 > ### A ninth consumer, and not a coding agent
 >
@@ -232,6 +251,7 @@ determines whether the model selects the skill for a task. Write it as *use when
 | **Codex** | `config.toml` — `[mcp_servers.<name>]` with `command`, `args`, `env`, `enabled_tools`. Project `.codex/config.toml` or user `~/.codex/config.toml` |
 | **Antigravity** | `.agents/mcp_config.json` workspace; `~/.gemini/config/mcp_config.json` global; `/mcp` manager in CLI. Supports `stdio` `command` or remote `serverUrl`, plus auth and tool-disable fields. **`documented`**, [official MCP docs](https://antigravity.google/docs/mcp), retrieved 2026-09-04 |
 | **Goose** | extensions; documented as connecting to 3,000+ tools via MCP |
+| **Devin** | `.devin/mcp_config.local.json` project config, documented as gitignored because it carries tokens; plugins may also declare servers through a root `.mcp.json` or an inline manifest. `devin mcp list` includes plugin-contributed servers. A server's published **prompts** surface as `/mcp__<server>__<prompt>` slash commands. **`documented`**, [MCP overview](https://docs.devin.ai/cli/extensibility/mcp/overview), retrieved 2026-09-14 |
 
 > MCP is the **only** extension mechanism that is both cross-vendor and carries executable
 > capability. `AGENTS.md` is cross-vendor but is only text; skills carry capability but are
@@ -245,6 +265,7 @@ determines whether the model selects the skill for a task. Write it as *use when
 | **Codex** | `.codex/agents/*.toml` — `name`, `description`, `developer_instructions`, `model`, `sandbox_mode` (`read-only`, `workspace-write`, `danger-full-access`). Built-in types: `default`, `worker`, `explorer`. Concurrency cap in `config.toml`: `agents.max_concurrent_threads_per_session`, legacy alias `agents.max_threads`. Retrieved 2026-09-01 |
 | **Antigravity** | `.agents/agents/<name>.md` or `<name>/agent.md`; global `~/.gemini/config/agents/`; plugin `agents/`. YAML frontmatter scopes tools, primary/subagent role, model, shell policy, MCP, skills and plugins. Built-ins: `research`, `browser`, `self`. **`documented`**, [Subagents](https://antigravity.google/docs/subagents), retrieved 2026-09-04 |
 | **Goose** | subrecipes |
+| **Devin** | `agents/<name>/AGENT.md` **inside a plugin**, surfaced as `<plugin>:<agent>` profiles; a skill may also set `subagent: true` in its frontmatter. No project-scoped subagent directory outside a plugin was documented in this pass. **`documented`**, [CLI changelog](https://docs.devin.ai/cli/changelog/stable), retrieved 2026-09-14 |
 
 Not portable. Every vendor has its own format.
 
@@ -256,6 +277,20 @@ Not portable. Every vendor has its own format.
 | **Codex** | **`<repo>/.codex/hooks.json` and `~/.codex/hooks.json`**, inline `[hooks]` in either `config.toml`, and plugin-bundled hooks. All layers load cumulatively; none replaces another. `/hooks` manages them. `command` and `mcp_tool` handlers run; `prompt` and `agent` are parsed but skipped. The event list, decision contracts, blocking mechanisms and trust behavior are owned by the [Codex inventory](../docs/agents/codex.md#8-hooks), rechecked 2026-09-03. |
 | **Antigravity** | **`.agents/hooks.json` and `~/.gemini/config/hooks.json`**, plus plugin-bundled hooks; command handlers on `PreToolUse`, `PostToolUse`, `PreInvocation`, `PostInvocation`, and `Stop`. JSON stdin/stdout contracts include pre-tool allow/deny/modify decisions. **`documented`**, [official Hooks docs](https://antigravity.google/docs/hooks), retrieved 2026-09-04; not exercised locally. |
 | **Goose** | **(unverified)** |
+| **Devin** | **`.devin/hooks.v1.json`** plus a user-level config, discovered from the working directory up to the repository root — **and hooks already present in `.claude/` directories are picked up automatically.** Events: `PreToolUse`, `PostToolUse`, `PermissionRequest`, `UserPromptSubmit`, `Stop`, `PostCompaction`, `SessionStart`, `SessionEnd`. Handlers read event data on stdin and block by non-zero exit or by returning `{"decision": "block", "reason": …}`. Plugin-bundled `hooks.json` loads alongside project hooks. **`documented`**, [Hooks overview](https://docs.devin.ai/cli/extensibility/hooks/overview), retrieved 2026-09-14; not exercised. |
+
+> **The one row that partially answers this section's own complaint.** Every revision of this
+> section has concluded that the inner schema is shared but *the file location is not*. Devin is
+> the first surveyed agent documented to read **another vendor's** hook directory — `.claude/` —
+> rather than only its own. If that holds when run, a `.claude/` hook is portable across at least
+> two agents without an adapter, which no other pair here manages.
+>
+> It does not change the verdict, for the reason the verdict has always rested on: a hook still
+> **binds only the agent that reads it**, and a Devin-shaped `PermissionRequest` or
+> `PostCompaction` event has no equivalent elsewhere. It is also `documented` and unexercised, and
+> the claim is sourced from the CLI's pages only — Desktop, Cloud and the JetBrains product are
+> not established to do the same. Verify it before relying on it; the procedure is step 5 of the
+> [Devin inventory's enumeration section](../docs/agents/devin.md#6-how-to-enumerate-this-yourself).
 
 **No hook system is a hard guarantee.** Use hooks as vendor-local guardrails and fast feedback;
 put the binding, agent-independent gate in CI. Exact failure contracts stay in the canonical
@@ -301,8 +336,13 @@ cost of the mirror — it is closer to adapting one schema than inventing three 
 | **Codex** | plugins — required `.codex-plugin/plugin.json`, plus optional `skills/`, `commands/`, `agents/`, `hooks.json`, `.mcp.json`, `.app.json`, `assets/`. `codex plugin add\|list\|remove`, `codex plugin marketplace …`. **Measured 2026-08-31** — full list in `docs/agents/codex.md` |
 | **Antigravity** | plugins — `plugin.json` plus optional `skills/`, `rules/`, `mcp_config.json`, `hooks.json`; CLI plugins may also package `agents/`. CLI stages them under `~/.gemini/antigravity-cli/plugins/<name>/`. **`documented`**, [Plugins](https://antigravity.google/docs/plugins) and [CLI Plugins](https://antigravity.google/docs/cli/plugins/), retrieved 2026-09-04 |
 | **Goose** | recipes — YAML packaging a goal, required extensions, structured inputs, execution steps. Plus subrecipes |
+| **Devin** | plugins — installed from a GitHub `owner/repo`, a git URL or a local path with `devin plugins install`, behind an interactive trust prompt (`-y` skips it). One bundle can contribute **skills, rules, hooks, MCP servers and subagents**: its `AGENTS.md`/`AGENT.md`/`.windsurfrules` load as always-on rules, `hooks.json` loads alongside project hooks, `.mcp.json` or an inline manifest runs servers for the session, and `agents/<name>/AGENT.md` becomes a `<plugin>:<agent>` profile. `devin plugins list\|info\|update\|remove\|prune`; team marketplaces and governance configs are organization features. **`documented`**, [CLI changelog](https://docs.devin.ai/cli/changelog/stable) and [plugin ecosystem](https://docs.devin.ai/product-guides/plugin-ecosystem), retrieved 2026-09-14 |
 
-Not portable.
+Not portable. **Devin's bundle is the widest single confirmation in this table** — one trust
+prompt can admit always-on instructions, a blocking hook, an external tool server and a subagent
+together. That is a larger grant than the repository-committed `SKILL.md` this file already warns
+about under Managed Agents, and it is worth stating plainly wherever plugin installation is
+suggested.
 
 ## 7. Configuration precedence — Codex documents it, others less so
 
@@ -318,6 +358,14 @@ Antigravity documents global versus project settings in 2.0 and a separate CLI p
 The complete precedence across `AGENTS.md`, `GEMINI.md`, Rules, Plugins, project settings and CLI
 flags is not documented and remains `(unverified)`. See the canonical
 [Antigravity inventory](../docs/agents/antigravity.md), retrieved 2026-09-04.
+
+Devin documents precedence for **rules only**: `.devin/rules/` takes precedence over
+`.windsurf/rules/`, with legacy `.windsurfrules` and imported `.cursor/rules` also read, and
+discovery walking up to the git root. What is *not* documented is the corresponding rule for
+**skills**, where three project roots (`.agents/`, `.devin/`, `.windsurf/`) can hold the same
+name — that is `(unverified)` and is exactly the case `devin skills show <name>` would settle.
+Devin also shares Codex's trust boundary in shape: a workspace must be trusted before local agents
+activate. Retrieved 2026-09-14; see the [Devin inventory](../docs/agents/devin.md#5-extension-points).
 
 ## 8. Capability inventories — moved
 
@@ -369,7 +417,11 @@ Three results from those files that this comparison depends on:
 | Claim-level sourcing | This file carries a document-level "checked" date. Volatile rows should each carry their own official link and retrieval date; several now do, most do not |
 | Antigravity local verification | Windows presence audit found 2.0 v2.11.0 and IDE v2.5.5 installed; neither was run or capability-enumerated. CLI/SDK were not locally enumerated and `agy` was absent from `PATH`. Test the exact checklist in `docs/agents/antigravity.md` section 15 before calling any capability `tested`; treat Remote Control and the managed API separately |
 | Tier 2/3 | Cursor/Kiro native invocation remains pending after launcher/installer checks; Copilot, Goose and OpenCode still need canonical inventories |
-| Zed / Windsurf | Skill paths documented in section 2, 2026-09-05; other mechanisms and runtime loading remain backlog |
+| Zed | Skill paths documented in section 2, 2026-09-05; other mechanisms and runtime loading remain backlog |
+| **Devin retrieval channel** | Every Devin row was retrieved through a documentation index because `docs.devin.ai` and `docs.windsurf.com` were unreachable from the authoring session's network egress policy. An index can lag the live page. **Re-read the cited paths directly on the next pass**, starting from the vendor's own machine-readable index at `https://docs.devin.ai/llms.txt`, and upgrade or correct the rows rather than carrying them forward on this channel |
+| **Devin surface split** | Nearly every Devin extension row is sourced from `/cli/...` pages. Whether Devin Desktop, Devin Cloud and Windsurf JetBrains honour the same discovery order, precedence and frontmatter is **unknown**. This is the same generalisation that produced the superseded Windsurf row; do not repeat it |
+| **Devin `.claude/` hook pickup** | Documented: Devin CLI automatically picks up hooks already present in `.claude/` directories — the first surveyed case of an agent reading another vendor's hook location. If true when run, it is the only hook portability in this file that needs no adapter. Unexercised, and CLI-sourced only |
+| **Devin skill precedence and built-ins** | Three project skill roots (`.agents/`, `.devin/`, `.windsurf/`) can hold the same name and no page states which wins; `devin skills show <name>` would settle it. The shipped-skill set is also unenumerated, so built-in skills are **unknown, not absent**. Duplicate-name failure mode — silent replacement, both listed, or neither — is `(unverified)`, which is why no `RESERVED_DEVIN` set was added |
 
 
 ---
@@ -464,8 +516,28 @@ Source: [official shared commands](https://antigravity.google/docs/slash-command
 [CLI reference](https://antigravity.google/docs/cli/reference), and
 [Changelog](https://antigravity.google/changelog), retrieved 2026-09-04.
 
-**The overlap is now three-way.** A prefix avoids known Claude replacement, Codex ambiguity, and
-Antigravity's untested resolution behavior without depending on any blocklist being complete.
+### Devin reserved names — documented 2026-09-14
+
+Same mechanism again, and the same unanswered question. A Devin skill whose frontmatter declares
+`triggers: [user]` becomes a slash command, sharing one namespace with the built-ins
+`/help`, `/shortcuts`, `/config`, `/context`, `/compact`, `/usage`, `/session-stats` (alias
+`/stats`), `/copy`, `/feedback`, `/bug`, `/update`, `/upgrade`, `/login`, `/logout`,
+`/login-status` (advertised to ACP hosts as `/status`), `/org`, `/mouse` and `/handoff`, plus MCP
+prompts under `/mcp__<server>__<prompt>`. Source:
+[commands reference](https://docs.devin.ai/cli/reference/commands), retrieved 2026-09-14.
+
+**No reserved set was added to `check.py` for Devin**, matching how Cursor and Kiro were admitted.
+Two reasons, and the second is the load-bearing one. The offline sets exist to catch *this
+repository's own inventories* drifting out of sync, and the drift check reads only the Claude Code
+and Antigravity files. More importantly, **Devin's collision behaviour is `(unverified)`**: no
+retrieved page says whether a same-named skill replaces the built-in silently as Claude Code does,
+lists both as Codex does, or something else. A blocklist enforcing an unknown failure mode would
+assert more than the evidence supports.
+
+**The overlap is now four-way, and only one of the four has a known failure mode.** A prefix avoids
+Claude replacement, Codex ambiguity, and Antigravity's and Devin's untested resolution behaviour
+without depending on any blocklist being complete — which remains the whole argument for the
+prefix rule over a maintained list.
 
 ---
 
@@ -518,6 +590,9 @@ revision history. Each entry is a claim this file once made and no longer does.
 | 2026-09-04 | Antigravity 2.0 and IDE were flattened to one global Skill path; CLI's `.agents/skills/` directory was treated as proof of the nested `SKILL.md` layout; SDK tools and managed-API limits were only summarized | Split all three Skill path/layout contracts, added confirmed built-in Skills and exact SDK `BuiltinTools`, and recorded the managed API's explicit unsupported tools and structured-output limitation |
 | 2026-09-04 | The Antigravity inventory said no application was installed; instruction discovery was flattened to workspace root; installer output implied nested `SKILL.md` covered CLI; commands and built-in Skills shared one drift set | Recorded installed-but-unrun 2.0/IDE presence, marked root-versus-walk-up discovery disputed, exposed the CLI installer gap, split command/Skill drift checks, and moved unresolved Rule/path questions into named test items |
 | 2026-09-05 | The portable-layer rule excluded skills whenever any agent had a similar built-in | Narrowed the exclusion to unevaluated replicas; optional fallbacks may address a demonstrated gap on a particular surface. This is a user-authorized scope decision, not a vendor evidence-grade change. Prior rule and rationale are preserved in [PORTABILITY.md section 3](PORTABILITY.md#3-the-rule). |
+
+| 2026-09-14 | Windsurf was one supplemental skill-path row: two project paths, `~/.codeium/windsurf/skills/` as a literal directory, sourced from a Cascade page the redirected Windsurf URL happened to land on | **Promoted to a full inventory as [Devin](../docs/agents/devin.md), and corrected in three places.** The vendor renamed the product (Windsurf → Devin Desktop, with Cloud/CLI/Review under one brand), the authoritative extensibility documentation sits under the **CLI** section rather than Desktop/Cascade, `.devin/skills/` and `~/.config/devin/skills/` were missing entirely, and `<channel>` is a variable, not the literal `windsurf`. Added instruction-file, skills, MCP, subagent, hook, bundle, precedence and reserved-name rows. Evidence is `documented`, not `tested`, and **weaker than every other file here**: the vendor's documentation host was unreachable from the authoring session, so all of it came through a documentation index rather than the pages themselves |
+| 2026-09-14 | "Six of the eight rows have never been run"; `.agents/skills/` read by 6 of 8 | Nine agents, seven of them never run here; `.agents/skills/` is read by 7 of 9. **The minimal covering set stayed three directories** — Devin reads `.agents/skills/` alongside its own `.devin/skills/`, so no installer target was added for it, on the same redundancy argument already standing against `.cursor/` and `.opencode/` |
 
 **The pattern worth noticing:** most of these were an enumeration mistaken for an inventory, or a
 local artefact mistaken for a loaded capability. The overview-ablation entry is a third kind, and
