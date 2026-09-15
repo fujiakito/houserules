@@ -140,6 +140,33 @@ class EvalRunnerTest(unittest.TestCase):
                     actual = hashlib.sha256((manifest.parent / name).read_bytes()).hexdigest()
                     self.assertEqual(actual, expected, f'{manifest.parent.name}/{name} drifted')
 
+    def test_shipped_case_arms_differ_only_by_their_treatment_block(self):
+        """Every arm file ends with its case's task.md bytes, exactly.
+
+        This is the control that review finding R-003/F-001 was raised about: an arm differing
+        from another in more than the declared variable produces a number that is not a result.
+        Asserted here rather than reviewed by eye.
+        """
+        for manifest in sorted((ROOT / 'tests/workflows/skill-eval').glob('*/case.json')):
+            case = json.loads(manifest.read_text(encoding='utf-8'))
+            task = (manifest.parent / case['task']).read_bytes()
+            for arm, name in sorted(case['arms'].items()):
+                with self.subTest(case=case['case'], arm=arm):
+                    self.assertTrue((manifest.parent / name).read_bytes().endswith(task),
+                                    f'{name} does not end with {case["task"]} verbatim')
+
+    def test_shipped_case_judge_spans_do_not_name_their_arms(self):
+        """Only the judge span reaches a grader, so it must not carry condition vocabulary."""
+        for manifest in sorted((ROOT / 'tests/workflows/skill-eval').glob('*/case.json')):
+            case = json.loads(manifest.read_text(encoding='utf-8'))
+            rubric = (manifest.parent / case['rubric']).read_text(encoding='utf-8')
+            span, marker = runner.extract_judge_section(rubric)
+            with self.subTest(case=case['case']):
+                self.assertTrue(marker, f"{case['case']} rubric has no judge markers")
+                for leak in list(case['arms']) + ['promot']:
+                    self.assertNotIn(leak.lower(), span.lower(),
+                                     f"{case['case']} judge span leaks {leak!r}")
+
     def test_drifted_frozen_input_refuses_and_names_the_file(self):
         (self.case_dir / 'arm-candidate.md').write_text('tampered\n', encoding='utf-8')
         code, _, err = self.call(*self.run_args(), cells=[])

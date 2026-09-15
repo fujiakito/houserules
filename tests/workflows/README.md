@@ -218,6 +218,14 @@ packets, outcome rubric, execution status and limitations. This is separate from
 author-only pilot above; neither upgrades untested vendor surfaces.
 
 
+## Skill evaluation
+
+[Skill evaluation cases](skill-eval/README.md) hold the comparative records
+`research/PORTABILITY.md` criterion 5 asks for, produced by `tests/eval/runner.py`. The first case
+compares `hr-tdd` against no procedure, a length-matched generic procedure and a one-line
+instruction; it is prepared and frozen, **not run**. No skill is promoted by it.
+
+
 ## Public-repository adoption walkthrough
 
 [Bottle adoption](bottle-adoption/README.md) records a real clone/install/bug-fix walkthrough,
