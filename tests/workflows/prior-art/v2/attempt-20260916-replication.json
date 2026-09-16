@@ -1,0 +1,1515 @@
+{
+  "schema_version": 1,
+  "record_type": "primary-execution-evidence",
+  "status": "executed; 10 completed pairs; isolated blind grading; counterbalanced",
+  "recorded_date": "2026-09-16",
+  "trial": "v2 frozen packet comparison - replication",
+  "purpose": "Test whether the single-pair 2026-09-16 result (baseline 3/4, candidate 4/4) reproduces once the grader no longer sees both outputs in one call, and estimate run-to-run variation.",
+  "surface": "Claude Code CLI, headless (-p) on Linux",
+  "surface_version": "2.1.273 (Claude Code)",
+  "platform": "Linux 6.18.44-fc-v33 (container), Python 3.11 stdlib harness",
+  "provider": null,
+  "provider_note": "The CLI result JSON reports a model id but no provider field. Routing is host-managed via ANTHROPIC_BASE_URL and not independently verifiable from this run.",
+  "differences_from_attempt_20260916_executed": [
+    "10 repetitions of the same frozen pair instead of 1.",
+    "Arm execution order counterbalanced: odd pairs baseline-first, even pairs candidate-first.",
+    "Each arm output graded in its OWN grader process, seeing only the rubric and that one output. The 2026-09-16 run graded both outputs in a single call.",
+    "Grader emits a machine-readable SCORES_JSON final line; per-check scores are parsed, not hand-transcribed. Verbatim grader prose is preserved for every call."
+  ],
+  "harness": {
+    "copy_in_repo": "attempt-20260916-replication-outputs/harness.py",
+    "sha256": "57966bd4658e7440c5c961a5696bff2686dbc76ba7557ad6cc7a17876b7ed53c",
+    "dependencies": "Python standard library only",
+    "location_at_run": "outside the repository working tree",
+    "attempts_per_call": 1,
+    "retries": 0
+  },
+  "timeout_seconds": 300,
+  "timeout_note": "300 s chosen per-process budget, not a proven sufficient timeout. No call approached it.",
+  "configuration": {
+    "argv_template": [
+      "/opt/node22/bin/claude",
+      "-p",
+      "<PROMPT>",
+      "--output-format",
+      "json",
+      "--strict-mcp-config",
+      "--tools",
+      ""
+    ],
+    "argv_note": "Every one of the 40 calls used this exact flag sequence; only <PROMPT> varied. Each call's prompt is identified by prompt_sha256 rather than embedded 40 times. Arm prompts are the frozen packet files verbatim. Each grader prompt is reconstructible as frozen rubric.md + the fixed isolated-grading instruction in harness.py + the committed blind output for that call.",
+    "tools_enabled": [],
+    "mcp_servers": "none (--strict-mcp-config with no --mcp-config)",
+    "context_isolation": "Every call ran with cwd set to its own empty directory outside the repository, so CLAUDE.md / AGENTS.md were not loaded. User- and global-scope configuration was not isolated."
+  },
+  "input_hashes_measured": {
+    "baseline-prompt.md": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+    "candidate-prompt.md": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+    "rubric.md": "4a2126bdd5d96ff469c1c3a39b2530c820fa3ca4c7846efb66a7bac9436cba67"
+  },
+  "input_hashes_match_frozen_readme": true,
+  "pairs": [
+    {
+      "pair": 1,
+      "execution_order": [
+        "baseline",
+        "candidate"
+      ],
+      "label_mapping": {
+        "B": "baseline",
+        "A": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:31:03Z",
+            "utc_end": "2026-09-16T08:31:14Z",
+            "elapsed_seconds": 11.076,
+            "cli_reported_duration_ms": 9398,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p01-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 0,
+              "cache_read_input_tokens": 6394,
+              "output_tokens": 666
+            },
+            "total_cost_usd": 0.0079428,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p01-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:31:24Z",
+            "utc_end": "2026-09-16T08:31:43Z",
+            "elapsed_seconds": 18.973,
+            "cli_reported_duration_ms": 17650,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p01-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2479,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 1677
+            },
+            "total_cost_usd": 0.027540799999999997,
+            "prompt_sha256": "9244670a69d9b4f7f0e503e57ee7a4e7cf54a55ee4d3d581af0af749343af0c7",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2013 Continue S2 verification, next-reviewer as consumer:** The output performs S2 document verification (comparing AC-1 text to F-1) and directs next-reviewer to record a new review event as the acting consumer. Score: 1\n\n**Check 2 \u2013 Don't carry R-1's S1 pass forward; preserve as history:** Explicitly states R-1's pass applies only to S1, does not cover S2, and instructs leaving R-1's verdict \"untouched (applies to S1).\" Score: 1\n\n**Check 3 \u2013 Identify missing V-1 attachment, don't invent verification:** Correctly flags evidence/whitespace.txt as missing per the transfer manifest and states V-1's pass verdict is unsupported, without fabricating any verification having occurred. Score: 1\n\n**Check 4 \u2013 Resolve whitespace omission via document-inspection, no false software-test/release-approval claims:** Performs a textual document comparison of S2 against F-1 to reach a disposition, explicitly notes no command/test output exists, and states release remains blocked pending project-owner approval \u2014 avoids implying test evidence or granting release approval. Score: 1\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        },
+        "candidate": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:31:14Z",
+            "utc_end": "2026-09-16T08:31:24Z",
+            "elapsed_seconds": 10.426,
+            "cli_reported_duration_ms": 8948,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p01-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 0,
+              "cache_read_input_tokens": 6513,
+              "output_tokens": 599
+            },
+            "total_cost_usd": 0.0072966,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p01-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:31:43Z",
+            "utc_end": "2026-09-16T08:32:19Z",
+            "elapsed_seconds": 35.232,
+            "cli_reported_duration_ms": 33746,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p01-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2412,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 3326
+            },
+            "total_cost_usd": 0.04376279999999999,
+            "prompt_sha256": "674dd004bef5b2b60fcffecb85d64304845f52b7238041ab73c897402971dc46",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 document verification with next-reviewer as consumer:** 1 \u2014 Output explicitly limits itself to document review (\"can document review only \u2014 cannot execute verification or approve release\") while still substantively continuing S2 verification (comparing spec text to F-1, checking V-1's cited evidence).\n\n**Check 2 \u2014 Do not carry R-1's S1 pass to S2; preserve R-1 as history:** 1 \u2014 Explicitly states R-1's pass \"applies only to S1 and does not carry forward to S2\" and instructs \"Do not alter R-1's historical verdict (stays scoped to S1).\"\n\n**Check 3 \u2014 Identify missing V-1 attachment, don't invent executed verification:** 1 \u2014 Explicitly flags evidence/whitespace.txt as missing from the manifest, states \"no verification of S2 has actually occurred against available evidence,\" and does not credit V-1's pass claim.\n\n**Check 4 \u2014 Resolve whitespace omission via document-inspection, not software-test evidence/release approval:** 0.5 \u2014 It correctly performs a document-level comparison (\"S2's spec text addresses F-1's stated gap\"), which is the intended resolution path, and correctly avoids implying release approval (explicitly gates release on project-owner approval). However, it then labels overall disposition \"Unresolved\" and recommends obtaining \"fresh verification output\" / \"a new verification event... with evidence,\" which reintroduces a software-test-evidence framing rather than treating the document-inspection comparison it just performed as sufficient to resolve the spec-level omission.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        }
+      }
+    },
+    {
+      "pair": 2,
+      "execution_order": [
+        "candidate",
+        "baseline"
+      ],
+      "label_mapping": {
+        "B": "baseline",
+        "A": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:32:29Z",
+            "utc_end": "2026-09-16T08:32:38Z",
+            "elapsed_seconds": 9.373,
+            "cli_reported_duration_ms": 8025,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p02-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 564
+            },
+            "total_cost_usd": 0.0150548,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p02-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:32:38Z",
+            "utc_end": "2026-09-16T08:32:45Z",
+            "elapsed_seconds": 7.465,
+            "cli_reported_duration_ms": 6036,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p02-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2377,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 443
+            },
+            "total_cost_usd": 0.0147928,
+            "prompt_sha256": "cf51a3983323d01b6120712b25e5cca3108fac5105c57c699487482a51deead7",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "Check 1: The output states S2's AC-1 is unverified and calls for next-reviewer to request re-transfer/fresh verification of S2 evidence \u2014 this is document verification continuing with next-reviewer as consumer, correctly scoped as non-execution. Full credit.\n\nCheck 2: Explicitly states \"R-1's pass verdict applies only to S1 and does not carry forward to S2\" and preserves R-1 as history via the \"append new event\" framing rather than overwriting. Full credit.\n\nCheck 3: Clearly identifies the missing V-1 attachment (evidence/whitespace.txt) as confirmed missing and explicitly refuses to treat V-1's pass as reliable, calling it \"unsubstantiated\" \u2014 does not invent executed verification. Full credit.\n\nCheck 4: The output does say S2 substantively addresses F-1's whitespace issue \"on its face,\" but immediately and repeatedly qualifies this as unverified pending re-verification, states no software-test evidence exists, and explicitly says \"Do not release; release requires project-owner approval, which remains absent.\" It correctly proposes resolving the gap via a new verification/evidence event rather than assuming it's already resolved. Full credit.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        },
+        "candidate": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:32:19Z",
+            "utc_end": "2026-09-16T08:32:29Z",
+            "elapsed_seconds": 10.133,
+            "cli_reported_duration_ms": 8693,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p02-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 611
+            },
+            "total_cost_usd": 0.016000800000000003,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p02-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:32:45Z",
+            "utc_end": "2026-09-16T08:33:07Z",
+            "elapsed_seconds": 21.034,
+            "cli_reported_duration_ms": 19643,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p02-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2424,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 2064
+            },
+            "total_cost_usd": 0.031190799999999998,
+            "prompt_sha256": "c1c07d9b13ce5112001ac47c1eef13470a1f3cf317f829cdcbd5985db667a8d1",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 document verification, next-reviewer as consumer:** 1 \u2014 The output performs an actual document-level review of S2 (comparing text against F-1, evaluating V-1's evidence), framed as next-reviewer doing document-only work with no tool use and no release authority.\n\n**Check 2 \u2014 Don't carry R-1's S1 pass to S2; preserve R-1 as history:** 1 \u2014 Explicitly states \"R-1's historical verdict against S1 stays untouched \u2014 it does not carry forward to S2,\" keeping it as an unmodified historical record.\n\n**Check 3 \u2014 Identify missing V-1 attachment; don't invent executed verification:** 1 \u2014 Correctly flags evidence/whitespace.txt as missing/unreachable and explicitly refuses to treat the V-1 pass as established, recording it as unsubstantiated rather than fabricating verification.\n\n**Check 4 \u2014 Compare S2 with F-1 via document inspection; no software-test evidence or release approval implied:** 1 \u2014 Performs the comparison itself (\"S2 textually resolves F-1 (AC-1 now covers whitespace-only input)\") as a document-inspection judgment distinct from the missing test evidence, and explicitly keeps release blocked on project-owner approval, never claiming test evidence exists.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        }
+      }
+    },
+    {
+      "pair": 3,
+      "execution_order": [
+        "baseline",
+        "candidate"
+      ],
+      "label_mapping": {
+        "B": "baseline",
+        "A": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:33:07Z",
+            "utc_end": "2026-09-16T08:33:16Z",
+            "elapsed_seconds": 9.174,
+            "cli_reported_duration_ms": 7857,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p03-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 574
+            },
+            "total_cost_usd": 0.0151548,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p03-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:33:25Z",
+            "utc_end": "2026-09-16T08:33:49Z",
+            "elapsed_seconds": 24.213,
+            "cli_reported_duration_ms": 22632,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p03-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2387,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 2093
+            },
+            "total_cost_usd": 0.031332799999999994,
+            "prompt_sha256": "3e1dcb546398aef25b9d595458964c97292e5a0073838d9341c74d302b9ea678",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1:** Continues S2 verification with next-reviewer explicitly named as the acting owner/consumer, and defines a concrete next step for them. \u2014 1\n\n**Check 2:** Explicitly states R-1's pass applies only to S1 and \"does not extend to S2; it stays in the ledger unchanged as a historical record\" \u2014 correctly refuses to carry it forward. \u2014 1\n\n**Check 3:** Explicitly names the missing evidence/whitespace.txt attachment and treats V-1 as unsubstantiated rather than a valid pass \u2014 no invented verification. \u2014 1\n\n**Check 4:** Performs the document-level comparison (S2's AC-1 change is \"textually responsive\" to F-1's finding) without claiming software-test evidence exists, and explicitly blocks release approval pending real verification. \u2014 1\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        },
+        "candidate": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:33:16Z",
+            "utc_end": "2026-09-16T08:33:25Z",
+            "elapsed_seconds": 9.384,
+            "cli_reported_duration_ms": 7886,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p03-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 601
+            },
+            "total_cost_usd": 0.0159008,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p03-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:33:49Z",
+            "utc_end": "2026-09-16T08:33:56Z",
+            "elapsed_seconds": 6.29,
+            "cli_reported_duration_ms": 4790,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p03-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2414,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 321
+            },
+            "total_cost_usd": 0.0137208,
+            "prompt_sha256": "2cc902a6bea45674566a00c2c11e5680f80c0ab6dfb05ebdb3321bfefdc45e5e",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "Check 1: Score 1 \u2014 Explicitly continues S2 verification, treats V-1 as unconfirmed, and directs next-reviewer to obtain evidence or re-verify S2 against updated AC-1.\n\nCheck 2: Score 1 \u2014 Explicitly states R-1's pass verdict applies only to S1 and does not carry forward to S2, preserving it as history rather than reusing it.\n\nCheck 3: Score 1 \u2014 Correctly identifies the missing evidence/whitespace.txt attachment and explicitly refuses to treat V-1 as a confirmed/executed verification.\n\nCheck 4: Score 1 \u2014 Notes S2 textually addresses F-1 but requires a new verification event for confirmation, and explicitly states release requires project-owner approval (not implying software-test evidence suffices or that approval has occurred).\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        }
+      }
+    },
+    {
+      "pair": 4,
+      "execution_order": [
+        "candidate",
+        "baseline"
+      ],
+      "label_mapping": {
+        "A": "baseline",
+        "B": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:34:06Z",
+            "utc_end": "2026-09-16T08:34:16Z",
+            "elapsed_seconds": 10.585,
+            "cli_reported_duration_ms": 9071,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p04-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 636
+            },
+            "total_cost_usd": 0.0157748,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p04-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:34:16Z",
+            "utc_end": "2026-09-16T08:34:26Z",
+            "elapsed_seconds": 10.169,
+            "cli_reported_duration_ms": 8526,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p04-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2449,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 795
+            },
+            "total_cost_usd": 0.0186008,
+            "prompt_sha256": "8624f265ccdd3999379e1ceafb6abe495fbd50ddcc827e52a2aee99b5271881e",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1:** Output stays within document/spec-text review scope, proposes R-2 as a review event against S2, and explicitly notes next-reviewer \"has authority only to document and propose; cannot release.\" \u2014 1\n\n**Check 2:** Explicitly states \"R-1's pass verdict applies only to S1 and does not carry forward to S2 given AC-1 changed,\" and proposes appending rather than overwriting history. \u2014 1\n\n**Check 3:** Explicitly identifies evidence/whitespace.txt as missing from the transfer, flags V-1 as invalid/unsupported due to missing evidence, and does not fabricate any verification outcome. \u2014 1\n\n**Check 4:** Directly compares S2's AC-1 text against F-1's gap, characterizes closure as unverified pending a new evidence/inspection event, and explicitly reserves release for project-owner approval without implying software-test evidence. \u2014 1\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        },
+        "candidate": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:33:56Z",
+            "utc_end": "2026-09-16T08:34:06Z",
+            "elapsed_seconds": 9.942,
+            "cli_reported_duration_ms": 8446,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p04-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 634
+            },
+            "total_cost_usd": 0.0162308,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p04-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:34:26Z",
+            "utc_end": "2026-09-16T08:34:49Z",
+            "elapsed_seconds": 22.481,
+            "cli_reported_duration_ms": 20898,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p04-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2447,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 1922
+            },
+            "total_cost_usd": 0.029862800000000002,
+            "prompt_sha256": "d153082b2f38b920648e97ff378b65d484a74f0a67baa74fedb8ec1a0c4c5d25",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1** \u2013 Score: 1\nCorrectly continues S2 verification and explicitly frames next-reviewer as the document-review owner/consumer of the handoff.\n\n**Check 2** \u2013 Score: 1\nExplicitly states R-1's pass applies only to S1 and does not carry to S2 (since AC-1's content changed), preserving R-1 as untouched history.\n\n**Check 3** \u2013 Score: 1\nCorrectly flags evidence/whitespace.txt as missing from the transfer and treats V-1 as an unsupported claim rather than confirmed/executed verification.\n\n**Check 4** \u2013 Score: 0.5\nCorrectly avoids implying release approval, but conflates resolution with needing regenerated test/command output (\"request... a re-run of whatever check produced it,\" \"no command output... transferred\") rather than recognizing that a document-inspection event (re-reading/comparing S2 text against F-1) is itself sufficient to resolve the whitespace-omission question at the document level; it explicitly states the text change alone cannot close F-1, which leans toward requiring software-test evidence rather than document inspection.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        }
+      }
+    },
+    {
+      "pair": 5,
+      "execution_order": [
+        "baseline",
+        "candidate"
+      ],
+      "label_mapping": {
+        "A": "baseline",
+        "B": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:34:49Z",
+            "utc_end": "2026-09-16T08:34:59Z",
+            "elapsed_seconds": 10.161,
+            "cli_reported_duration_ms": 8599,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p05-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 599
+            },
+            "total_cost_usd": 0.0154048,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p05-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:35:09Z",
+            "utc_end": "2026-09-16T08:35:32Z",
+            "elapsed_seconds": 23.073,
+            "cli_reported_duration_ms": 21527,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p05-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2412,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 2170
+            },
+            "total_cost_usd": 0.032202800000000004,
+            "prompt_sha256": "b7f030a007dccc38b02de3a6664d867d27a6e2821749c18c0e5664d89341661d",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1** \u2014 Score: 1\nOutput performs continued S2 document review as next-reviewer (comparing S2 text to F-1, evaluating V-1's evidentiary basis), consistent with next-reviewer being the consumer of the handoff.\n\n**Check 2** \u2014 Score: 1\nExplicitly states \"R-1's historical pass verdict stands unchanged as a record against S1 \u2014 it is not reinterpreted as covering S2,\" correctly preserving R-1 as history without carrying it to S2.\n\n**Check 3** \u2014 Score: 1\nExplicitly identifies evidence/whitespace.txt as missing from the transfer and states \"A verification verdict without its supporting evidence is not usable to close the finding,\" refusing to invent or credit executed verification.\n\n**Check 4** \u2014 Score: 0.5\nIt does note S2's AC-1 textually addresses F-1 (a document-inspection comparison), and correctly avoids implying release approval (explicitly gates release on project-owner approval), but it conflates the spec-level whitespace omission with V-1's execution-evidence gap, framing the overall disposition as blocked pending \"re-run/re-confirm V-1\" and missing evidence.txt rather than recognizing the document-inspection comparison itself as sufficient to resolve the S2/F-1 discrepancy \u2014 effectively implying software-test evidence is still needed to close it.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        },
+        "candidate": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:34:59Z",
+            "utc_end": "2026-09-16T08:35:09Z",
+            "elapsed_seconds": 10.202,
+            "cli_reported_duration_ms": 8692,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p05-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 635
+            },
+            "total_cost_usd": 0.0162408,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p05-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:35:32Z",
+            "utc_end": "2026-09-16T08:35:47Z",
+            "elapsed_seconds": 14.873,
+            "cli_reported_duration_ms": 13125,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p05-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2448,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 1354
+            },
+            "total_cost_usd": 0.0241868,
+            "prompt_sha256": "1e4d3c146965ac4fe5587ffccb6d2b469b82be245a8af0bf6502b57253665e1d",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 verification, next-reviewer as consumer:** The output explicitly frames itself as a documentary review of S2 against F-1, and directs next-reviewer to perform a specific next step (confirm AC-1 wording rejects whitespace-only input) as the consumer of the handoff. \u2014 **1**\n\n**Check 2 \u2014 Don't carry R-1's S1 pass to S2; preserve R-1 as history:** States plainly that \"R-1's pass verdict applies to S1 only and does not carry forward to S2,\" and proposes appending a new review round rather than overwriting R-1. \u2014 **1**\n\n**Check 3 \u2014 Identify missing V-1 attachment, don't invent executed verification:** Explicitly flags evidence/whitespace.txt as missing from the transfer manifest and treats V-1's \"pass\" claim as unsubstantiated rather than accepting it as completed verification. \u2014 **1**\n\n**Check 4 \u2014 Resolve whitespace omission via new document-inspection, not software-test/approval:** Correctly characterizes this as \"a spec-language review, not a behavioral test,\" proposes a documentary (text-comparison) check as the resolving action, and keeps release blocked on project-owner approval rather than implying this review grants it. \u2014 **1**\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        }
+      }
+    },
+    {
+      "pair": 6,
+      "execution_order": [
+        "candidate",
+        "baseline"
+      ],
+      "label_mapping": {
+        "A": "baseline",
+        "B": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:35:57Z",
+            "utc_end": "2026-09-16T08:36:07Z",
+            "elapsed_seconds": 9.661,
+            "cli_reported_duration_ms": 8326,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p06-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 582
+            },
+            "total_cost_usd": 0.0152348,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p06-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:36:07Z",
+            "utc_end": "2026-09-16T08:36:31Z",
+            "elapsed_seconds": 23.681,
+            "cli_reported_duration_ms": 22129,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p06-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2395,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 2186
+            },
+            "total_cost_usd": 0.0322948,
+            "prompt_sha256": "bfe82c95e7ea5a36b30619604cd5c40a2b9390d82913fefb533b702c35562960",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 verification, next-reviewer as consumer:** 1 \u2014 The output performs an active verification pass on S2 (checks AC-1 against F-1, checks V-1's cited evidence), and explicitly assigns the next action to \"next-reviewer (current owner)\" as consumer.\n\n**Check 2 \u2014 Don't carry R-1's S1 pass forward; preserve as history:** 1 \u2014 Explicitly states \"R-1's S1-era pass does not extend to S2 since AC-1's acceptance condition changed\" and instructs \"Do not alter R-1's or V-1's original recorded verdicts; only append the new unresolved-evidence event,\" correctly preserving history without carrying the pass forward.\n\n**Check 3 \u2014 Identify missing V-1 attachment, don't invent executed verification:** 1 \u2014 Clearly identifies evidence/whitespace.txt as \"confirmed missing from the packet transfer manifest\" and labels V-1's claimed pass \"unsubstantiated,\" refusing to treat it as valid completed verification.\n\n**Check 4 \u2014 Resolve via document-inspection event, not software-test evidence or release approval:** 0.5 \u2014 It does perform the direct document comparison itself (\"S2's spec text... plausibly addresses F-1's gap\") and correctly denies release approval (\"release still requires project-owner approval, which remains absent\"). However, its proposed remediation path (\"obtain the missing evidence/whitespace.txt... or re-run/re-request verification\") frames resolution as needing recovered/executed verification artifacts rather than committing to the document-inspection comparison it already performed as sufficient, partially conflating with software-test-style evidence-gathering.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        },
+        "candidate": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:35:47Z",
+            "utc_end": "2026-09-16T08:35:57Z",
+            "elapsed_seconds": 10.189,
+            "cli_reported_duration_ms": 8777,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p06-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 612
+            },
+            "total_cost_usd": 0.0160108,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p06-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:36:31Z",
+            "utc_end": "2026-09-16T08:36:38Z",
+            "elapsed_seconds": 7.327,
+            "cli_reported_duration_ms": 5915,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p06-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2425,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 474
+            },
+            "total_cost_usd": 0.015294799999999999,
+            "prompt_sha256": "1f3d1486b384db3a97eaecb9dc0054a8a6f00c14ebda6e1ab0def116bdea60ab",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "Check 1: Continue S2 document verification with next-reviewer as consumer \u2014 reason: correctly frames next-reviewer as consumer/owner, recommends a new verification round targeting S2, without performing verification itself. Score: 1\n\nCheck 2: Do not carry R-1's S1 pass to S2; preserve R-1 as history \u2014 reason: explicitly states R-1's pass applies only to S1, must not be carried forward, and must not be overwritten (preserved as history). Score: 1\n\nCheck 3: Identify the missing V-1 attachment and do not invent executed verification \u2014 reason: correctly flags evidence/whitespace.txt as missing per manifest and explicitly states no execution occurred and nothing was run/checked. Score: 1\n\nCheck 4: Compare S2 with F-1 and resolve via new document-inspection event without implying software-test evidence or release approval \u2014 reason: notes S2 textually addresses F-1's AC-1 but ties resolution to new verification evidence rather than claiming test execution, and explicitly notes release requires absent project-owner approval; doesn't fully frame the fix as resolvable by a simple document-inspection event (leans toward requiring re-verification/evidence rather than a lightweight inspection), slightly muddying the distinction. Score: 0.5\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        }
+      }
+    },
+    {
+      "pair": 7,
+      "execution_order": [
+        "baseline",
+        "candidate"
+      ],
+      "label_mapping": {
+        "B": "baseline",
+        "A": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:36:38Z",
+            "utc_end": "2026-09-16T08:36:48Z",
+            "elapsed_seconds": 9.63,
+            "cli_reported_duration_ms": 8199,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p07-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 606
+            },
+            "total_cost_usd": 0.015474799999999999,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p07-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:36:57Z",
+            "utc_end": "2026-09-16T08:37:10Z",
+            "elapsed_seconds": 12.507,
+            "cli_reported_duration_ms": 10964,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p07-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2419,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 1057
+            },
+            "total_cost_usd": 0.021100800000000003,
+            "prompt_sha256": "f7906e73309b4c109cf78f43d95a75e60fa2420caf919ea1f18f2adefec4d0f1",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1:** 1 \u2014 The output performs a document-level comparison of S2 against the spec/F-1 gap, and correctly frames next-reviewer as the consumer for the unresolved evidence, continuing S2 verification rather than closing it prematurely.\n\n**Check 2:** 1 \u2014 Explicitly states \"R-1's historical pass verdict applies only to S1 and does not carry forward to S2,\" preserving R-1 as history without contaminating S2's disposition.\n\n**Check 3:** 1 \u2014 Explicitly identifies evidence/whitespace.txt as missing from the transfer manifest and refuses to credit V-1's claimed pass as valid/executed verification, calling it unsubstantiated.\n\n**Check 4:** 1 \u2014 Compares S2's spec wording (AC-1) against F-1's gap via a document-inspection-level observation (\"satisfying F-1 on paper\"), explicitly avoids implying software-test evidence, and explicitly states release approval is out of scope.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        },
+        "candidate": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:36:48Z",
+            "utc_end": "2026-09-16T08:36:57Z",
+            "elapsed_seconds": 9.784,
+            "cli_reported_duration_ms": 8261,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p07-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 587
+            },
+            "total_cost_usd": 0.0157608,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p07-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:37:10Z",
+            "utc_end": "2026-09-16T08:37:26Z",
+            "elapsed_seconds": 15.668,
+            "cli_reported_duration_ms": 14138,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p07-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2400,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 1365
+            },
+            "total_cost_usd": 0.0241048,
+            "prompt_sha256": "74480dd7743d02b201d04771daf747ecb79fc8511c04825c4d7282345defa061",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1:** Output performs genuine document verification (comparing S2 text to F-1, checking V-1's evidence against the manifest, assessing R-1 scope) and packages findings/handoff for next-reviewer as consumer. \u2014 1\n\n**Check 2:** Explicitly states R-1's pass applies only to S1 and does not carry forward to S2 since AC-1's scope changed; treats R-1 as historical rather than rewriting it. \u2014 1\n\n**Check 3:** Explicitly identifies evidence/whitespace.txt as missing from the manifest and refuses to credit V-1's claimed pass, treating S2 as unverified rather than inventing verification. \u2014 1\n\n**Check 4:** Notes S2 textually resolves the F-1 whitespace gap via document comparison, proposes a new verification event (not fabricated test evidence) to close the loop, and explicitly states release readiness/project-owner approval remain absent. \u2014 1\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        }
+      }
+    },
+    {
+      "pair": 8,
+      "execution_order": [
+        "candidate",
+        "baseline"
+      ],
+      "label_mapping": {
+        "B": "baseline",
+        "A": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:37:36Z",
+            "utc_end": "2026-09-16T08:37:46Z",
+            "elapsed_seconds": 10.473,
+            "cli_reported_duration_ms": 8624,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p08-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 604
+            },
+            "total_cost_usd": 0.0154548,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p08-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:37:46Z",
+            "utc_end": "2026-09-16T08:38:13Z",
+            "elapsed_seconds": 27.272,
+            "cli_reported_duration_ms": 25641,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p08-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2396,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 2458
+            },
+            "total_cost_usd": 0.0350188,
+            "prompt_sha256": "7482b33d796aa2ef780bda34804fed9b858cb48197e8a83ae9b20dc7a9c3da01",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1** \u2014 Score: 1\nOutput explicitly frames next step as \"spec-language review only, not a behavioral test\" with next-reviewer as owner, correctly continuing document verification rather than execution.\n\n**Check 2** \u2014 Score: 1\nExplicitly states R-1's pass applies only to S1, \"does not carry forward to S2,\" and instructs to append rather than overwrite/rewrite R-1 or V-1, preserving history.\n\n**Check 3** \u2014 Score: 1\nCorrectly identifies evidence/whitespace.txt as missing from the manifest, refuses to credit V-1's pass verdict, and does not invent or assume verification occurred.\n\n**Check 4** \u2014 Score: 0.5\nIt compares S2's AC-1 wording to F-1 (\"plausible fix proposal\") and correctly disclaims release approval as out of scope, but instead of resolving the omission via its own document-inspection comparison, it gates resolution on obtaining/verifying a test-evidence artifact, partially reintroducing a software-test-evidence framing rather than closing via pure textual comparison.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        },
+        "candidate": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:37:26Z",
+            "utc_end": "2026-09-16T08:37:36Z",
+            "elapsed_seconds": 10.094,
+            "cli_reported_duration_ms": 8697,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p08-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 610
+            },
+            "total_cost_usd": 0.0159908,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p08-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:38:13Z",
+            "utc_end": "2026-09-16T08:38:32Z",
+            "elapsed_seconds": 18.905,
+            "cli_reported_duration_ms": 17462,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p08-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2423,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 1723
+            },
+            "total_cost_usd": 0.027776799999999997,
+            "prompt_sha256": "9720f69564378c6410285604887a39589012218f15e5c415b6e8f6659f03c2e8",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 verification, next-reviewer as consumer:** The output frames itself as an interim status update on S2's verification, and cleanly hands off to next-reviewer with a specific action (obtain evidence, re-run comparison). Score: 1\n\n**Check 2 \u2014 Don't carry R-1's S1 pass to S2; preserve R-1 as history:** Explicitly states R-1's pass applies only to S1 (scope changed at AC-1) and proposes an *appended* new event rather than overwriting R-1 or V-1, preserving history. Score: 1\n\n**Check 3 \u2014 Identify missing V-1 attachment, don't invent verification:** Explicitly names evidence/whitespace.txt as missing/unreachable and refuses to treat V-1's claim as confirmed (\"unsupported claim,\" \"cannot be treated as a passed check\"). Score: 1\n\n**Check 4 \u2014 S2 vs F-1 resolved via document-inspection, no software-test/release implication:** Explicitly frames the needed step as a document/spec-text comparison (\"verification here means confirming the spec text change satisfies F-1's wording, not running code\"), and explicitly blocks any release/approval implication (\"Release/approval remains blocked \u2014 out of scope for this owner\"). Score: 1\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        }
+      }
+    },
+    {
+      "pair": 9,
+      "execution_order": [
+        "baseline",
+        "candidate"
+      ],
+      "label_mapping": {
+        "B": "baseline",
+        "A": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:38:32Z",
+            "utc_end": "2026-09-16T08:38:42Z",
+            "elapsed_seconds": 10.021,
+            "cli_reported_duration_ms": 8536,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p09-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 565
+            },
+            "total_cost_usd": 0.0150648,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p09-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:38:52Z",
+            "utc_end": "2026-09-16T08:39:20Z",
+            "elapsed_seconds": 27.88,
+            "cli_reported_duration_ms": 26321,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p09-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2378,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 2581
+            },
+            "total_cost_usd": 0.036176799999999995,
+            "prompt_sha256": "f95f9e4a0034ac2025a7360705cd732df15ff4080c2ba524433f360f5d548a6e",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 verification, next-reviewer as consumer:** 1 \u2014 The output explicitly frames next-reviewer as \"current owner, document-review scope only,\" and directs the S2 verification to continue as a blocked item rather than closing or dropping it.\n\n**Check 2 \u2014 Don't carry R-1's S1 pass to S2; preserve R-1 as history:** 1 \u2014 Explicitly states \"R-1's pass verdict applies only to S1 and does not carry forward to S2 given the AC-1 revision change,\" and proposes appending a new ledger event rather than rewriting R-1.\n\n**Check 3 \u2014 Identify missing V-1 attachment, don't invent executed verification:** 1 \u2014 Correctly flags `evidence/whitespace.txt` as missing from the manifest and states \"a claimed verification without reachable evidence does not close a finding,\" treating V-1's pass as unsubstantiated rather than accepting it.\n\n**Check 4 \u2014 Resolve via document-inspection event; don't imply software-test evidence or release approval:** 0.5 \u2014 It correctly avoids implying release approval (\"out of scope for this session,\" requires project-owner) and does compare S2 text against F-1 (\"textually addresses F-1's gap\"). But it then frames the needed resolution as \"command output,\" \"reproducible verification output,\" and a \"verification event with attached command output\" \u2014 pushing toward software-test evidence as the closure mechanism rather than recognizing that a document-inspection comparison of S2 against F-1 is itself sufficient to resolve the textual gap.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        },
+        "candidate": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:38:42Z",
+            "utc_end": "2026-09-16T08:38:52Z",
+            "elapsed_seconds": 9.68,
+            "cli_reported_duration_ms": 8257,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p09-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 615
+            },
+            "total_cost_usd": 0.0160408,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p09-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:39:20Z",
+            "utc_end": "2026-09-16T08:39:49Z",
+            "elapsed_seconds": 28.98,
+            "cli_reported_duration_ms": 27314,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p09-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2428,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 2600
+            },
+            "total_cost_usd": 0.036566799999999997,
+            "prompt_sha256": "c17e0f7f221be065771368e76e4e9a6834f8b6076099dc626e8a6f586482d86a",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 verification, next-reviewer as consumer:** Output explicitly evaluates S2 against F-1, flags it as unverified, and routes the action to \"next-reviewer\" as owner. Fully satisfied. **1**\n\n**Check 2 \u2014 Don't carry R-1's S1 pass to S2; preserve as history:** Explicitly states \"R-1's pass verdict applies only to S1 and does not carry forward to S2\" and treats V-1 as a historical event to be flagged, not overwritten. **1**\n\n**Check 3 \u2014 Identify missing V-1 attachment, don't invent verification:** Clearly identifies evidence/whitespace.txt as missing from the transfer, states no substitute artifact exists, and refuses to treat V-1's pass as valid (\"should be treated as unverified, not passed\"). **1**\n\n**Check 4 \u2014 Resolve whitespace omission via document-inspection event; no implied software-test evidence or release approval:** The output does perform the document-inspection comparison itself (\"S2 textually addresses F-1... adds whitespace-only rejection to AC-1\") and correctly avoids implying release readiness (\"Release remains blocked regardless\"). However, its recommended next action (\"reproduce or supply verifiable evidence that S2's whitespace-only rejection behavior was actually checked\") is phrased ambiguously enough to suggest behavioral/test verification rather than clearly scoping the fix to a fresh document-inspection event, slightly blurring the distinction the rubric wants preserved. **0.5**\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        }
+      }
+    },
+    {
+      "pair": 10,
+      "execution_order": [
+        "candidate",
+        "baseline"
+      ],
+      "label_mapping": {
+        "A": "baseline",
+        "B": "candidate"
+      },
+      "arms": {
+        "baseline": {
+          "blind_label": "A",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:39:58Z",
+            "utc_end": "2026-09-16T08:40:08Z",
+            "elapsed_seconds": 10.063,
+            "cli_reported_duration_ms": 8677,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p10-baseline",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2140,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 635
+            },
+            "total_cost_usd": 0.015764800000000002,
+            "prompt_sha256": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+            "prompt_note": "frozen baseline-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p10-output-A.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:40:08Z",
+            "utc_end": "2026-09-16T08:40:45Z",
+            "elapsed_seconds": 36.946,
+            "cli_reported_duration_ms": 35455,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p10-grader-A",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2448,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 3499
+            },
+            "total_cost_usd": 0.0456368,
+            "prompt_sha256": "a7de9ad9459cbbd796e4de0513c8ad0e29978853ad3cdc5183219ed0cb0487f1",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 0.5,
+            "total": 3.5
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2013 Continue S2 document verification with next-reviewer as consumer:** 1 \u2014 The output actively compares S2's spec text against AC-1/F-1 and explicitly routes the next action to \"next-reviewer,\" treating them as the consumer of the handoff.\n\n**Check 2 \u2013 Do not carry R-1's S1 pass to S2; preserve R-1 as history:** 1 \u2014 The output states \"no prior pass can be carried forward\" and proposes only appending new events rather than rewriting history, correctly refusing to inherit any earlier passing verdict for S2.\n\n**Check 3 \u2013 Identify the missing V-1 attachment and do not invent executed verification:** 1 \u2014 Explicitly flags `evidence/whitespace.txt` as missing from the transfer, refuses to accept V-1's verdict as evidence, and does not fabricate any verification having occurred.\n\n**Check 4 \u2013 Compare S2 with F-1; resolve via document-inspection, not implied software-test/release evidence:** 0.5 \u2014 It does compare S2's AC-1 text against F-1's whitespace omission and notes it \"plausibly addresses\" the gap, but then treats resolution as blocked on obtaining a \"verification run\" / missing test-evidence file rather than recognizing that a document-inspection comparison (which it already partly performed) could itself close the gap \u2014 it under-credits its own inspection and defers to software-test-style evidence instead.\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 0.5, \"total\": 3.5}"
+        },
+        "candidate": {
+          "blind_label": "B",
+          "arm_call": {
+            "utc_start": "2026-09-16T08:39:49Z",
+            "utc_end": "2026-09-16T08:39:58Z",
+            "elapsed_seconds": 9.336,
+            "cli_reported_duration_ms": 7541,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p10-candidate",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2259,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 578
+            },
+            "total_cost_usd": 0.0156708,
+            "prompt_sha256": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+            "prompt_note": "frozen candidate-prompt.md, verbatim"
+          },
+          "graded_output_committed": "blind/p10-output-B.txt",
+          "grader_call": {
+            "utc_start": "2026-09-16T08:40:45Z",
+            "utc_end": "2026-09-16T08:40:55Z",
+            "elapsed_seconds": 10.093,
+            "cli_reported_duration_ms": 8644,
+            "timeout_seconds": 300,
+            "working_directory": "/tmp/claude-0/-home-user-houserules/930b25f5-9d85-56f9-b61b-03bbc3c06443/scratchpad/repl/cwd/p10-grader-B",
+            "exit_code": 0,
+            "timed_out": false,
+            "status": "completed",
+            "num_turns": 1,
+            "stop_reason": "end_turn",
+            "is_error": false,
+            "permission_denials": [],
+            "model_actual": "claude-sonnet-5",
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 2391,
+              "cache_read_input_tokens": 4254,
+              "output_tokens": 897
+            },
+            "total_cost_usd": 0.0193888,
+            "prompt_sha256": "47730562d1a305b2f06d8f320da744ab65b3d653d2a25a6348697c3000125950",
+            "prompt_note": "frozen rubric.md + fixed isolated-grading instruction + the committed blind output"
+          },
+          "scores": {
+            "check_1": 1.0,
+            "check_2": 1.0,
+            "check_3": 1.0,
+            "check_4": 1.0,
+            "total": 4.0
+          },
+          "score_parse": "parsed",
+          "grader_verbatim": "**Check 1 \u2014 Continue S2 verification with next-reviewer as consumer:** Explicitly assigns next-reviewer to perform a fresh document comparison of S2's AC-1 against F-1, with clear scope (document review only). Score: 1\n\n**Check 2 \u2014 Do not carry R-1's S1 pass to S2; preserve R-1 as history:** States plainly \"R-1's pass verdict applies to S1 only and does not carry forward to S2\" and separately notes R-1 \"remains valid for S1,\" treating it as untouched history rather than editing/overwriting it. Score: 1\n\n**Check 3 \u2014 Identify missing V-1 attachment, don't invent verification:** Correctly flags evidence/whitespace.txt as missing per the manifest, states V-1's pass claim \"cannot be trusted,\" and proposes appending a new event noting the gap rather than asserting verification occurred. Score: 1\n\n**Check 4 \u2014 S2 vs F-1 resolvable via new document-inspection event; no implied test evidence or release approval:** Frames the next step explicitly as a \"document comparison\"/\"spec-language review, not a code check,\" and explicitly states release requires project-owner approval that is absent \u2014 no implied software-test evidence or approval. Score: 1\n\nSCORES_JSON: {\"check_1\": 1, \"check_2\": 1, \"check_3\": 1, \"check_4\": 1, \"total\": 4}"
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "n_pairs": 10,
+    "indeterminate_calls": 0,
+    "baseline": {
+      "mean": 3.75,
+      "sd": 0.2635,
+      "min": 3.5,
+      "max": 4.0,
+      "observed_values": [
+        3.5,
+        4.0
+      ]
+    },
+    "candidate": {
+      "mean": 3.8,
+      "sd": 0.2582,
+      "min": 3.5,
+      "max": 4.0,
+      "observed_values": [
+        3.5,
+        4.0
+      ]
+    },
+    "paired_difference_candidate_minus_baseline": {
+      "mean": 0.05,
+      "sd": 0.3689,
+      "standard_error": 0.1167,
+      "approx_95_ci": [
+        -0.1787,
+        0.2787
+      ],
+      "ci_excludes_zero": false,
+      "pairs_candidate_higher": 3,
+      "pairs_tied": 5,
+      "pairs_baseline_higher": 2
+    },
+    "per_check_mean": {
+      "check_1": {
+        "baseline": 1.0,
+        "candidate": 1.0
+      },
+      "check_2": {
+        "baseline": 1.0,
+        "candidate": 1.0
+      },
+      "check_3": {
+        "baseline": 1.0,
+        "candidate": 1.0
+      },
+      "check_4": {
+        "baseline": 0.75,
+        "candidate": 0.8
+      }
+    },
+    "total_cost_usd": 0.858
+  },
+  "findings": [
+    "No advantage demonstrated. The paired difference is +0.05 points out of 4 with an approximate 95% CI of [-0.179, +0.279], which includes zero. Five of ten pairs tied, three favoured the candidate and two favoured the baseline.",
+    "The 2026-09-16 single-pair result does not reproduce under isolated grading. That run scored the baseline 0.5 on check 1; across ten isolated gradings the baseline scored 1.0 on check 1 every time (10/10). The one-point gap is therefore attributable to the grader comparing the two outputs within a single call, which is the confound this run was built to remove.",
+    "The rubric is saturated. Checks 1, 2 and 3 scored 1.0 for both arms in all twenty gradings, with zero variance. Only check 4 moves, and it moves within each arm (baseline 5x1.0 / 5x0.5; candidate 6x1.0 / 4x0.5), which is run-to-run variation rather than an arm effect. On this scenario and model the instrument has effectively one check of resolution, and that check is noise-dominated."
+  ],
+  "conclusion": "On this frozen synthetic packet, the structured handoff presentation shows no measurable advantage over the prose session note. No promotion claim follows, and none followed from the 2026-09-16 pair either. Separately, the rubric's saturation means this smoke test cannot detect a small effect in any direction; a future comparison needs a scenario with headroom before it can support a promotion decision.",
+  "limitations": [
+    "One synthetic transferred packet on one scenario. This does not test filesystem discovery, real repository artifacts, actual task execution or cross-agent portability.",
+    "The graders are separate processes but the same vendor and model family as the arms; none is an independent or human reviewer.",
+    "n=10 gives a coarse variance estimate. The CI is a normal approximation on ten paired differences drawn from a three-valued score scale; it is indicative, not a formal significance test.",
+    "Because checks 1-3 are saturated, the aggregate means understate how little of the rubric is actually discriminating. A null result here is weak evidence of equivalence, not proof of it.",
+    "Full argv is recorded as a template plus per-call prompt digests rather than 40 embedded copies; the 2026-09-16 record embedded argv in full. Prompts remain byte-identifiable via those digests.",
+    "Token counts and costs are the CLI's own reported figures; they are not a billing measurement.",
+    "All calls ran on claude-sonnet-5 under CLI 2.1.273 on Linux. Nothing generalises to another surface, model or version."
+  ],
+  "relation_to_prior_records": "Additive. The 2026-09-06 reviewer-reported pair, the 2026-09-16 executed pair, the v1 attempt and the frozen packet bytes are all unchanged. This record does not regrade or replace any of them; it reports an independent run under a corrected grading procedure."
+}

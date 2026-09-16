@@ -65,3 +65,28 @@ no repetition, graded by the same vendor and model family as the arms. It is a s
 promotion claim: the record's limitations list applies, and real task artifacts, actual consumption
 and independent regrading remain required. The 2026-09-06 reviewer-reported attempt, the v1 record
 and the frozen packet bytes are unchanged.
+
+
+## Replication with isolated grading — 2026-09-16
+
+Ten pairs of the same frozen packet were executed on the same surface (CLI **2.1.273**, headless,
+`claude-sonnet-5`), with arm order counterbalanced and **each output graded in its own grader
+process** seeing only the rubric and that one output. The
+[replication record](attempt-20260916-replication.json) holds every call's timestamps, deadline,
+working directory, exit status, usage, cost and verbatim grader prose; the graded outputs and the
+harness are in [attempt-20260916-replication-outputs/](attempt-20260916-replication-outputs/).
+
+**No advantage demonstrated.** Baseline mean 3.75, candidate mean 3.80; paired difference +0.05
+with an approximate 95% CI of [-0.179, +0.279], which includes zero. Five pairs tied, three
+favoured the candidate, two favoured the baseline; no call was indeterminate.
+
+The single pair recorded above **does not reproduce**. That run scored the baseline 0.5 on check 1;
+across ten isolated gradings the baseline scored 1.0 on check 1 in all ten. The one-point gap is
+attributable to grading both outputs in one call, not to the handoff presentation.
+
+**The rubric is saturated.** Checks 1-3 scored 1.0 for both arms in all twenty gradings. Only
+check 4 varies, and it varies within each arm. On this scenario and model the instrument has
+effectively one discriminating check, and that check is noise-dominated, so this smoke test cannot
+detect a small effect in either direction. A scenario with headroom is required before any
+comparison here can support a promotion decision. The 2026-09-06 reviewer-reported attempt, the
+2026-09-16 executed pair, the v1 record and the frozen packet bytes are unchanged.

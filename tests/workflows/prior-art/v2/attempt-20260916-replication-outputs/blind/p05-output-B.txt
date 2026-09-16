@@ -1,0 +1,12 @@
+**Disposition:** Unresolved — cannot confirm F-1 is closed. S2 textually updates AC-1 to cover whitespace-only input, which matches F-1's complaint, but the only verification claim (V-1, "pass for S2") is unsupported: its cited evidence file (evidence/whitespace.txt) is missing per the transfer manifest, and no command output or other artifact was transferred. R-1's pass verdict applies to S1 only and does not carry forward to S2, since AC-1's text changed. No implementation is in scope, so this is a spec-language review, not a behavioral test — verification here means confirming the S2 wording actually satisfies F-1's concern and that V-1's claim is substantiated, not running code.
+
+**Evidence gaps:**
+- evidence/whitespace.txt (cited by V-1) not present in packet.
+- No record of what V-1 actually checked (text comparison, reviewer reasoning, or something else).
+
+**Next action / owner:** next-reviewer should request retransmission of evidence/whitespace.txt or, if unavailable, ask the author to re-run/re-produce V-1's verification with transferable evidence. Until then, next-reviewer can independently do a documentary check — confirm S2's AC-1 wording explicitly rejects whitespace-only input as F-1 required — and record that as a distinct, narrower review step. Release remains blocked on project-owner approval regardless.
+
+**Proposed updates (pending confirmation, not applied):**
+- Append a new review round (not overwrite R-1) noting: S2 reviewed against F-1; V-1's evidence unverifiable due to missing file; disposition = unresolved pending evidence.
+- Leave F-1 open until V-1 evidence is supplied or re-verified.
+- Update handoff: owner next-reviewer, action = obtain V-1 evidence or re-verify, blocker = missing evidence/whitespace.txt.
