@@ -48,3 +48,20 @@ traces, argv, timestamps and the deadline were unavailable in the supplied accou
 work files; unknown fields are null. Current input hashes match the frozen set. No model rerun or
 independent regrading was performed. Reported token counts do not establish a billing advantage.
 The pair remains reviewer-reported and does not satisfy fallback promotion criteria.
+
+
+## Executed pair with primary evidence — 2026-09-16
+
+One completed pair was executed on Claude Code CLI **2.1.273** headless (`-p`) on Linux, each arm a
+separate process with an empty non-repository working directory so no project context file loaded.
+The [attempt record](attempt-20260916-executed.json) holds argv, UTC timestamps, the 300-second
+deadline, surface/version, model, configuration, measured input hashes, exit status, usage and cost.
+Complete arm and grader outputs are in [attempt-20260916-outputs/](attempt-20260916-outputs/),
+alongside the harness that produced them.
+
+Blind grading by a third separate process scored **baseline 3/4** and **candidate 4/4**; neither arm
+was indeterminate and the measured input hashes match the frozen set. This is one synthetic pair with
+no repetition, graded by the same vendor and model family as the arms. It is a smoke test, not a
+promotion claim: the record's limitations list applies, and real task artifacts, actual consumption
+and independent regrading remain required. The 2026-09-06 reviewer-reported attempt, the v1 record
+and the frozen packet bytes are unchanged.

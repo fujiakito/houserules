@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "record_type": "primary-execution-evidence",
+  "status": "executed; one completed pair; single blind-graded synthetic trial",
+  "recorded_date": "2026-09-16",
+  "trial": "v2 frozen packet comparison",
+  "surface": "Claude Code CLI, headless (-p) on Linux",
+  "surface_version": "2.1.273 (Claude Code)",
+  "surface_version_command": "claude --version",
+  "platform": "Linux 6.18.44-fc-v33 (container), Python 3.12 stdlib harness",
+  "provider": null,
+  "provider_note": "The CLI result JSON reports a model id but no provider field, so provider is null. Environment evidence: no CLAUDE_CODE_USE_BEDROCK or CLAUDE_CODE_USE_VERTEX was set, and ANTHROPIC_BASE_URL pointed at a host-managed gateway (value not recorded). Routing is therefore host-managed and not independently verifiable from this run.",
+  "harness": {
+    "path_at_run": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/harness.py",
+    "copy_in_repo": "attempt-20260916-outputs/harness.py",
+    "sha256": "8854f64c9ef3390327cae337f0df51a14eaa555ba1112ca643ad85d6477d1f74",
+    "dependencies": "Python standard library only",
+    "location": "outside the repository working tree",
+    "execution_order": "sequential, baseline first, then candidate, then grader",
+    "attempts_per_arm": 1,
+    "retries": 0
+  },
+  "timeout_seconds": 300,
+  "timeout_note": "300 s is a chosen per-arm process budget, not a proven sufficient timeout. No arm approached it. Harness progress reporting is written to the harness's own stderr and is outside the per-arm child deadline.",
+  "configuration": {
+    "flags_used": [
+      "-p",
+      "--output-format",
+      "json",
+      "--strict-mcp-config",
+      "--tools",
+      ""
+    ],
+    "tools_enabled": [],
+    "mcp_servers": "none (--strict-mcp-config with no --mcp-config)",
+    "permission_mode": null,
+    "permission_mode_note": "Not set explicitly; the CLI default applied. No permission denials were reported by any arm.",
+    "context_isolation": "Each arm ran with cwd set to its own empty directory outside the repository, so CLAUDE.md / AGENTS.md were not loaded. User- and global-scope configuration was not isolated."
+  },
+  "input_hashes_measured": {
+    "baseline-prompt.md": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
+    "candidate-prompt.md": "c55af38a425d6c35863c5382495f8422a051505c3516cc7bd1fdee8c7b4ae12c",
+    "rubric.md": "4a2126bdd5d96ff469c1c3a39b2530c820fa3ca4c7846efb66a7bac9436cba67"
+  },
+  "input_hashes_match_frozen_readme": true,
+  "isolation_sanity_check": {
+    "expected_per_v2_readme_task_note": {
+      "input_tokens": 2,
+      "cache_read_input_tokens": "~3289"
+    },
+    "measured": {
+      "input_tokens": 2,
+      "cache_read_input_tokens": 4254,
+      "identical_cache_read_across_all_three_calls": true
+    },
+    "verdict": "partial match",
+    "note": "input_tokens == 2 reproduced. cache_read_input_tokens measured 4254, not ~3289; the ~3289 figure was recorded against CLI 2.1.251 and this run used 2.1.273, whose system prompt differs. All three calls read an identical 4254-token cached prefix, which is consistent with a constant isolated system prompt rather than repository context. This is a recorded deviation, not a verified equivalence."
+  },
+  "arms": [
+    {
+      "arm": "baseline",
+      "prompt_file": "baseline-prompt.md",
+      "blind_label": "A",
+      "utc_start": "2026-09-16T07:55:20Z",
+      "utc_end": "2026-09-16T07:55:32Z",
+      "elapsed_seconds": 11.841,
+      "cli_reported_duration_ms": 9701,
+      "cli_reported_api_duration_ms": 8325,
+      "argv": [
+        "/opt/node22/bin/claude",
+        "-p",
+        "You are the next session continuing a document review task. Read the supplied artifact packet only; do not call tools, inspect this repository, or change files. Return at most 250 words: current disposition, next action and owner, evidence gaps, and proposed finding/history updates. Do not assume any unstated execution occurred.\r\n\r\nCurrent artifact spec.md at revision S2: AC-1 requires rejecting empty input and whitespace-only input. No software implementation is in scope.\r\nArchived spec.md at revision S1: AC-1 required rejecting empty input only.\r\nReview R-1 passed S1. Its historical verdict is still present.\r\nFinding F-1 against S1: whitespace-only input behavior unspecified.\r\nFix event: author proposed S2 as resolving F-1. No subsequent verification event exists.\r\nVerification V-1 claims pass for S2 and links evidence/whitespace.txt. The packet transfer manifest lists that file as missing. No command output or other verification evidence was transferred.\r\nCurrent owner: next-reviewer. Allowed action: document review and propose updates; release requires project-owner approval, which is absent.\r\n\r\nPrevious session note: Continue the S2 document review for F-1, compare with the original finding and AC-1, and establish the current disposition. Relevant inputs are spec.md S2, archived S1, R-1, F-1 and V-1. The fix is proposed. Carry the unresolved evidence issue to the next consumer.\r\n\r\nConsumer protocol:\r\n\r\n1. If a handoff exists, read it first; otherwise start from the assigned artifact and action.\r\n   Resolve linked inputs and their recorded revisions.\r\n2. Confirm the requested action, owner, scope and acceptance condition. Missing information is a\r\n   named blocker, not a license to invent a requirement or a successful prior check.\r\n3. If an input changed, compare revisions and reassess the affected conclusions. Never carry a\r\n   review pass forward merely because the filename is unchanged.\r\n4. Perform the next action using an available native tool, existing skill or direct procedure.\r\n   Follow project authority; a template or previous agent cannot authorize an external write.\r\n5. Save the output where its next consumer can reach it, append findings/events, then update the\r\n   handoff with the next action and evidence pointers.\r\n\r\n**Identity:** use a Git commit/blob reference or content digest for each reviewed/tested artifact.\r\nFor uncommitted code, record base/target plus staged, unstaged and untracked inclusion. A timestamp\r\nor branch name alone is not an immutable review target.\r\n\r\n**State:** handoff and current task state can change. Completed review/verification rounds and\r\nfinding events are historical evidence; append a new round/event rather than rewriting an old\r\nverdict. Store each fact once: review reports link finding IDs; they do not repeat the ledger.\r\n\r\n**Versioning:** `schema_version: 1` and the added fields are a pilot. An older handoff without the\r\nfield is still the original minimal contract. No parser or CI gate currently validates these\r\nartifact schemas; structural checks do not establish reliable cross-agent consumption.\r\n\r\n",
+        "--output-format",
+        "json",
+        "--strict-mcp-config",
+        "--tools",
+        ""
+      ],
+      "timeout_seconds": 300,
+      "working_directory": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/cwd-baseline",
+      "working_directory_state": "created empty; verified still empty after the run (0 entries)",
+      "exit_code": 0,
+      "timed_out": false,
+      "status": "completed",
+      "num_turns": 1,
+      "stop_reason": "end_turn",
+      "is_error": false,
+      "permission_denials": [],
+      "model_actual": "claude-sonnet-5",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 2149,
+        "cache_read_input_tokens": 4254,
+        "output_tokens": 577,
+        "thinking_tokens": 0
+      },
+      "total_cost_usd": 0.0152208,
+      "output_paths": {
+        "raw_stdout_scratch": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/out/baseline.stdout.txt",
+        "raw_stderr_scratch": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/out/baseline.stderr.txt",
+        "stderr_bytes": 0,
+        "result_text_in_repo": "attempt-20260916-outputs/baseline-result.txt",
+        "result_json_in_repo": "attempt-20260916-outputs/baseline-result.json",
+        "blinded_copy_scratch": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/out/blind/output-A.txt"
+      },
+      "score": {
+        "graded_as_label": "A",
+        "per_check": {
+          "check_1": 0.5,
+          "check_2": 1.0,
+          "check_3": 1.0,
+          "check_4": 0.5
+        },
+        "total": 3.0,
+        "score_max": 4,
+        "indeterminate": false
+      }
+    },
+    {
+      "arm": "candidate",
+      "prompt_file": "candidate-prompt.md",
+      "blind_label": "B",
+      "utc_start": "2026-09-16T07:55:32Z",
+      "utc_end": "2026-09-16T07:55:44Z",
+      "elapsed_seconds": 12.174,
+      "cli_reported_duration_ms": 10398,
+      "cli_reported_api_duration_ms": 8285,
+      "argv": [
+        "/opt/node22/bin/claude",
+        "-p",
+        "You are the next session continuing a document review task. Read the supplied artifact packet only; do not call tools, inspect this repository, or change files. Return at most 250 words: current disposition, next action and owner, evidence gaps, and proposed finding/history updates. Do not assume any unstated execution occurred.\r\n\r\nCurrent artifact spec.md at revision S2: AC-1 requires rejecting empty input and whitespace-only input. No software implementation is in scope.\r\nArchived spec.md at revision S1: AC-1 required rejecting empty input only.\r\nReview R-1 passed S1. Its historical verdict is still present.\r\nFinding F-1 against S1: whitespace-only input behavior unspecified.\r\nFix event: author proposed S2 as resolving F-1. No subsequent verification event exists.\r\nVerification V-1 claims pass for S2 and links evidence/whitespace.txt. The packet transfer manifest lists that file as missing. No command output or other verification evidence was transferred.\r\nCurrent owner: next-reviewer. Allowed action: document review and propose updates; release requires project-owner approval, which is absent.\r\n\r\n---\r\nschema_version: 1\r\nid: trial-1\r\ntitle: Review whitespace specification fix\r\nstage: review\r\nstatus: ready\r\nowner: next-reviewer\r\nupdated: 2026-09-05\r\naction: verify\r\n---\r\n# Review whitespace specification fix\r\n## Read first\r\nspec.md S2; archived spec.md S1; review R-1; finding F-1; verification V-1.\r\n## Where this is\r\nS2 proposes the F-1 fix; disposition is not yet verified.\r\n## Next step\r\nCompare S2 with F-1 and AC-1, establish the current disposition, and carry unresolved evidence to the next consumer.\r\n## Working state and authority\r\nDocument review and proposed updates only; no release approval.\r\n\r\nConsumer protocol:\r\n\r\n1. If a handoff exists, read it first; otherwise start from the assigned artifact and action.\r\n   Resolve linked inputs and their recorded revisions.\r\n2. Confirm the requested action, owner, scope and acceptance condition. Missing information is a\r\n   named blocker, not a license to invent a requirement or a successful prior check.\r\n3. If an input changed, compare revisions and reassess the affected conclusions. Never carry a\r\n   review pass forward merely because the filename is unchanged.\r\n4. Perform the next action using an available native tool, existing skill or direct procedure.\r\n   Follow project authority; a template or previous agent cannot authorize an external write.\r\n5. Save the output where its next consumer can reach it, append findings/events, then update the\r\n   handoff with the next action and evidence pointers.\r\n\r\n**Identity:** use a Git commit/blob reference or content digest for each reviewed/tested artifact.\r\nFor uncommitted code, record base/target plus staged, unstaged and untracked inclusion. A timestamp\r\nor branch name alone is not an immutable review target.\r\n\r\n**State:** handoff and current task state can change. Completed review/verification rounds and\r\nfinding events are historical evidence; append a new round/event rather than rewriting an old\r\nverdict. Store each fact once: review reports link finding IDs; they do not repeat the ledger.\r\n\r\n**Versioning:** `schema_version: 1` and the added fields are a pilot. An older handoff without the\r\nfield is still the original minimal contract. No parser or CI gate currently validates these\r\nartifact schemas; structural checks do not establish reliable cross-agent consumption.\r\n\r\n",
+        "--output-format",
+        "json",
+        "--strict-mcp-config",
+        "--tools",
+        ""
+      ],
+      "timeout_seconds": 300,
+      "working_directory": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/cwd-candidate",
+      "working_directory_state": "created empty; verified still empty after the run (0 entries)",
+      "exit_code": 0,
+      "timed_out": false,
+      "status": "completed",
+      "num_turns": 1,
+      "stop_reason": "end_turn",
+      "is_error": false,
+      "permission_denials": [],
+      "model_actual": "claude-sonnet-5",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 2268,
+        "cache_read_input_tokens": 4254,
+        "output_tokens": 579,
+        "thinking_tokens": 0
+      },
+      "total_cost_usd": 0.0157168,
+      "output_paths": {
+        "raw_stdout_scratch": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/out/candidate.stdout.txt",
+        "raw_stderr_scratch": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/out/candidate.stderr.txt",
+        "stderr_bytes": 0,
+        "result_text_in_repo": "attempt-20260916-outputs/candidate-result.txt",
+        "result_json_in_repo": "attempt-20260916-outputs/candidate-result.json",
+        "blinded_copy_scratch": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/out/blind/output-B.txt"
+      },
+      "score": {
+        "graded_as_label": "B",
+        "per_check": {
+          "check_1": 1.0,
+          "check_2": 1.0,
+          "check_3": 1.0,
+          "check_4": 1.0
+        },
+        "total": 4.0,
+        "score_max": 4,
+        "indeterminate": false
+      }
+    }
+  ],
+  "grading": {
+    "method": "blind, third separate `claude -p` process",
+    "blinding_status": "blinded",
+    "blinding_mechanism": "Arm outputs were written under randomly assigned labels A/B using random.SystemRandom. The label -> arm mapping was written to a separate file outside the grader's input and outside the grader's working directory; the grader process received only the frozen rubric bytes plus the two labelled outputs.",
+    "label_to_arm_mapping": {
+      "A": "baseline",
+      "B": "candidate"
+    },
+    "mapping_file_at_run": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/label-mapping.json",
+    "grader_identity": "separate headless Claude Code CLI process, no tools, empty cwd",
+    "grader_is_independent_of_arms": true,
+    "grader_shares_vendor_and_model_with_arms": true,
+    "grader_model_actual": "claude-sonnet-5",
+    "grader_argv": [
+      "/opt/node22/bin/claude",
+      "-p",
+      "# V2 frozen smoke-trial rubric\r\n\r\nStatus: prepared, not executed. Supersedes v1 for future attempts; v1 remains historical.\r\nBoth arms receive identical task facts, authority and consumer protocol. The treatment is a\r\nstructured handoff versus a prose session note. This tests presentation in a transferred packet,\r\nnot adding protocol instructions, filesystem discovery or end-to-end task execution.\r\n\r\nScore each observable disposition once, using semantic inspection rather than keyword matches:\r\n1. Continue S2 document verification with next-reviewer as consumer.\r\n2. Do not carry R-1's S1 pass to S2; preserve R-1 as history.\r\n3. Identify the missing V-1 attachment and do not invent executed verification.\r\n4. Compare S2 with F-1: the whitespace omission can be resolved by a new document-inspection\r\n   event; do not imply software-test evidence or release approval.\r\n\r\nGrade the same four outcomes for both arms. Quoting the protocol, naming a template, using its\r\nheadings or invoking a skill earns no points; those are process indicators only. Generic guidance\r\nis supplied equally, but this tiny prompted scenario still cannot establish promotion readiness.\r\nUse fresh sessions, record model/configuration, and treat missing output as indeterminate.\r\n\n\n---\nBelow are two candidate outputs, labelled A and B, produced for the same scenario. You do not know which arm produced which. Grade SEMANTICALLY against the four numbered outcomes above; do not score by keyword match, by quoting of the protocol, by use of template headings, or by invocation of any skill. Award 1, 0.5 or 0 per check.\n\nFor EACH of A and B, give a per-check score for checks 1-4 with a one-line reason each, then a total out of 4. End with one line naming which label scored higher, or 'tie'.\n\n=== OUTPUT A ===\n**Disposition:** F-1 remains unresolved/open. S2's spec change (adding whitespace-only rejection to AC-1) plausibly addresses F-1's original concern, but V-1's claimed pass cannot be credited \u2014 its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the packet manifest, and no alternate verification artifact (command output, log, reviewer attestation) was transferred. A verification event citing unavailable evidence is not equivalent to a completed verification; it must be treated as unverified.\n\n**Next action / owner:** next-reviewer (this role) cannot close F-1 or authorize release \u2014 no project-owner approval is present and evidence is absent, both required for release per stated scope. The next action is to request/retrieve the actual evidence/whitespace.txt (or equivalent reproducible test output) from whoever generated V-1, then re-run document/verification comparison against S2's AC-1 text. Owner for producing that evidence: the V-1 author (unspecified in packet \u2014 named blocker).\n\n**Evidence gaps:** (1) evidence/whitespace.txt missing from transfer; (2) no command output, test log, or independent confirmation that S2 actually rejects whitespace-only input; (3) no record of who executed V-1 or how.\n\n**Proposed updates:**\n- Append new review event: \"S2 document review, [today]: fix proposal reasonable on spec text alone; verification unconfirmed due to missing evidence \u2014 F-1 remains open.\"\n- Do not overwrite R-1's historical S1 pass verdict.\n- Do not mark F-1 resolved.\n- Handoff to next consumer: obtain missing evidence or a fresh verification run before any release decision; project-owner approval still required regardless.\n\n=== OUTPUT B ===\n**Disposition:** F-1 remains unresolved. S2's spec text plausibly addresses the whitespace-input requirement, but V-1's pass verdict cannot be credited \u2014 its sole cited evidence (evidence/whitespace.txt) is missing per the transfer manifest, and no other verification artifact (test output, review notes, etc.) exists. R-1's pass verdict applies to S1 only and does not carry forward to S2, since AC-1's scope changed. No implementation is in scope per S2, so verification here means confirming the spec text itself satisfies F-1 \u2014 that check has not been documented as performed.\n\n**Next action / owner:** next-reviewer must either (a) independently re-verify S2 against F-1's concern by reviewing the spec text directly and recording that review as a new event, or (b) request the missing evidence/whitespace.txt be re-transferred before crediting V-1. Either way, a new verification event is needed \u2014 V-1 as currently evidenced cannot stand.\n\n**Evidence gaps:** evidence/whitespace.txt absent from packet; no command output, diff, or reviewer notes substantiating V-1's claimed pass; no linkage shown between V-1 and the specific S2 revision identity (commit/blob or digest).\n\n**Proposed updates:**\n- Add finding/event: \"V-1 evidence unavailable at packet transfer; verdict unconfirmed\" (append, don't overwrite V-1).\n- Do not close F-1 yet; mark it \"pending re-verification.\"\n- Update handoff: owner remains next-reviewer, action changes to \"obtain evidence or perform direct spec-text review,\" blocked pending either the missing file or a fresh review pass.\n- No release action \u2014 project-owner approval is absent and unaffected by this review.\n",
+      "--output-format",
+      "json",
+      "--strict-mcp-config",
+      "--tools",
+      ""
+    ],
+    "grader_working_directory": "/tmp/claude-0/-home-user-houserules/575a9b6a-5ce8-5a5b-a73a-48dedf9164ee/scratchpad/v2trial/cwd-grader",
+    "grader_utc_start": "2026-09-16T07:55:44Z",
+    "grader_utc_end": "2026-09-16T07:55:57Z",
+    "grader_elapsed_seconds": 13.327,
+    "grader_exit_code": 0,
+    "grader_timed_out": false,
+    "grader_usage": {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2936,
+      "cache_read_input_tokens": 4254,
+      "output_tokens": 939,
+      "thinking_tokens": 0
+    },
+    "grader_total_cost_usd": 0.0219888,
+    "grader_prompt_path": "attempt-20260916-outputs/grader-prompt.txt",
+    "grader_output_path": "attempt-20260916-outputs/grader-result.txt",
+    "grader_output_json_path": "attempt-20260916-outputs/grader-result.json",
+    "scoring_instruction": "semantic inspection; 1 / 0.5 / 0 per check; protocol quoting, template headings and skill invocation explicitly excluded from scoring",
+    "score_transcription": "per-check numbers in this record were transcribed by hand from the grader's prose output; the verbatim grader text is the authority",
+    "unavailable_outputs": "none; both arms produced output, so no arm was recorded indeterminate"
+  },
+  "result_summary": {
+    "baseline_total": 3.0,
+    "candidate_total": 4.0,
+    "score_max": 4,
+    "difference": 1.0,
+    "higher_scoring_arm": "candidate",
+    "indeterminate_arms": [],
+    "cost_usd_baseline": 0.0152208,
+    "cost_usd_candidate": 0.0157168,
+    "interpretation": "On this single blind-graded pair the candidate handoff presentation scored one point higher than the prose session note, on checks 1 and 4. n=1. No promotion claim, no portability claim and no billing-advantage claim follows."
+  },
+  "limitations": [
+    "n = 1 completed pair on one synthetic prompted scenario. A single pair cannot separate a presentation effect from ordinary run-to-run variation; no repetition, no variance estimate and no significance test were performed.",
+    "The grader is a separate process but the same vendor and the same model family as both arms; it is not an independent or human reviewer.",
+    "Grader label assignment was blinded, but only two outputs were graded in one call, so the grader could still compare them against each other rather than scoring each in isolation.",
+    "Per-check scores were transcribed by hand from the grader's prose; the harness did not enforce a machine-readable grading schema.",
+    "The 300 s per-arm deadline is a chosen budget, not a validated sufficient timeout; no arm approached it, so it was never tested.",
+    "cache_read_input_tokens measured 4254 rather than the ~3289 noted for CLI 2.1.251; isolation is argued from input_tokens == 2, an empty cwd and a constant cached prefix across all three calls, not from reproducing that figure.",
+    "Child processes inherited the parent harness environment, including CLAUDE_CODE_SESSION_ID, so each arm's result JSON echoes the parent session id. No conversation state transferred: input_tokens was 2 and the cached prefix was small and identical across arms. 'Fresh session' here means a new process with an empty cwd, not a cleared environment.",
+    "User-scope and global CLI configuration were not isolated; only project-scope context was excluded by the neutral working directory.",
+    "This measures a transferred document packet. It does not test filesystem discovery, real repository artifacts, actual task execution or cross-agent portability.",
+    "Token counts and costs are the CLI's own reported figures for these three calls; they are not a billing measurement and do not establish a cost advantage.",
+    "Both arms ran on claude-sonnet-5 under one CLI version on Linux. Nothing here generalises to another surface, model or version."
+  ],
+  "supersedes": null,
+  "relation_to_prior_records": "Independent of the 2026-09-06 reviewer-reported pair (attempt-20260906-reported.json), which remains unchanged and still lacks primary evidence. The v1 attempt and the frozen packet bytes are unmodified. This record does not regrade or replace either.",
+  "evidence_file_sha256": {
+    "baseline-result.json": "527dce328c55acf2fe48a6bcad39fd21e983d1bf7b358c0c248ba15fb085fa81",
+    "baseline-result.txt": "c64ec7c5f8d6a02f60efce037c61169d80287c344ced6f43b5a0bfe32f7f0d5a",
+    "candidate-result.json": "3f96a6511df6a1089bb0d0d7f1fcfa8ac745548095302511d361905788c040a0",
+    "candidate-result.txt": "ed2220523705de1dcd8a1f777202047fbe234d77ffd83b0e266f15b35e2c3b14",
+    "grader-prompt.txt": "1004eca5fbe56003425c2f581190fd831f6d16efd70152458938dba3ad482a8c",
+    "grader-result.json": "6354541511e143956ec0c47ac48d946ddad640417972cfcddef09655fa572082",
+    "grader-result.txt": "f4e112fa853da9d5eaf38fd46cb4b96be200af5fb5750e23bd633c1f6c880339",
+    "harness.py": "8854f64c9ef3390327cae337f0df51a14eaa555ba1112ca643ad85d6477d1f74"
+  },
+  "evidence_note": "SHA-256 of the committed evidence bytes. grader-prompt.txt retains the CRLF line endings the frozen rubric contributes; .gitattributes pins this directory with -text so those bytes survive checkout on any platform."
+}
