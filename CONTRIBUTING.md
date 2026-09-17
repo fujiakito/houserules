@@ -34,8 +34,13 @@ type(scope): short description
 - Scope is optional. Write a short imperative description: `fix(installer): preserve user files`.
 - Keep each commit focused on one coherent change. Use the body for the reason and validation.
 - For breaking changes, add `!` before `:` and a `BREAKING CHANGE:` footer explaining migration.
-- Work on a `codex/<topic>` branch and open a PR against `main`. Use squash merge with a
-  compliant PR title; retain any breaking-change footer in the final commit message.
+- Name branches `<type>/<topic>`, reusing the types above, lowercase and kebab-case:
+  `fix/preserve-user-files`, `docs/close-evaluation`. Lead the topic with an issue number
+  when one exists: `fix/123-preserve-user-files`. Open a PR against `main` and use squash
+  merge with a compliant PR title; retain any breaking-change footer in the final commit message.
+- An agent session often opens on a generated placeholder branch such as
+  `claude/amazing-carson-mxs5dr`. Set the name when the session starts, or rename before opening
+  the PR. The branch name is the first summary a reviewer reads; a generated one says nothing.
 - Amend or rewrite published commits only when authorized; use `--force-with-lease` when pushing
   an authorized rewrite.
 
