@@ -1,8 +1,10 @@
 # houserules
 
-**Give your coding agent project rules, optional skills and a repeatable way to verify work.**
-Keep the same task evidence when switching agents. Everything runs locally with Python 3.9+
-and the standard library.
+**Your repository owns its rules and its proof — whichever agent and model turn up.**
+Project instructions every agent reads, executable checks with their limits written down, and task
+evidence that survives a switch. As one agent comes to run several models, what your repository
+states and can check is the part that stays constant. Optional skills are available and are not
+the point. Everything runs locally with Python 3.9+ and the standard library.
 
 ## Install
 
