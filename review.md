@@ -191,3 +191,162 @@ a fresh tree.
 every commit. Finding 1 is fixed at the instrument level rather than only recorded, so the deferral
 decisions in `ENFORCEMENT.md` now rest on a leak-free measurement. Findings 2-5 are corrected in
 place. Two independent runs agree on both the null and the saturation.
+
+---
+
+# Re-review — 2026-09-17
+
+Reviewer, second pass. Fetched `0bde2a6` (two commits: `1b90990` prose corrections + leak recorded,
+`0bde2a6` leak-free re-run). Everything below was re-derived locally rather than read off the
+records.
+
+## The two corrections to the review are accepted
+
+- **`t(9)=2.262 x se=0.1167` gives `[-0.214, +0.314]`.** My `[-0.214, +0.264]` was wrong on the
+  upper bound — I subtracted the margin correctly and then added the wrong one. The wider interval
+  is the one to quote and both forms are now quoted.
+- **`ENFORCEMENT.md` never quoted the interval.** My nit said "quoted bare in two docs"; only
+  `PORTABILITY.md` and `tests/workflows/prior-art/v2/README.md` did. The nit was right about those
+  two and wrong about the third.
+
+## Dispositions verified
+
+| # | Claimed | Verified |
+|---|---|---|
+| 1 | Fixed at the instrument level and re-run | **Confirmed.** See below |
+| 2 | Corrected in three docs + the record's `findings` | **Confirmed** in all four places |
+| 3 | "the 2026-09-06 table in the preceding section" | **Confirmed** |
+| 4 | "a third would not" | **Confirmed** |
+| 5 | Claim withdrawn, row rests on a repository fact | **Confirmed.** No unsourced external claim remains in `ENFORCEMENT.md` |
+
+The reasoning for leaving the source/date audit trigger at 1 of 2 holds. The trigger is worded
+"acted on *before verification*", the incident was verified in session and lost only its citation,
+and firing a trigger on a defect it does not describe would be worse than the wording gap. Recording
+the wording gap for the next revisit is the right disposition.
+
+**Finding 1 — the fix is real, and at the right level.** `run_one` still takes `label`, but it now
+reaches only the stdout/stderr filenames under `OUT`, never `argv` and never `cwd`; the working
+directory is `rng.randbytes(6).hex()`. I reproduced the underlying behaviour again today on CLI
+**2.1.274**: `claude -p --strict-mcp-config --tools ""` in `/tmp/cFz5FGMs/9f2c1ab77e01` returned
+`/tmp/cFz5FGMs/9f2c1ab77e01` verbatim, no tool call. The channel is still open — cwd is in context —
+but it now carries a token, so it cannot carry the arm. That is the correct fix: the leak is closed
+where it was, not papered over in prose.
+
+## Independent re-derivation of the 2026-09-17 record
+
+All green.
+
+- **Gates.** `python check.py` (10/10), `python install.py --check` (no drift),
+  `python -m unittest discover -s tests` (76 tests) — all pass at `0bde2a6`.
+- **Evidence bytes.** 21/21 `evidence_file_sha256` in the new record, 21/21 in the newly added
+  block on `attempt-20260916-replication.json`, and 8/8 in `attempt-20260916-executed.json` —
+  all **50 re-verified after deleting the three evidence directories and forcing a re-checkout**,
+  so the new `.gitattributes` entry pins the bytes as claimed. `harness.sha256` matches its own
+  evidence-block entry.
+- **Prompts.** 20/20 generating `prompt_sha256` equal the frozen `baseline-prompt.md` /
+  `candidate-prompt.md` hashes. 20/20 grader `prompt_sha256` reconstruct byte-exactly from
+  `rubric.md` (CRLF preserved) + the harness's `GRADER_INSTRUCTION` + the committed blind output +
+  `"\n"`. The grader prompt contains the rubric, the instruction and one output — no pair number, no
+  arm, no label.
+- **Scores.** 20/20 `grader_verbatim` blocks parse to exactly the recorded per-check scores, and
+  every recorded `total` equals the sum of its four checks.
+- **Aggregate.** 27/27 figures reproduce from the raw pairs: both means and sds, min/max, the paired
+  mean/sd/SE, both intervals, the 1/7/2 win-tie-loss split, all eight per-check means, and
+  `total_cost_usd` $0.9262 summed over 40 calls. Raw diffs
+  `[0, 0, +0.5, -0.5, 0, -0.5, 0, 0, 0, 0]`.
+- **Blinding and counterbalancing.** Execution order 5/5. `label_mapping` <-> `blind_label` <->
+  committed filename consistent in all 20. 40 unique 12-hex tokens, every recorded
+  `working_directory` ending in its own token. No committed blind output contains `baseline`,
+  `candidate`, `cwd` or a `/tmp/claude` path. 40/40 calls completed, exit 0, one model
+  (`claude-sonnet-5`), zero indeterminate.
+
+The sign flip is not a concern. With seven ties and diffs only ever `0` or `±0.5`, the difference is
+one pair of ±0.5 either way; -0.05 and +0.05 are the same null. The durable result is the one the
+response already identifies: saturation reproduced independently on a different CLI build.
+
+## Findings — second round
+
+### R1. `research/PORTABILITY.md:197` — "Three records exist, all retained unchanged" is now false twice
+
+There are **four** records, and the 2026-09-17 one is not in this enumeration — it first appears
+fifteen lines later, inside the limits paragraph. And they are not all unchanged: `1b90990` added a
+limitation to `attempt-20260916-executed.json`, and added a limitation, rewrote `findings[1]`, added
+a second limitation about the interval and added a 21-entry `evidence_file_sha256` block to
+`attempt-20260916-replication.json`.
+
+The numbers are untouched, which is what matters, and `CONTRIBUTING.md` has no mechanical guard here
+("Append a new dated run; do not edit a recorded one" is convention only — nothing in `check.py` or
+`tests/` hashes the attempt JSONs). Annotating a superseded record with a defect found later is the
+right thing to have done. But then say so rather than claiming the records are unchanged. The same
+overstatement is in the new record's `relation_to_prior_records`: "unchanged apart from the
+limitation recording the leak" omits the rewritten finding, the interval limitation and the evidence
+block.
+
+### R2. `research/PORTABILITY.md:202-204` — the headline figures are the superseded instrument's
+
+The new record says `supersedes_for_interpretation: attempt-20260916-replication.json` and "This run
+is the leak-free instrument and is the one the conclusion should rest on". The **Outcome** paragraph
+— the bolded line a reader stops at — still leads with baseline 3.75, candidate 3.80, difference
++0.05 and both intervals from the run this same document goes on to disclose as leaky. The
+leak-free 3.90 / 3.85 / -0.05 appears two paragraphs down, inside a paragraph about limits.
+
+The conclusion is identical either way, so nothing is wrong on the substance. But `PORTABILITY.md`
+is the canonical summary, and it currently presents as its result the numbers its own record demotes.
+Lead the Outcome with the 2026-09-17 figures and keep the single pair's check-1/check-4
+decomposition where it is, as the history of how the question was closed.
+
+### R3. `research/PORTABILITY.md:211-217` — "Two limits" now introduces three things
+
+The leak is spliced between limit one (saturation) and limit two, so the paragraph promises two and
+delivers three, and "And the trial is one synthetic packet on one model and surface" now reads as an
+orphaned continuation across an intervening link line. Beyond the flow: the leak is not a limit of
+this evidence at all — it is a defect of a superseded instrument, already corrected. It belongs in
+the record paragraph above (with R1's enumeration fix), not in the list of what the current result
+cannot support.
+
+### R4. `attempt-20260917-replication.json:1513,1517` — the record and the prose quote different intervals
+
+The record has `ci_95_normal_z: [-0.2258, 0.1258]` and `ci_95_student_t9: [-0.2529, 0.1529]`.
+`tests/workflows/prior-art/v2/README.md:109-110`, the response above and both commit messages quote
+`[-0.2259, +0.1259]` and `[-0.2530, +0.1530]`.
+
+The prose is right. The record multiplied the **rounded** SE (`0.0897`) instead of the exact one
+(`0.0897526...`): `1.96 x 0.0897 = 0.175812` against an exact `0.175915`. Exact values are
+`[-0.225915, +0.125915]` and `[-0.253021, +0.153021]`. Immaterial to every conclusion — but this
+repository's whole claim is that its recorded numbers reproduce, and these two are the only figures
+in the new record that do not reproduce exactly from the raw pairs. Fix the record (the prose is
+already correct), or state in `evidence_note` that the intervals are computed from the rounded SE.
+The 2026-09-16 record does not have this artifact: its SE rounds to `0.1167` closely enough that
+both forms agree to four places.
+
+## Not findings, recorded so the next reader does not re-derive them
+
+- **Blind labels are not counterbalanced.** `label_mapping['A']` is candidate in 6 of 10 pairs — in
+  both replications — because execution order is counterbalanced deliberately (`i % 2`) while the
+  A/B label is a per-pair `rng.shuffle`. Harmless: under isolated grading the label never enters a
+  grader prompt (verified above — the prompt is rubric + instruction + one output), so it names a
+  file and nothing else. Worth one clause in the record so "counterbalanced" is not read as covering
+  the labels.
+- **The calls are not context-free, only arm-free.** Every working directory sits under
+  `/tmp/claude-.../-home-user-houserules/<uuid>/scratchpad/repl2/cwd/<token>`, so each generating
+  call still receives a path naming the repository and the run. Identical across both arms, so it
+  cannot bias a paired comparison, and `configuration.context_isolation` is careful to claim only
+  that project files and *the directory name* are uninformative — which is now true. Flagged only
+  so a future absolute-isolation claim uses a neutral parent.
+- `run_one` raising on a non-empty cwd is deliberate and correct; agreed, not a finding.
+- The two-blank-line gap before `## Leak-free replication — 2026-09-17` matches the existing
+  convention in that file (lines 38, 52, 69), so it is right as written.
+- The CLI 2.1.273 -> 2.1.274 difference between the runs is disclosed in the record, in
+  `tests/workflows/prior-art/v2/README.md` and in the response. Correctly handled; it is why
+  "saturation reproduced on a different build" is the stronger of the two results rather than a
+  weaker one.
+
+## Verdict — second pass
+
+Finding 1 is properly fixed: instrument corrected, trial re-run in full, superseded record annotated
+rather than rewritten, and the null survives on a leak-free measurement. Findings 2-5 are correctly
+applied and finding 5 is withdrawn for the right reason. Nothing in the measurement, the evidence or
+the arithmetic fails independent re-derivation.
+
+R1-R3 are all in one paragraph block of `research/PORTABILITY.md` and are prose; R4 is two array
+literals in the new record. None of them touches a conclusion. **No blocker remains.**
