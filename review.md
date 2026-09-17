@@ -565,3 +565,101 @@ both 2026-09-16 records are byte-identical to it. 23/23 evidence hashes verify.
 Across three rounds, no measured value has changed in any record, every defect found was in a
 derivation or a description, and the two that reached the instrument — the working-directory leak and
 the uncommitted aggregation step — are both closed in code.
+
+---
+
+# Re-review — fourth pass, 2026-09-17
+
+Reviewer. Fetched `fa19186`.
+
+## Dispositions
+
+| # | Claimed | Verified |
+|---|---|---|
+| R5 | `relation_to_prior_records` states what was done | **Confirmed.** All four edits it now names are the four I found in `1b90990`, and "unmerged work from this branch" is the right framing |
+| R6 | Producer and input committed; derivation reproducible | **Confirmed end to end** — see below |
+
+**R6 is fixed at the level it names.** `python aggregate.py bundle.json` emits a block equal to the
+record's `aggregate` under deep equality, under canonical JSON, and in key order — not merely
+field-for-field. The chain from raw execution to published figure is now closed, and I checked every
+link rather than the endpoints:
+
+- 20/20 `grading.scores` in the bundle equal the record's `scores`.
+- 40/40 `prompt_sha256` recompute from the bundle's **own `argv[2]`** — the prompts are embedded, so
+  the digests no longer depend on a reconstruction.
+- 20/20 grader prompts in the bundle end with the committed blind output for that call.
+- 20/20 bundle arm outputs are byte-identical to the committed `blind/pNN-output-X.txt`.
+- 20/20 bundle grader outputs are byte-identical to the record's `grader_verbatim`.
+- 20/20 `working_directory` values match the record and end in their own `cwd_token`.
+- `surface_version` and `input_hashes_measured` match the record.
+- The bundle carries the harness-written shape (`pair`, `execution_order`, `label_mapping`, `arms`,
+  `grading`), which is what makes it credible as harness output rather than a back-formed artifact.
+
+**52/52 evidence hashes** across the three records (23 + 21 + 8) re-verify after deleting the
+evidence directories and forcing a re-checkout; the `-text` pin covers `aggregate.py` and
+`bundle.json` as it does the rest. `python check.py`, `python install.py --check` and
+`python -m unittest discover -s tests` pass at `fa19186`. **Nothing measured moved again**: the
+2026-09-17 `pairs` and `aggregate` are identical to `841d9b1`, and both 2026-09-16 records are
+byte-identical to it.
+
+The `derivation` field is the right shape — producer, input, reproduce command, and the withdrawal of
+the `harness.py` attribution stated in the artifact rather than only in this file.
+
+## Findings — fourth round
+
+### R7. `attempt-20260917-replication.json` limitation 5 is now stale — the record undersells its own evidence
+
+> "Full argv is recorded as a template plus per-call prompt digests rather than 40 embedded copies."
+
+That was true at `0bde2a6`. It is not true at `fa19186`: committing `bundle.json` embedded all 40
+`argv` arrays with their prompt text inline, which is exactly why I could recompute all 40 digests
+from the bundle alone this round. `configuration.argv_note` has the same drift — "Each call's prompt
+is identified by `prompt_sha256`" is now the weaker of two available statements, since each call's
+prompt is *present*.
+
+The fix that closed R6 retired this limitation and nobody told the limitation. Low severity, and the
+direction is harmless — a record claiming less evidence than it has — but a limitation that no longer
+applies is noise in the next consumer's risk assessment, and this branch has spent four rounds on
+exactly that class of drift.
+
+### R8. `aggregate.py:24` — the t critical value is hardcoded while n is derived from the data
+
+`T9_95 = 2.262` is the two-sided 95% value for df=9. `n_pairs` is computed from the input
+(`len(diffs)`), and `harness.py:42` reads `N_PAIRS = int(os.environ.get("N_PAIRS", "10"))`, so a
+bundle with a different pair count is an expected input, not a hypothetical.
+
+Demonstrated on the committed bundle truncated to its first six pairs:
+
+```
+n_pairs=6  key=ci_95_student_t9  interval=[-0.4309, +0.2642]
+implied critical value = 2.261   (df=5 requires 2.571)
+correct t(5) interval would be [-0.4785, +0.3119]
+```
+
+The output is both wrong and mislabeled, silently, with no warning — the key still reads `t9`. `Z_95`
+is fine, since the normal critical value does not depend on n.
+
+**Nothing in any committed record is affected.** This run is n=10, and its interval is right; I
+verified it again this round to four places. But R6's whole point was that this producer stops being
+a one-off transcript and becomes code that gets re-run, and the first thing it will be re-run on is a
+trial with a different N. Cheapest fix: derive df from `len(diffs) - 1`, carry a small df→critical
+table (or assert `len(diffs) == 10`), and name the key from the actual df rather than hardcoding
+`t9`.
+
+Two smaller instances of the same pattern in the same function, worth folding into that fix:
+
+- `interval_note` interpolates the SE dynamically but keeps "shifts the bounds by 1e-4" as a fixed
+  literal, so it will assert 1e-4 for any dataset. (For this one it is right: I measure 9.3e-5.)
+- `indeterminate_calls` increments once per arm whose output went ungraded, but there are two calls
+  per arm, so the name overstates by up to 2x. Zero in this run, so no recorded figure is affected.
+
+## Verdict — fourth pass
+
+R5 and R6 are both properly closed, R6 in code with its input committed beside it. The evidence chain
+for the 2026-09-17 run is now the strongest thing on this branch: execution, raw bundle, derivation
+and published figures are each independently checkable from committed bytes, and all of them agree.
+
+R7 is one stale sentence. R8 is a latent defect in newly committed code that cannot affect any
+figure recorded here. **No blocker, and none of the previous rounds' findings has reopened.** Four
+rounds in, no measured value has changed in any record — every defect found has been in a
+description, a derivation or the instrument, which is the right place for them to be found.
