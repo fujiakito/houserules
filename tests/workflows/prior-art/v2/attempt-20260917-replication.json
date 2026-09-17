@@ -1561,9 +1561,9 @@
     "Token counts and costs are the CLI's own reported figures; they are not a billing measurement.",
     "All calls ran on claude-sonnet-5 under CLI 2.1.274 on Linux. Nothing generalises to another surface, model or version, and the CLI build differs from the 2026-09-16 runs."
   ],
-  "relation_to_prior_records": "Additive. The frozen packet bytes, the v1 attempt, the 2026-09-06 reviewer-reported pair and both 2026-09-16 records are unchanged apart from the limitation recording the leak. This run does not regrade any of them.",
+  "relation_to_prior_records": "Additive in its measurements; the frozen packet bytes, the v1 attempt and the 2026-09-06 reviewer-reported pair are untouched, and no prior run is regraded. The two 2026-09-16 records keep every measured value exactly as recorded but were annotated afterwards on this same branch: both gained a limitation describing the working-directory leak, and attempt-20260916-replication.json additionally had its second finding corrected (the single pair's one-point gap decomposes into a grading artefact on check 1 and within-arm variation on check 4, not one cause), gained a limitation about the normal-vs-t interval, and gained a 21-entry evidence_file_sha256 block. Those records are unmerged work from this branch, not frozen earlier runs.",
   "evidence_file_sha256": {
-    "harness.py": "f452eff0efe258906ee0cdb96af6aaf1ecb9281e3da19feaa93cfd7092920441",
+    "aggregate.py": "85c1fca1829770bb73352da7830a1760d01cb4a2b1b24972f61f51e30b899328",
     "blind/p01-output-A.txt": "c7c7199f3881898711b32a1f06a3c232f30371c077ec97571867d6017930bb5d",
     "blind/p01-output-B.txt": "21099eabadbcfe0bfbbfdd9c52df1d78e19f4e73989d9308fa0ee889a3d3a047",
     "blind/p02-output-A.txt": "2d182a0c053fda770395c8f77fc7c034562e9b2e2170b42849945162cb2a3d66",
@@ -1583,6 +1583,15 @@
     "blind/p09-output-A.txt": "3fd1454c9f128d6bd39ee7d38162b32da5b574448013be6f68a902ac173f34d8",
     "blind/p09-output-B.txt": "4caa2a636ad09a8ae012ad8429667a61a2fc1c60d0a07e2620c4a1dc120c664a",
     "blind/p10-output-A.txt": "3957bc45d2144e320c7aa4ad99772ad4eca29540eaa7b8175dea0afe2a506547",
-    "blind/p10-output-B.txt": "0cf3f2e86fdf2b8ff4baef0e28adfaaa923d1342d40593ecf210d2e057b943ab"
-  }
+    "blind/p10-output-B.txt": "0cf3f2e86fdf2b8ff4baef0e28adfaaa923d1342d40593ecf210d2e057b943ab",
+    "bundle.json": "1e59be82b7cb036adda8a785af1874675599534c6793f3b4a2a1da2df2cc0976",
+    "harness.py": "f452eff0efe258906ee0cdb96af6aaf1ecb9281e3da19feaa93cfd7092920441"
+  },
+  "derivation": {
+    "aggregate_producer": "attempt-20260917-replication-outputs/aggregate.py",
+    "aggregate_input": "attempt-20260917-replication-outputs/bundle.json",
+    "reproduce": "python attempt-20260917-replication-outputs/aggregate.py attempt-20260917-replication-outputs/bundle.json  # output equals this record's `aggregate`",
+    "note": "harness.py executes the trial and writes bundle.json; it computes no statistics. The aggregate block was originally derived by an uncommitted step, which is how a rounding defect reached this record: that step rounded sd before deriving the standard error and then multiplied the rounded SE, shifting both interval bounds by about 9.3e-5. An earlier description of this record blamed a helper inside harness.py; that is withdrawn, since harness.py contains no such code. The producer is now committed alongside its input and recorded in evidence_file_sha256, so the derivation is reproducible and not merely recomputable."
+  },
+  "evidence_note": "SHA-256 of the committed evidence bytes, now including the aggregation producer and its input. Each grader prompt is additionally reconstructible as frozen rubric.md + the harness's fixed isolated-grading instruction + the committed blind output, and every grader_call.prompt_sha256 matches that reconstruction. The 2026-09-16 records share the uncommitted-derivation property described in `derivation`; they are superseded and were not re-derived."
 }

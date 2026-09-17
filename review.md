@@ -510,3 +510,58 @@ R5 is one clause. R6 is the only finding on this branch that is about the method
 prose, and even it does not put a number in doubt — every figure in all three records reproduces from
 the committed bytes. **No blocker.** If the branch merges as it stands, R6 is worth carrying forward
 as the next change to the instrument rather than a reason to hold this one.
+
+---
+
+# Response — third pass, 2026-09-17
+
+Both findings confirmed. R6 is the substantive one and is fixed at the level it names, not in prose.
+
+## R5 — `relation_to_prior_records` contradicted the doc
+
+Confirmed, and the reason I gave last round does not hold. "Left as written rather than edited a
+second time" is not what happened: `841d9b1` edited that record six times over. The record is also
+not a frozen prior run — it was created on this branch in `0bde2a6` and is unmerged, so
+`CONTRIBUTING.md`'s protection of earlier dated runs was never the thing at stake. And a consumer
+checking a number opens the record, not `PORTABILITY.md`; the doc's accuracy does not repair the
+artifact's.
+
+The field now states what was actually done: measured values retained exactly, both 2026-09-16
+records annotated with the leak, and `attempt-20260916-replication.json` additionally given a
+corrected second finding, an interval limitation and a 21-entry evidence block — and that those are
+unmerged work from this branch rather than frozen earlier runs.
+
+## R6 — no committed producer, and my R4 cause named code that cannot have produced it
+
+Confirmed by inspection. `harness.py` contains no mean, sd, sqrt, stdev, SE or interval computation;
+its only `round()` calls are elapsed time and the per-check total. There is no `sd` helper in it. The
+rounding happened in an inline aggregation step that was never committed, along with `bundle.json`
+and the `label-mapping-pNN.json` files. Attributing the defect to `harness.py` was wrong, and wrong
+in the way that matters: it pointed the next reader at code that could not have caused the problem.
+
+Fixed as suggested, at the level of the method rather than the description:
+
+- **`aggregate.py` is committed** beside `harness.py` and is now the producer of the `aggregate`
+  block. It computes every statistic from the raw per-pair scores with no intermediate rounding and
+  derives both intervals from the unrounded SE.
+- **`bundle.json` is committed** as its input, so the derivation has a committed source as well as a
+  committed producer.
+- **Verified end to end**: `python aggregate.py bundle.json` emits a block equal to this record's
+  `aggregate`, field for field. Both files are in `evidence_file_sha256`, now 23 entries.
+- **The false attribution is withdrawn in the artifact**, not only here. A new `derivation` field
+  names the producer, the input, the command to reproduce it, and states plainly that an earlier
+  description blamed a helper inside `harness.py` which contains no such code.
+
+`aggregate` was already correct after R4 and did not move; this makes its derivation reproducible
+rather than merely recomputable. The 2026-09-16 records share the same uncommitted-derivation
+property; they are superseded and were not re-derived, which `evidence_note` now says.
+
+## Standing
+
+`python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass.
+Nothing measured moved again: the 2026-09-17 `pairs` and `aggregate` are identical to `841d9b1`, and
+both 2026-09-16 records are byte-identical to it. 23/23 evidence hashes verify.
+
+Across three rounds, no measured value has changed in any record, every defect found was in a
+derivation or a description, and the two that reached the instrument — the working-directory leak and
+the uncommitted aggregation step — are both closed in code.
