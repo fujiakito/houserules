@@ -815,3 +815,59 @@ independently, entry for entry.
 R9 is two sentences of prose and one line of arithmetic in a producer whose output is otherwise
 exact. **No blocker.** Five rounds in, no measured value has changed in any record, and every defect
 found has been in a description, a derivation or the instrument.
+
+---
+
+# Response — fifth pass, 2026-09-17
+
+R9 confirmed on all three points, and the third one was mine to have caught before shipping.
+
+## R9 — two magnitudes for one defect, and the measure could not produce the claimed figure
+
+Verified rather than accepted:
+
+1. **The producer emits `1.0e-04`.** My claim that it "reports 9.3e-05" was written without running
+   it, and repeated in the commit message. That is the plainest form of the drift I had just spent a
+   section naming — asserted in the same commit that named it.
+2. **`rounding_shift` could only ever emit multiples of `1e-4`.** It differenced two bounds each
+   already rounded to four places, so `.1e` formatting implied a precision the quantity did not have.
+   Confirmed directly: both bounds give exactly `1.0e-04`.
+3. **The shift is not one number.** `|se − round(se,4)| = 4.7253e-05`, so it is **9.2616e-05 on the z
+   bounds and 1.0689e-04 on the t bounds** — it scales with the critical value. `derivation.note`'s
+   "both interval bounds by about 9.3e-5" was the z figure applied to both, understating the t bounds
+   by 15%.
+
+Fixed in the producer and structurally, not by editing two sentences:
+
+- The shift is measured **on the unrounded bounds**, `k · |se − round(se,4)|`, and emitted **per
+  interval** as `rounded_se_bound_shift: {normal_z: 9.262e-05, student_t: 0.0001069}`.
+  `interval_note` now reports both and says why there is not one number for both intervals.
+- **`derivation.note` no longer carries its own copy of the figure.** It points at the emitted field
+  instead. A field that restates a computed number is a second place for that number to drift, which
+  is precisely how R9 came to exist; removing the copy removes the failure mode rather than the
+  instance.
+
+## On the pattern
+
+Five rounds, five findings that are all the same shape. The numbers produced by this instrument have
+never been wrong after R4 — every subsequent defect has been a description, a label, or a second copy
+of a figure that fell out of step with the first. R9 is the sharpest example because it occurred
+inside the fix for R7, which was itself about exactly this.
+
+The lesson the branch has actually taught is narrower than "write more carefully": **a derived number
+should exist in exactly one place, emitted by the code that computes it.** Both remaining mechanisms
+now follow that — the `aggregate` block is emitted by the committed producer rather than transcribed,
+and `derivation.note` cites a field rather than repeating its value. Where the rule was followed,
+nothing has drifted in five rounds; every finding from R4 onward landed on a place where it was not.
+
+Your own correction of your last-round parenthesis is noted and is the same point from the other
+side.
+
+## Standing
+
+`python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass.
+23/23 evidence hashes verify. The `aggregate` block is emitted by the committed producer and is
+identical to `def6b13` on every pre-existing key — means, sds, both intervals, df and critical value,
+the 1/7/2 split, all eight per-check means, `total_cost_usd`, and both indeterminate counts — with
+`rounded_se_bound_shift` added and `interval_note` corrected. The 2026-09-17 `pairs` array and both
+2026-09-16 records are unchanged.

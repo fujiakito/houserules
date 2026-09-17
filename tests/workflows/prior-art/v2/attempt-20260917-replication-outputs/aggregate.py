@@ -90,9 +90,13 @@ def aggregate(bundle: dict) -> dict:
     df = len(diffs) - 1
     t_crit = t_critical_95(df)
     t_key = "ci_95_student_t%d" % df
-    # The cost of the defect this producer was committed to fix, measured rather than asserted.
-    rounding_shift = max(abs(round(mean - k * se, 4) - round(mean - k * round(se, 4), 4))
-                         for k in (Z_95, t_crit))
+    # The cost of the defect this producer was committed to fix, measured on the UNROUNDED bounds.
+    # Differencing two bounds that are each already rounded to four places can only ever yield a
+    # multiple of 1e-4, which hides the real size; the shift also differs per interval because it
+    # scales with the critical value.
+    se_display_error = abs(se - round(se, 4))
+    shift_z = Z_95 * se_display_error
+    shift_t = t_crit * se_display_error
 
     return {
         "n_pairs": len(diffs),
@@ -113,12 +117,17 @@ def aggregate(bundle: dict) -> dict:
             "pairs_candidate_higher": sum(1 for d in diffs if d > 0),
             "pairs_tied": sum(1 for d in diffs if d == 0),
             "pairs_baseline_higher": sum(1 for d in diffs if d < 0),
+            "rounded_se_bound_shift": {"normal_z": float("%.4g" % shift_z),
+                                       "student_t": float("%.4g" % shift_t)},
             "interval_note": ("Both intervals are computed from the unrounded standard error "
                               f"({se:.9f}); the displayed sd and standard_error are that same "
                               "quantity rounded for reading. Multiplying the rounded SE instead "
-                              f"would shift a bound by up to {rounding_shift:.1e}. The t critical "
-                              f"value {t_crit} is the two-sided 95% value for df={df}, derived from "
-                              "this input rather than fixed."),
+                              f"would move a z bound by {shift_z:.4g} and a t bound by {shift_t:.4g} "
+                              "— the shift scales with the critical value, so it is not one number "
+                              "for both intervals. These are measured on the unrounded bounds; "
+                              "differencing the rounded bounds would only ever report a multiple of "
+                              f"1e-4. The t critical value {t_crit} is the two-sided 95% value for "
+                              f"df={df}, derived from this input rather than fixed."),
         },
         "per_check_mean": {k: {arm: round(sum(per_check[arm][k]) / len(per_check[arm][k]), 4)
                                for arm in ("baseline", "candidate")} for k in CHECKS},
