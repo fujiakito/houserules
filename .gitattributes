@@ -18,3 +18,7 @@ tests/workflows/prior-art/v2/attempt-20260916-outputs/** -text whitespace=blank-
 # Replication evidence: preserve exact bytes of graded outputs and harness.
 # Recorded by SHA-256 in the attempt record.
 tests/workflows/prior-art/v2/attempt-20260916-replication-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Leak-free replication evidence: preserve exact bytes of graded outputs and harness.
+# Recorded by SHA-256 in the attempt record.
+tests/workflows/prior-art/v2/attempt-20260917-replication-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol

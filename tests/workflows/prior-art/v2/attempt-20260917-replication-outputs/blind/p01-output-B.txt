@@ -1,0 +1,16 @@
+**Disposition:** F-1 remains open. S2's AC-1 text now covers whitespace-only rejection, which addresses F-1 on paper, but V-1's "pass" verdict is unsubstantiated — the linked evidence/whitespace.txt is confirmed missing from this packet transfer, and no alternate verification artifact (test output, log, digest) accompanied the claim. R-1's pass verdict applies only to S1 and must not be carried forward to S2, since AC-1's acceptance condition changed between revisions. No implementation is in scope per S2, so this is a pure documentation/spec review.
+
+**Next action / owner:** Verification evidence for V-1 must be re-supplied or re-executed and transferred into the packet before F-1 can be closed. This falls outside next-reviewer's scope (document review and proposing updates only); it belongs to whoever owns the verification step (the fix author or a verifier role), and closure additionally requires project-owner approval for release, which is currently absent.
+
+**Evidence gaps:**
+- evidence/whitespace.txt missing from transfer manifest
+- No command output, test log, or other verification proof included
+- No committed identity (commit/blob ref or content digest) recorded for spec.md S2 itself
+
+**Proposed updates (append-only, no overwrite of prior verdicts):**
+- Append a new verification event: "V-1 evidence unverifiable at handoff — evidence/whitespace.txt absent from transfer; verification claim cannot be confirmed."
+- Leave F-1 status as open/unresolved pending evidence.
+- Do not extend R-1's S1 pass to S2.
+- Flag release as blocked on both (a) verification evidence and (b) project-owner approval.
+
+Carry this unresolved evidence gap to the next consumer unchanged.

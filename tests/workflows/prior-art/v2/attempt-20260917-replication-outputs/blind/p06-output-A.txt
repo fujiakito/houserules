@@ -1,0 +1,12 @@
+**Disposition:** F-1 remains unresolved (open), not closed. S2 correctly amends AC-1 to cover whitespace-only input, so the *spec-level* gap is addressed on paper. However, V-1's pass verdict cannot be accepted: its sole cited evidence, evidence/whitespace.txt, is confirmed missing per the packet transfer manifest, and no alternate command output or evidence artifact was transferred. R-1's historical pass applies only to S1 and does not extend to S2 — it must not be treated as covering the amended AC-1.
+
+**Evidence gap:** No verifiable evidence supports V-1's claimed pass for S2. This is a named blocker, not something to infer or backfill.
+
+**Next action / owner:** next-reviewer (current owner) should record F-1 as "fix proposed, verification unsubstantiated" and request re-transfer or re-generation of evidence/whitespace.txt (or equivalent verification output) from whoever holds V-1's original evidence. Release/closure requires project-owner approval, which is currently absent regardless of evidence status — so even if evidence arrives, closure is not this session's call.
+
+**Proposed finding/history updates (append-only, do not rewrite prior verdicts):**
+- Append a new finding-status event to F-1: "S2 fix proposed; verification V-1 evidence missing per transfer manifest; disposition = unresolved pending evidence."
+- Append a review note (not a new R-round pass) stating S2 AC-1 text change is confirmed adequate on its face, but V-1's pass verdict is unsubstantiated and should not be relied upon until evidence/whitespace.txt or equivalent is supplied.
+- Leave R-1's S1 pass verdict untouched — it is historical and out of scope for S2.
+
+**Handoff to next consumer:** carry forward the missing-evidence blocker and the requirement for project-owner approval before any release/closure action.

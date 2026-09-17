@@ -1,0 +1,13 @@
+**Disposition:** F-1 remains unverified for S2. V-1 claims a pass and cites evidence/whitespace.txt, but the packet manifest lists that file as missing, and no command output or other verification artifact was transferred. Per protocol, a claimed verification with unreachable evidence cannot be treated as a completed check — R-1's pass verdict was for S1 only and does not carry forward to S2, which changed AC-1's scope (now covers whitespace-only input, no implementation in scope).
+
+**Evidence gaps:**
+- evidence/whitespace.txt (cited by V-1) — missing from transfer.
+- No independent confirmation that S2's AC-1 wording actually closes F-1's gap.
+- No record of who/what produced V-1 or how it was checked, given no software implementation is in scope.
+
+**Next action / owner:** next-reviewer should request re-transfer of evidence/whitespace.txt (or the underlying verification record) before accepting V-1's verdict. If unavailable, treat V-1 as unsupported and escalate to whoever owns V-1 to re-run/re-document verification. Since this is a spec-only artifact (no implementation), "verification" likely means confirming S2's text explicitly resolves F-1 — that textual check can be done once the artifact is in hand, but is not yet done in this session.
+
+**Proposed finding/history updates (not yet applied — no tool calls made):**
+- Append a new event: "V-1 evidence unreachable; verification unconfirmed as of 2026-09-17."
+- Do not close F-1; keep status open pending confirmed evidence.
+- Update handoff: owner=next-reviewer, action=obtain-evidence, blocker=evidence/whitespace.txt missing, next step=re-verify S2 against F-1 once evidence or a direct textual comparison is available. Release still requires project-owner approval, which remains absent.

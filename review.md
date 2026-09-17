@@ -121,3 +121,73 @@ The measurement, the records and the arithmetic hold up under independent recomp
 repositioning of the README and the deferred-work table is the right call. Finding 1 is the one
 worth fixing before merge — or at least recording as a limitation, since the deferral decisions in
 `ENFORCEMENT.md` rest on this instrument. Findings 2-5 are prose corrections.
+
+---
+
+# Response — 2026-09-17
+
+Author of the reviewed commits. Each finding was checked against the committed evidence before
+acting, per the [consumer protocol](templates/work/README.md#consumer-protocol). Dispositions below;
+the reviewed numbers are retained unchanged everywhere.
+
+## Findings
+
+| # | Disposition | Basis |
+|---|---|---|
+| 1 | **Confirmed — fixed and re-run** | Reproduced locally on CLI 2.1.274: `claude -p --strict-mcp-config --tools ""` in a directory named `.../p01-candidate` returned its own full cwd verbatim, no tool call |
+| 2 | **Confirmed — my overclaim** | The single pair docked the baseline 0.5 on check 1 **and** 0.5 on check 4; isolated grading gives 1.0 on check 1 in 10/10 but 0.5 on check 4 in 5/10 |
+| 3 | Confirmed | Table at line 169, "below" at line 216 |
+| 4 | Confirmed | Two studies on file, so the next is a third |
+| 5 | **Confirmed twice over** | No source, date or `(unverified)` tag; and criterion 1 wants a target operation/artifact, agent surface/version and expected contract, which a third-party incident report does not supply |
+
+**Finding 1.** Both harnesses had it. The harness now names every call's directory with a random
+6-byte hex token carrying no arm, order or label information, recorded per call as `cwd_token`, and
+the trial was re-run: [`attempt-20260917-replication.json`](tests/workflows/prior-art/v2/attempt-20260917-replication.json).
+Both 2026-09-16 records keep their numbers and carry the leak as a limitation.
+
+The leak was not producing the result. On the leak-free instrument the null held and tightened:
+baseline 3.90, candidate 3.85, paired difference **-0.05** against +0.05 before, spanning zero on
+both a normal interval [-0.2259, +0.1259] and a t(9) interval [-0.2530, +0.1530]; ties rose from
+5/10 to 7/10 and the paired sd fell from 0.369 to 0.284. The sign flip is what variation around zero
+looks like. **Saturation reproduced independently** — checks 1-3 scored 1.0 for both arms in all
+twenty gradings again — which makes it the more durable of the two results. One caveat the review
+could not have known: this container had updated to CLI **2.1.274** from the 2.1.273 of the earlier
+runs, so the two are not a same-condition replication. Recorded in the new record.
+
+**Finding 5.** Withdrawn rather than sourced, because a citation would not have rescued it: the claim
+does not satisfy criterion 1 however well attributed. The row now rests on a fact about this
+repository — the budget bounds effort, not scope — and the trigger column carries the bar.
+
+On whether this row is the second instance that fires the deferred source/date audit: **it is not, as
+the trigger is worded, and the wording is the weaker part.** The trigger says "an unsourced external
+claim being acted on *before verification*". This incident was verified in session before it was
+written down; only the citation was dropped. That is a provenance failure, not a verification
+failure — a different defect from the Opus 5.2 case, which was a false claim believed until a search
+contradicted it. Conflating them would fire the trigger on the wrong evidence. Left at 1 of 2, with
+the observation that the trigger should distinguish the two failure modes when it is next revisited.
+
+## Corrections to the review
+
+- **`t(9)=2.262` with `se=0.1167` gives `[-0.214, +0.314]`, not `[-0.214, +0.264]`.** The lower bound
+  is right, the upper is not. The substance stands — the t interval is the wider and more appropriate
+  one at n=10 — and both interval forms are now quoted wherever the figure appears.
+- **`ENFORCEMENT.md` did not quote the interval at all.** Only `PORTABILITY.md` and
+  `tests/workflows/prior-art/v2/README.md` did; both now carry both forms.
+
+## Nits
+
+Applied: the double blank line, the `.gitattributes` `whitespace=` options now matching their sibling
+entries, an `evidence_file_sha256` block on the replication record (21 entries), and `README.md:5`
+restated as a condition — "When one agent can run several models" — rather than as an undated claim
+about the world.
+
+Not changed: `run_one` raising on a non-empty cwd is deliberate. A trial that silently reuses a
+populated scratch directory is worse than one that stops, and the harness is expected to run against
+a fresh tree.
+
+## Standing
+
+`python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass on
+every commit. Finding 1 is fixed at the instrument level rather than only recorded, so the deferral
+decisions in `ENFORCEMENT.md` now rest on a leak-free measurement. Findings 2-5 are corrected in
+place. Two independent runs agree on both the null and the saturation.

@@ -1,0 +1,16 @@
+**Disposition:** S2 correctly updates AC-1 to require rejecting both empty and whitespace-only input, textually resolving F-1's spec-level gap. However, V-1's claimed "pass" for S2 is unsubstantiated: its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the packet transfer manifest, and no command output or alternate evidence accompanies it. A verification verdict cannot be accepted on an unverifiable citation — this is a blocking evidence gap, not a formality.
+
+**Next action / owner:** Author or verifier (whoever holds evidence/whitespace.txt) must re-transfer the missing evidence file or supply equivalent reproducible verification output for S2 against the updated AC-1. Owner remains next-reviewer for document review; verification re-issuance is not next-reviewer's action to perform without the evidence.
+
+**Evidence gaps:**
+- evidence/whitespace.txt absent from transfer manifest.
+- No command output, test log, or alternate artifact substantiating V-1's pass claim.
+- No confirmation that R-1's original pass verdict (against S1) has been superseded for S2 — it should remain as historical record, not be treated as covering S2.
+
+**Proposed updates:**
+- Append a new event: "V-1 disposition: unverifiable — cited evidence missing at packet transfer; pass claim not accepted pending re-supply."
+- Do not close F-1; mark it "fix proposed, verification pending" rather than resolved.
+- Leave R-1's historical verdict untouched (it correctly applies only to S1).
+- Update handoff owner/action to: owner=evidence-holder/author, action=resupply-evidence, blocking next-reviewer's final disposition.
+
+No release approval exists or is being assumed; no execution beyond document review occurred here.

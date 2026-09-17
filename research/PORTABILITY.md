@@ -210,9 +210,11 @@ the treatment.
 
 Two limits keep this from being evidence of equivalence. The rubric is saturated — checks 1-3 scored
 1.0 for both arms in all twenty gradings — so the instrument cannot resolve a small effect in either
-direction. The instrument also had a generation-side leak — each arm ran in a directory named after
-its own arm, and the headless CLI places the working directory in the model's context — corrected and
-re-run on 2026-09-17; see the [replication record](../tests/workflows/prior-art/v2/attempt-20260916-replication.json).
+direction. Review also found a generation-side leak — each arm ran in a directory named after its own
+arm, and the headless CLI places the working directory in the model's context. Corrected and re-run on
+a leak-free instrument, the null held and tightened: paired difference -0.05, seven of ten pairs tied,
+and saturation reproduced. See the
+[2026-09-17 record](../tests/workflows/prior-art/v2/attempt-20260917-replication.json).
 And the trial is one synthetic packet on one model and surface; criterion 5 still wants
 representative tasks and fresh-session consumption. Rebuilding the instrument is deferred with a
 stated trigger; see [ENFORCEMENT](../docs/ENFORCEMENT.md#deferred-checks-and-their-triggers).

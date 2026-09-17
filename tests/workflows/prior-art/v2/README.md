@@ -92,3 +92,23 @@ effectively one discriminating check, and that check is noise-dominated, so this
 detect a small effect in either direction. A scenario with headroom is required before any
 comparison here can support a promotion decision. The 2026-09-06 reviewer-reported attempt, the
 2026-09-16 executed pair, the v1 record and the frozen packet bytes are unchanged.
+
+
+## Leak-free replication — 2026-09-17
+
+Review found a generation-side defect in both 2026-09-16 harnesses: each arm ran in a directory named
+after its own arm, and the headless CLI places the working directory in the model's context. Verified
+on CLI 2.1.274 — a `-p` call with no tools returns its own cwd verbatim — so every generating call
+could read a word naming its arm. Grader blinding was never affected.
+
+The harness now names every call's directory with an opaque random token and the trial was re-run.
+The [2026-09-17 record](attempt-20260917-replication.json) carries the correction, the per-call
+tokens and the full evidence; the 2026-09-16 numbers stand as recorded, with the leak noted.
+
+**The conclusion survives and tightens.** Baseline mean 3.90, candidate 3.85, paired difference
+**-0.05**, spanning zero on both a normal interval [-0.2259, +0.1259] and a t(9) interval
+[-0.2530, +0.1530]. Seven pairs tied, two favoured the baseline, one the candidate. The difference
+changed sign and the paired sd fell from 0.369 to 0.284, so the leak was not producing the earlier
+result. **Saturation reproduced independently**: checks 1-3 again scored 1.0 for both arms in all
+twenty gradings. Note the CLI build differs (2.1.273 then, 2.1.274 now), so this is not a
+same-condition replication.

@@ -1,0 +1,11 @@
+**Disposition:** S2 textually resolves F-1 (whitespace-only rejection now specified in AC-1), but this is unverified. V-1 claims a pass, but its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the transfer manifest, and no command output or alternate evidence accompanied it. R-1's pass verdict applies to S1 only and cannot be carried forward to S2, since AC-1's scope changed. No implementation is in scope, so V-1's claimed verification target (behavior against spec) is also unclear — it's not stated whether V-1 was a document-level check or a test-execution claim, which itself is a gap.
+
+**Next action / owner:** next-reviewer must request the missing evidence/whitespace.txt (or a redone verification) from whoever produced V-1 before treating F-1 as closed. Until that artifact is retrieved and inspected, V-1's "pass" claim should be treated as unsubstantiated, not disproven.
+
+**Evidence gaps:** (1) evidence/whitespace.txt missing from packet; (2) no command output, log, or independent confirmation for V-1; (3) no record of what V-1 actually checked (spec text vs. behavior) given no implementation is in scope.
+
+**Proposed updates:**
+- Append a new finding event (not a rewrite): F-1 status = "fix proposed (S2), verification unconfirmed — evidence missing."
+- Append V-1 annotation noting evidence non-transfer; do not alter V-1's original recorded claim.
+- Handoff next action: `action: verify` → obtain/reproduce evidence/whitespace.txt, owner: next-reviewer, blocked-on: evidence retrieval.
+- No release action is authorized; project-owner approval remains required and absent.

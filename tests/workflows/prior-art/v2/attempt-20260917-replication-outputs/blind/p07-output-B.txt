@@ -1,0 +1,15 @@
+**Disposition:** F-1 remains open, not verified. S2's AC-1 text does correctly add the whitespace-only rejection requirement, resolving F-1 at the spec-language level. However, V-1's claimed "pass for S2" cannot be substantiated — its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the packet transfer manifest, and no alternate command output, test log, or reviewer artifact was transferred. A verdict lacking any retrievable evidence must be treated as unverified, not as a passed check carried forward.
+
+**Next action / owner:** next-reviewer must either (a) obtain the missing evidence/whitespace.txt (or equivalent verification artifact) from whoever produced V-1, and re-run/confirm the check against S2's actual content identity, or (b) if evidence cannot be recovered, record V-1 as unsubstantiated and request a fresh verification pass against S2. This is a document-review task only — no implementation exists in scope, so "verification" here means confirming the evidentiary trail for the claimed check, not running code.
+
+**Evidence gaps:**
+- evidence/whitespace.txt missing per manifest — cannot confirm what was actually tested.
+- No content-identity (hash/commit ref) recorded for the S2 revision V-1 claims to have verified.
+- No record of who/what produced V-1's pass claim or by what method.
+
+**Proposed ledger updates (append-only, do not overwrite):**
+- Append new event: "V-1 evidence-gap noted at next-reviewer session — cited evidence file absent from transfer; verdict unsubstantiated pending re-verification."
+- Do not alter R-1 or F-1's original recorded text.
+- Release remains blocked: project-owner approval absent, and now also blocked on evidence gap.
+
+Carry forward to next consumer: obtain/regenerate whitespace.txt evidence, then re-assess V-1.
