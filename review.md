@@ -727,3 +727,91 @@ class of defect this branch has spent four rounds on.
 Five rounds in, no measured value has changed in any record. Three defects reached code — the
 working-directory leak, the uncommitted aggregation step, and the hardcoded critical value — and all
 three are closed in code rather than in prose.
+
+---
+
+# Re-review — fifth pass, 2026-09-17
+
+Reviewer. Fetched `def6b13`.
+
+## Dispositions
+
+| # | Claimed | Verified |
+|---|---|---|
+| R7 | Limitation removed, `argv_note` states both properties | **Confirmed.** 7 limitations remain, none claiming a template; 40/40 digests recompute from the bundle's `argv[2]`, which is what the new note claims |
+| R8 | df derived from the data, key named from df, raises outside the table | **Confirmed, including the failure path** |
+
+**R8 is fixed properly, and the table itself checks out.** The six-pair input now yields
+`ci_95_student_t5: [-0.4784, +0.3117]` with `t_critical_value: 2.571`; a two-pair input yields
+`ci_95_student_t1` with `12.706`; a fifty-pair input exits 1 naming df=49 and telling the caller to
+extend the table rather than emitting anything. Raising there is the right trade and the message says
+why.
+
+I did not take `T_95_BY_DF` on trust. I computed the two-sided 95% t quantile independently for every
+df in the table — regularized incomplete beta via a continued fraction, inverted by bisection — and
+**all 30 entries match to three decimal places** (df=1 → 12.7062, df=5 → 2.5706, df=9 → 2.2622,
+df=30 → 2.0423; df=1000 → 1.9623 against z=1.9600 as a sanity check).
+
+`indeterminate_calls` now counts what its name says. On a bundle I mutated to remove one
+`grader_record` and mark one arm call non-completed, it reports `indeterminate_calls: 2`,
+`indeterminate_arms: 1`, and drops the unscored pair from `n_pairs`. Both are 0 on the real input, as
+before.
+
+**Nothing moved, and the record is emitted rather than transcribed.** `aggregate.py` over
+`bundle.json` reproduces the record's `aggregate` under deep equality, canonical JSON and key order.
+Against `fa19186` every pre-existing key is identical — means, sds, both intervals, the 1/7/2 split,
+all eight per-check means, `total_cost_usd` — with only `t_degrees_of_freedom`, `t_critical_value`,
+`indeterminate_arms` added and `interval_note` reworded. Both 2026-09-16 records are byte-identical to
+`fa19186`, the 2026-09-17 `pairs` array likewise. 52/52 evidence hashes across the three records
+re-verify after a forced re-checkout. `python check.py`, `python install.py --check` and
+`python -m unittest discover -s tests` pass at `def6b13`.
+
+## Finding — fifth round
+
+### R9. The record now carries two different magnitudes for the same rounding defect, and the new "measurement" cannot produce the one that is claimed for it
+
+The response says `interval_note` "now **measures** the rounded-SE shift instead of asserting `1e-4`.
+For this input it reports 9.3e-05, matching your measurement." The committed record says:
+
+> "Multiplying the rounded SE instead **would shift a bound by up to 1.0e-04**."
+
+while `derivation.note`, four fields later in the same file, still says:
+
+> "…shifting both interval bounds **by about 9.3e-5**."
+
+Three separate things here, none affecting a figure:
+
+1. **The claim is wrong about its own output.** The producer emits `1.0e-04`. I ran it. The commit
+   message makes the same claim.
+2. **The new measure cannot emit 9.3e-05, for any input.** `rounding_shift` differences two bounds
+   that have each already been rounded to four places, so its only possible values are integer
+   multiples of `1e-4` — `0.0e+00`, `1.0e-04`, `2.0e-04`… Formatting that with `.1e` implies a
+   precision the quantity does not have. It measures the shift in the *displayed* bound, which is a
+   fair thing to want, but it is not the shift in the interval.
+3. **Neither figure covers both bounds.** The true shift is `k · |se − round(se,4)|` with
+   `|se − round(se,4)| = 4.725e-05`, so it is **9.26e-05 on the z bounds and 1.07e-04 on the t
+   bounds**. `derivation.note`'s "both interval bounds by about 9.3e-5" is the z figure applied to
+   both, understating the t bounds by about 15%.
+
+My own last-round parenthesis — "(For this one it is right: I measure 9.3e-5.)" — was the z-bound
+figure and carries the same imprecision; correcting it here.
+
+Cheapest fix: compute the shift unrounded per interval (`k * abs(se - round(se, 4))`), report the
+maximum (`1.07e-04`), and let `derivation.note` cite that same measured figure instead of a second
+hand-written one. If the displayed-bound shift is the intended quantity, say so in the note and drop
+the `.1e` formatting.
+
+This is the same pattern the response names in its own R7 section — descriptions drifting behind
+fixes — reappearing inside the fix for it. That is not a criticism of the fix, which is sound; it is
+the reason the pattern is worth the explicit guard the response proposes.
+
+## Verdict — fifth pass
+
+R7 and R8 are both fully closed. R8 in particular is fixed at the right level: the critical value is
+derived, the key is named from the df it was computed with, the parameters travel with the interval,
+and the out-of-table path fails loudly instead of quietly. The table it rests on verifies
+independently, entry for entry.
+
+R9 is two sentences of prose and one line of arithmetic in a producer whose output is otherwise
+exact. **No blocker.** Five rounds in, no measured value has changed in any record, and every defect
+found has been in a description, a derivation or the instrument.
