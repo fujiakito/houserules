@@ -871,3 +871,65 @@ identical to `def6b13` on every pre-existing key — means, sds, both intervals,
 the 1/7/2 split, all eight per-check means, `total_cost_usd`, and both indeterminate counts — with
 `rounded_se_bound_shift` added and `interval_note` corrected. The 2026-09-17 `pairs` array and both
 2026-09-16 records are unchanged.
+
+---
+
+# Re-review — sixth pass, 2026-09-17
+
+Reviewer. Fetched `ee953f3`. **R9 is fixed on all three points, and I have no new findings.**
+
+## R9 verified
+
+- **Per-interval, and measured on the unrounded bounds.** `rounded_se_bound_shift` is
+  `{normal_z: 9.262e-05, student_t: 0.0001069}`. Recomputed independently from the raw pairs:
+  `|se − round(se,4)| = 4.725321e-05`, giving `9.261630e-05` and `1.068868e-04`, which match the
+  emitted values exactly at the 4-significant-figure precision the producer documents. These are the
+  same two quantities I derived last round (9.26e-05, 1.07e-04), now computed by the code rather than
+  by either of us.
+- **The quantisation is gone and is explained rather than hidden.** `interval_note` states both
+  figures, says the shift scales with the critical value so there is not one number for both
+  intervals, and records that differencing the rounded bounds would only ever report a multiple of
+  1e-4 — the defect, named in the artifact.
+- **The second copy is gone.** `derivation.note` now points at the emitted field instead of
+  restating it. I grepped the whole record: neither `9.3e-5` nor `1.0e-04` appears anywhere in it.
+- **It scales.** On the six-pair input the block reports `ci_95_student_t5`, `t_critical_value 2.571`
+  and `rounded_se_bound_shift {normal_z: 8.021e-05, student_t: 0.0001052}` — the t shift tracking its
+  own critical value, which is the property the fix claims.
+
+**Nothing moved.** The producer reproduces the record's `aggregate` under deep equality, canonical
+JSON and key order; every pre-existing key is identical to `def6b13` with only
+`rounded_se_bound_shift` added and `interval_note` reworded. The 2026-09-17 `pairs` array and both
+2026-09-16 records are byte-identical to `def6b13`. 52/52 evidence hashes across the three records
+re-verify after a forced re-checkout. `python check.py`, `python install.py --check` and
+`python -m unittest discover -s tests` pass at `ee953f3`.
+
+## Closing sweep — every quoted figure against its record
+
+Since this looks like the last round, I checked the prose against the artifacts rather than only the
+changed lines. Every number the three documents quote resolves to the record it comes from:
+
+| Claim | Where | Verified against |
+|---|---|---|
+| 3.90 / 3.85 / -0.05, seven of ten tied | `PORTABILITY.md`, `v2/README.md` | `attempt-20260917` aggregate: means 3.9 / 3.85, diff -0.05, split 1/7/2 |
+| `[-0.2259, +0.1259]` and `[-0.2530, +0.1530]` | `PORTABILITY.md`, `v2/README.md` | `ci_95_normal_z`, `ci_95_student_t9` |
+| 3.75 / 3.80 / +0.05, five tied | `v2/README.md` | `attempt-20260916-replication` aggregate |
+| "paired sd fell from 0.369 to 0.284" | `v2/README.md` | 0.3689 → 0.2838 |
+| "checks 1-3 scored 1.0 for both arms in all twenty gradings, in both replications" | `PORTABILITY.md`, `ENFORCEMENT.md` | `per_check_mean` checks 1-3 = 1.0, both arms, both records |
+| "Four records exist" | `PORTABILITY.md` | three linked JSON records + the 2026-09-06 reviewer-reported pair, which has no file |
+
+No stale figure, no orphaned link, no claim without a record behind it.
+
+## Verdict — final
+
+Six passes. Nine findings, of which one reached the measurement instrument (the working-directory
+leak), two reached the derivation (the uncommitted aggregation step, the hardcoded critical value),
+and six were descriptions, labels or duplicated figures. **No measured value has changed in any
+record across the entire review** — every correction has been to how the numbers were produced,
+labelled or described, never to the numbers themselves.
+
+The diagnosis in the response is the right one and I would keep it: a derived number should exist in
+exactly one place, emitted by the code that computes it. Both mechanisms now follow it, and that is
+worth more than any of the individual fixes.
+
+**Nothing outstanding. This branch is done from my side.** `review.md` has served its purpose and
+should be deleted before merge, along with the commits that carry it.
