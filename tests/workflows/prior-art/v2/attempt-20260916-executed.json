@@ -232,6 +232,7 @@
     "interpretation": "On this single blind-graded pair the candidate handoff presentation scored one point higher than the prose session note, on checks 1 and 4. n=1. No promotion claim, no portability claim and no billing-advantage claim follows."
   },
   "limitations": [
+    "Generation-side working-directory leak. Each arm ran with cwd set to `cwd-baseline` or `cwd-candidate`, and the headless CLI places the working directory in the model's context \u2014 verified 2026-09-17 on CLI 2.1.274: a `-p` call with no tools returns its own cwd verbatim. So each generating call could read a word naming its own arm. The grader directory carried no arm name, so blinding is unaffected, but the leak sits on the side that produced this pair's one-point difference and is an alternative explanation for part of it. Recorded, not corrected: this record's numbers are retained unchanged. The harness was fixed and the trial re-run on 2026-09-17.",
     "n = 1 completed pair on one synthetic prompted scenario. A single pair cannot separate a presentation effect from ordinary run-to-run variation; no repetition, no variance estimate and no significance test were performed.",
     "The grader is a separate process but the same vendor and the same model family as both arms; it is not an independent or human reviewer.",
     "Grader label assignment was blinded, but only two outputs were graded in one call, so the grader could still compare them against each other rather than scoring each in isolation.",

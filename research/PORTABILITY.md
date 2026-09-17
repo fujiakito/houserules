@@ -138,8 +138,7 @@ requires an observed failure, and reading upstream sources can never produce one
 intake can only ever conclude "no demonstrated gap". Record friction during real work — the method
 `hr-onboard` already applies to instruction files — and go looking for a candidate once a failure
 recurs. Non-goal: further catalogue studies of third-party skill collections. The two on file
-(`MATT-POCOCK-SKILLS.md`, `SUPERPOWERS-SKILLS.md`) establish the pattern; a sixth would not.
-
+(`MATT-POCOCK-SKILLS.md`, `SUPERPOWERS-SKILLS.md`) establish the pattern; a third would not.
 
 Before promoting an optional `hr-` skill to recommended/default status, record:
 
@@ -201,19 +200,26 @@ and a [2026-09-16 replication](../tests/workflows/prior-art/v2/attempt-20260916-
 ten pairs with counterbalanced order and each output graded in its own blinded process.
 
 **Outcome: no advantage demonstrated; not promoted.** Baseline mean 3.75, candidate mean 3.80,
-paired difference +0.05 with an approximate 95% CI of [-0.179, +0.279] spanning zero. The single
-pair's one-point gap did not reproduce: it scored the baseline 0.5 on check 1, where ten isolated
-gradings scored it 1.0 every time, so that gap came from grading both outputs in one call.
+paired difference +0.05, spanning zero on both a normal (z) and a t(9) interval — [-0.179, +0.279]
+and [-0.214, +0.314]. The single pair's one-point gap did not reproduce, and it decomposes into two
+halves rather than one cause. It docked the baseline 0.5 on check 1 and 0.5 on check 4. Check 1 is
+cleanly contradicted: ten isolated gradings scored the baseline 1.0 there every time, so that half
+came from grading both outputs in one call. Check 4 is not contradicted: the baseline scored 0.5
+there in 5 of 10 isolated gradings, so that half is ordinary within-arm variation. Neither half is
+the treatment.
 
 Two limits keep this from being evidence of equivalence. The rubric is saturated — checks 1-3 scored
 1.0 for both arms in all twenty gradings — so the instrument cannot resolve a small effect in either
-direction. And the trial is one synthetic packet on one model and surface; criterion 5 still wants
+direction. The instrument also had a generation-side leak — each arm ran in a directory named after
+its own arm, and the headless CLI places the working directory in the model's context — corrected and
+re-run on 2026-09-17; see the [replication record](../tests/workflows/prior-art/v2/attempt-20260916-replication.json).
+And the trial is one synthetic packet on one model and surface; criterion 5 still wants
 representative tasks and fresh-session consumption. Rebuilding the instrument is deferred with a
 stated trigger; see [ENFORCEMENT](../docs/ENFORCEMENT.md#deferred-checks-and-their-triggers).
 
 This closes the question for the handoff presentation only. The three experimental `hr-` skills are
 untouched by it: their status remains source review with no comparative execution, exactly as the
-2026-09-06 table below records.
+2026-09-06 table in the preceding section records.
 
 ## 5. The handoff contract
 

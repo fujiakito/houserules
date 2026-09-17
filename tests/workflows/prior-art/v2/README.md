@@ -77,12 +77,14 @@ working directory, exit status, usage, cost and verbatim grader prose; the grade
 harness are in [attempt-20260916-replication-outputs/](attempt-20260916-replication-outputs/).
 
 **No advantage demonstrated.** Baseline mean 3.75, candidate mean 3.80; paired difference +0.05
-with an approximate 95% CI of [-0.179, +0.279], which includes zero. Five pairs tied, three
+spanning zero on both a normal (z) and a t(9) interval — [-0.179, +0.279] and [-0.214, +0.314]. Five pairs tied, three
 favoured the candidate, two favoured the baseline; no call was indeterminate.
 
-The single pair recorded above **does not reproduce**. That run scored the baseline 0.5 on check 1;
-across ten isolated gradings the baseline scored 1.0 on check 1 in all ten. The one-point gap is
-attributable to grading both outputs in one call, not to the handoff presentation.
+The single pair recorded above **does not reproduce**, and its one-point gap decomposes into two
+halves. That run docked the baseline 0.5 on check 1 and 0.5 on check 4. Across ten isolated gradings
+the baseline scored 1.0 on check 1 in all ten, so that half came from grading both outputs in one
+call; it scored 0.5 on check 4 in 5 of 10, so that half is ordinary within-arm variation. Neither
+half is the handoff presentation.
 
 **The rubric is saturated.** Checks 1-3 scored 1.0 for both arms in all twenty gradings. Only
 check 4 varies, and it varies within each arm. On this scenario and model the instrument has

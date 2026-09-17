@@ -2,7 +2,7 @@
 
 **Your repository owns its rules and its proof — whichever agent and model turn up.**
 Project instructions every agent reads, executable checks with their limits written down, and task
-evidence that survives a switch. As one agent comes to run several models, what your repository
+evidence that survives a switch. When one agent can run several models, what your repository
 states and can check is the part that stays constant. Optional skills are available and are not
 the point. Everything runs locally with Python 3.9+ and the standard library.
 

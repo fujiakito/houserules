@@ -1498,18 +1498,44 @@
   },
   "findings": [
     "No advantage demonstrated. The paired difference is +0.05 points out of 4 with an approximate 95% CI of [-0.179, +0.279], which includes zero. Five of ten pairs tied, three favoured the candidate and two favoured the baseline.",
-    "The 2026-09-16 single-pair result does not reproduce under isolated grading. That run scored the baseline 0.5 on check 1; across ten isolated gradings the baseline scored 1.0 on check 1 every time (10/10). The one-point gap is therefore attributable to the grader comparing the two outputs within a single call, which is the confound this run was built to remove.",
+    "The 2026-09-16 single-pair result does not reproduce under isolated grading, and its one-point gap decomposes into two halves rather than one cause. That run docked the baseline 0.5 on check 1 and 0.5 on check 4. Check 1 is cleanly contradicted: across ten isolated gradings the baseline scored 1.0 there every time (10/10), so that half came from the grader comparing the two outputs within a single call, which is the confound this run was built to remove. Check 4 is not contradicted: the baseline scored 0.5 there in 5 of 10 isolated gradings, so that half is ordinary within-arm variation on the one check that still moves. Neither half is the treatment.",
     "The rubric is saturated. Checks 1, 2 and 3 scored 1.0 for both arms in all twenty gradings, with zero variance. Only check 4 moves, and it moves within each arm (baseline 5x1.0 / 5x0.5; candidate 6x1.0 / 4x0.5), which is run-to-run variation rather than an arm effect. On this scenario and model the instrument has effectively one check of resolution, and that check is noise-dominated."
   ],
   "conclusion": "On this frozen synthetic packet, the structured handoff presentation shows no measurable advantage over the prose session note. No promotion claim follows, and none followed from the 2026-09-16 pair either. Separately, the rubric's saturation means this smoke test cannot detect a small effect in any direction; a future comparison needs a scenario with headroom before it can support a promotion decision.",
   "limitations": [
+    "Generation-side working-directory leak. Each arm ran with cwd set to a directory named after its own arm (`pNN-baseline` / `pNN-candidate`), and the headless CLI places the working directory in the model's context \u2014 verified 2026-09-17 on CLI 2.1.274: a `-p` call with no tools returns its own cwd verbatim. So every generating call could read a word naming its arm. Grader blinding is unaffected (grader directories carried only the shuffled A/B label, and the mapping was written outside the grader's input), but the leak sits on the side that produces the measured difference. The harness was corrected to use opaque random directory tokens and the trial re-run; see the 2026-09-17 record. This run's numbers are retained unchanged and should be read with the leak present.",
     "One synthetic transferred packet on one scenario. This does not test filesystem discovery, real repository artifacts, actual task execution or cross-agent portability.",
     "The graders are separate processes but the same vendor and model family as the arms; none is an independent or human reviewer.",
     "n=10 gives a coarse variance estimate. The CI is a normal approximation on ten paired differences drawn from a three-valued score scale; it is indicative, not a formal significance test.",
     "Because checks 1-3 are saturated, the aggregate means understate how little of the rubric is actually discriminating. A null result here is weak evidence of equivalence, not proof of it.",
     "Full argv is recorded as a template plus per-call prompt digests rather than 40 embedded copies; the 2026-09-16 record embedded argv in full. Prompts remain byte-identifiable via those digests.",
     "Token counts and costs are the CLI's own reported figures; they are not a billing measurement.",
-    "All calls ran on claude-sonnet-5 under CLI 2.1.273 on Linux. Nothing generalises to another surface, model or version."
+    "All calls ran on claude-sonnet-5 under CLI 2.1.273 on Linux. Nothing generalises to another surface, model or version.",
+    "The approximate 95% CI in `aggregate` is a normal (z=1.96) interval. A t(9) interval on the same ten paired differences is [-0.214, +0.314]; both span zero, so the null conclusion is unchanged, but the t interval is the wider and more appropriate one at n=10."
   ],
-  "relation_to_prior_records": "Additive. The 2026-09-06 reviewer-reported pair, the 2026-09-16 executed pair, the v1 attempt and the frozen packet bytes are all unchanged. This record does not regrade or replace any of them; it reports an independent run under a corrected grading procedure."
+  "relation_to_prior_records": "Additive. The 2026-09-06 reviewer-reported pair, the 2026-09-16 executed pair, the v1 attempt and the frozen packet bytes are all unchanged. This record does not regrade or replace any of them; it reports an independent run under a corrected grading procedure.",
+  "evidence_file_sha256": {
+    "blind/p01-output-A.txt": "fd0b16a8cad1d75b515ceb8898341b60855c90215656edd7530d9a7200ce99bd",
+    "blind/p01-output-B.txt": "fad09c1631c8054ee69b8ad5c09f19f63558c517d3dc0ab086b214a573502ff5",
+    "blind/p02-output-A.txt": "685bc9912852ccc7f879f4a2401e554479ecb60abd405629d435a92848e1be89",
+    "blind/p02-output-B.txt": "16f0e846048b67b16bdfe68abac0b1c00c080a47ad632d634b60b2f19adb1eab",
+    "blind/p03-output-A.txt": "1c029cad742619b8906b015e817b653a338e3fc5ec3fd495f0b40b4d30c8ef75",
+    "blind/p03-output-B.txt": "7eeab4990a38d5890f0d65ea9d381ef1b290326863e6ac9201abe653f5bd3d09",
+    "blind/p04-output-A.txt": "c94ab8665a18015ac83e792909304d5a7f4111357224ce5b153a5ab70530b855",
+    "blind/p04-output-B.txt": "6de9a94df98debfa4930ca78855ef176d034bf7390c977e6d3dbce9deb188062",
+    "blind/p05-output-A.txt": "4b0a888ed7952a414fb3e1ec980e31d2a2debd29ef02bca2233df9f7eb06030d",
+    "blind/p05-output-B.txt": "573a5017da2deddd8b2a3b34ae5612155df850066ff7e7fbd74ca38e093a55a2",
+    "blind/p06-output-A.txt": "41088f6ffcf2b616b6b3c8a224784fdc9dee52f3ccbf062316b5054b0b782564",
+    "blind/p06-output-B.txt": "9ff5f70fbb8732d8ccf7f7dadb3c6a7a06a1c7a61a802296c9c44ba68ddd3e07",
+    "blind/p07-output-A.txt": "b36e11d18534630e7409578afb2affcf44e7b6efd5e8f22c693ceb6d492b5626",
+    "blind/p07-output-B.txt": "8f59557cac7bd01e6b6de3ed3b580a41e5405fff634d80a351c724872a155322",
+    "blind/p08-output-A.txt": "37e5ecc7ba6d30dac21cfa5fff28ab7e1b4fcc98ee64af1217ca0a70a108f5a1",
+    "blind/p08-output-B.txt": "cc2001d21b386834cba1c59db1ee79d13be7e427303947c1089a878144d23269",
+    "blind/p09-output-A.txt": "25c8d507124fc5bae6c4b86b61e342fb0e06b40002140fdbc0074f3d6b4a07d6",
+    "blind/p09-output-B.txt": "ac300aa210b48917138f08dd6da6b9359ee28d2b0fea32445e7aa46330918a0a",
+    "blind/p10-output-A.txt": "b3f7734202251839cb90b8352bc1f867c47564b336226c45b350079da4745f2e",
+    "blind/p10-output-B.txt": "cf6d267ce6e9d776b525dc30c3459dd2ba1cc52d2b68f5990e2dbe6cf10820be",
+    "harness.py": "57966bd4658e7440c5c961a5696bff2686dbc76ba7557ad6cc7a17876b7ed53c"
+  },
+  "evidence_note": "SHA-256 of the committed evidence bytes. Each grader prompt is additionally reconstructible as frozen rubric.md + the harness's fixed isolated-grading instruction + the committed blind output, and every grader_call.prompt_sha256 matches that reconstruction."
 }
