@@ -133,6 +133,13 @@ assertions are sufficient, and it does not replace independent review.
 | **automatic replicas of built-ins or one skill per stage** | a stage is not a procedure; a new skill must pass the admission criteria below |
 
 ### Fallback admission criteria
+**Candidates enter this funnel from observed failure, not from a market survey.** Criterion 1 below
+requires an observed failure, and reading upstream sources can never produce one, so a survey-driven
+intake can only ever conclude "no demonstrated gap". Record friction during real work — the method
+`hr-onboard` already applies to instruction files — and go looking for a candidate once a failure
+recurs. Non-goal: further catalogue studies of third-party skill collections. The two on file
+(`MATT-POCOCK-SKILLS.md`, `SUPERPOWERS-SKILLS.md`) establish the pattern; a sixth would not.
+
 
 Before promoting an optional `hr-` skill to recommended/default status, record:
 
@@ -184,6 +191,29 @@ This records criterion 2's initial source comparison only. Criteria 1 and 5 rema
 the Bottle walkthrough is shared-context acceptance, not evidence of superiority. Start a future
 trial with hr-tdd as a bounded test-design experiment; evaluate review against the native option
 on each claimed surface, not against all vendors simultaneously. No trial is scheduled here.
+
+### Handoff presentation — evaluated, not promoted (2026-09-17)
+
+The transferred-packet comparison behind the handoff contract in section 5 has been run and closed.
+Three records exist, all retained unchanged: a 2026-09-06 reviewer-reported pair with no primary
+evidence, a [2026-09-16 executed pair](../tests/workflows/prior-art/v2/attempt-20260916-executed.json),
+and a [2026-09-16 replication](../tests/workflows/prior-art/v2/attempt-20260916-replication.json) of
+ten pairs with counterbalanced order and each output graded in its own blinded process.
+
+**Outcome: no advantage demonstrated; not promoted.** Baseline mean 3.75, candidate mean 3.80,
+paired difference +0.05 with an approximate 95% CI of [-0.179, +0.279] spanning zero. The single
+pair's one-point gap did not reproduce: it scored the baseline 0.5 on check 1, where ten isolated
+gradings scored it 1.0 every time, so that gap came from grading both outputs in one call.
+
+Two limits keep this from being evidence of equivalence. The rubric is saturated — checks 1-3 scored
+1.0 for both arms in all twenty gradings — so the instrument cannot resolve a small effect in either
+direction. And the trial is one synthetic packet on one model and surface; criterion 5 still wants
+representative tasks and fresh-session consumption. Rebuilding the instrument is deferred with a
+stated trigger; see [ENFORCEMENT](../docs/ENFORCEMENT.md#deferred-checks-and-their-triggers).
+
+This closes the question for the handoff presentation only. The three experimental `hr-` skills are
+untouched by it: their status remains source review with no comparative execution, exactly as the
+2026-09-06 table below records.
 
 ## 5. The handoff contract
 
