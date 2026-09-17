@@ -43,7 +43,8 @@
     "argv_note": "All 40 calls used this exact flag sequence; only <PROMPT> varied. Each call's prompt is identified by prompt_sha256. Arm prompts are the frozen packet files verbatim; each grader prompt is reconstructible as frozen rubric.md + the harness's fixed isolated-grading instruction + the committed blind output for that call.",
     "tools_enabled": [],
     "mcp_servers": "none (--strict-mcp-config with no --mcp-config)",
-    "context_isolation": "Every call ran in its own empty directory outside the repository, named by an opaque token, so neither project context files nor the directory name could inform the model. User- and global-scope CLI configuration was not isolated."
+    "context_isolation": "Every call ran in its own empty directory outside the repository, named by an opaque token, so neither project context files nor the directory name could inform the model. User- and global-scope CLI configuration was not isolated. The isolation claimed here is arm-freedom, not absolute context-freedom: every working directory still sits under a scratch path naming this repository and this run. That parent path is identical for both arms, so it cannot bias a paired comparison, but a future claim of absolute isolation would need a neutral parent.",
+    "blinding_note": "Execution order is counterbalanced by design (odd pairs baseline-first, even pairs candidate-first). The A/B blind label is an independent per-pair shuffle and is NOT counterbalanced \u2014 A is the candidate in 6 of 10 pairs here. That is immaterial under isolated grading, because the label never enters a grader prompt: each prompt is the frozen rubric plus the fixed instruction plus one output, with no pair number, arm or label. The label names a file and nothing else."
   },
   "input_hashes_measured": {
     "baseline-prompt.md": "de5f3d7354351f8d4857ae297eb5cff0e99409d04e50efcbd875eee236cdbab5",
@@ -1509,19 +1510,20 @@
     "paired_difference_candidate_minus_baseline": {
       "mean": -0.05,
       "sd": 0.2838,
-      "standard_error": 0.0897,
+      "standard_error": 0.0898,
       "ci_95_normal_z": [
-        -0.2258,
-        0.1258
+        -0.2259,
+        0.1259
       ],
       "ci_95_student_t9": [
-        -0.2529,
-        0.1529
+        -0.253,
+        0.153
       ],
       "both_intervals_span_zero": true,
       "pairs_candidate_higher": 1,
       "pairs_tied": 7,
-      "pairs_baseline_higher": 2
+      "pairs_baseline_higher": 2,
+      "interval_note": "Both intervals are computed from the unrounded standard error (0.089752747); the displayed sd and standard_error are that same quantity rounded for reading. Multiplying the rounded SE instead shifts the bounds by 1e-4."
     },
     "per_check_mean": {
       "check_1": {

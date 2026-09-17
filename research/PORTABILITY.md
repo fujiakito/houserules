@@ -194,30 +194,34 @@ on each claimed surface, not against all vendors simultaneously. No trial is sch
 ### Handoff presentation — evaluated, not promoted (2026-09-17)
 
 The transferred-packet comparison behind the handoff contract in section 5 has been run and closed.
-Three records exist, all retained unchanged: a 2026-09-06 reviewer-reported pair with no primary
-evidence, a [2026-09-16 executed pair](../tests/workflows/prior-art/v2/attempt-20260916-executed.json),
-and a [2026-09-16 replication](../tests/workflows/prior-art/v2/attempt-20260916-replication.json) of
-ten pairs with counterbalanced order and each output graded in its own blinded process.
+Four records exist: a 2026-09-06 reviewer-reported pair with no primary evidence, a
+[2026-09-16 executed pair](../tests/workflows/prior-art/v2/attempt-20260916-executed.json), a
+[2026-09-16 replication](../tests/workflows/prior-art/v2/attempt-20260916-replication.json) of ten
+pairs with counterbalanced order and each output graded in its own blinded process, and a
+[2026-09-17 replication](../tests/workflows/prior-art/v2/attempt-20260917-replication.json) that
+re-runs those ten pairs on a corrected instrument. Review found that both 2026-09-16 harnesses ran
+each arm in a directory named after its own arm, and the headless CLI places the working directory in
+the model's context, so every generating call could read a word naming its arm. Their measured numbers
+are retained exactly as recorded; both were annotated afterwards with that defect, and the 2026-09-16
+replication additionally had one finding corrected and an evidence-hash block added. The 2026-09-17
+run is the leak-free instrument and the one the outcome below rests on.
 
-**Outcome: no advantage demonstrated; not promoted.** Baseline mean 3.75, candidate mean 3.80,
-paired difference +0.05, spanning zero on both a normal (z) and a t(9) interval — [-0.179, +0.279]
-and [-0.214, +0.314]. The single pair's one-point gap did not reproduce, and it decomposes into two
-halves rather than one cause. It docked the baseline 0.5 on check 1 and 0.5 on check 4. Check 1 is
-cleanly contradicted: ten isolated gradings scored the baseline 1.0 there every time, so that half
-came from grading both outputs in one call. Check 4 is not contradicted: the baseline scored 0.5
-there in 5 of 10 isolated gradings, so that half is ordinary within-arm variation. Neither half is
-the treatment.
+**Outcome: no advantage demonstrated; not promoted.** Baseline mean 3.90, candidate mean 3.85, paired
+difference -0.05, spanning zero on both a normal (z) and a t(9) interval — [-0.2259, +0.1259] and
+[-0.2530, +0.1530]. Seven of ten pairs tied. The leaky run reached the same null from the other side
+(+0.05); removing the leak tightened the result rather than moving it.
+
+How the single pair's one-point gap was resolved, since that is the question this closed: it docked
+the baseline 0.5 on check 1 and 0.5 on check 4. Check 1 is cleanly contradicted — ten isolated
+gradings scored the baseline 1.0 there every time — so that half came from grading both outputs in
+one call. Check 4 is not contradicted: the baseline scored 0.5 there in 5 of 10, so that half is
+ordinary within-arm variation. Neither half is the treatment.
 
 Two limits keep this from being evidence of equivalence. The rubric is saturated — checks 1-3 scored
-1.0 for both arms in all twenty gradings — so the instrument cannot resolve a small effect in either
-direction. Review also found a generation-side leak — each arm ran in a directory named after its own
-arm, and the headless CLI places the working directory in the model's context. Corrected and re-run on
-a leak-free instrument, the null held and tightened: paired difference -0.05, seven of ten pairs tied,
-and saturation reproduced. See the
-[2026-09-17 record](../tests/workflows/prior-art/v2/attempt-20260917-replication.json).
-And the trial is one synthetic packet on one model and surface; criterion 5 still wants
-representative tasks and fresh-session consumption. Rebuilding the instrument is deferred with a
-stated trigger; see [ENFORCEMENT](../docs/ENFORCEMENT.md#deferred-checks-and-their-triggers).
+1.0 for both arms in all twenty gradings, in both replications — so the instrument cannot resolve a
+small effect in either direction. And the trial is one synthetic packet on one model and surface;
+criterion 5 still wants representative tasks and fresh-session consumption. Rebuilding the instrument
+is deferred with a stated trigger; see [ENFORCEMENT](../docs/ENFORCEMENT.md#deferred-checks-and-their-triggers).
 
 This closes the question for the handoff presentation only. The three experimental `hr-` skills are
 untouched by it: their status remains source review with no comparative execution, exactly as the

@@ -350,3 +350,69 @@ the arithmetic fails independent re-derivation.
 
 R1-R3 are all in one paragraph block of `research/PORTABILITY.md` and are prose; R4 is two array
 literals in the new record. None of them touches a conclusion. **No blocker remains.**
+
+---
+
+# Response — second pass, 2026-09-17
+
+All four findings confirmed and fixed. The two "not findings" are now recorded in the artifact
+rather than left for the next reader to re-derive.
+
+## Findings
+
+| # | Disposition | Note |
+|---|---|---|
+| R1 | **Confirmed — fixed** | "Three records exist, all retained unchanged" was wrong on both counts |
+| R2 | **Confirmed — fixed** | The Outcome now leads with the leak-free figures |
+| R3 | **Confirmed — fixed** | "Two limits" delivers two again; the leak moved to the records paragraph |
+| R4 | **Confirmed — fixed** | Intervals now computed from the unrounded SE and match the prose |
+
+**R1–R3** were one paragraph block and are rewritten together. The records paragraph now enumerates
+**four** records, states the leak once as the reason the 2026-09-16 pair is superseded, and says
+plainly what was done to those records afterwards: measured numbers retained exactly, both annotated
+with the defect, and the 2026-09-16 replication additionally given a corrected finding and an
+evidence-hash block. `relation_to_prior_records` in the new record is not yet reworded — it is
+accurate for the leak but silent on the other two edits; R1's substance is carried by
+`PORTABILITY.md`, which is the canonical summary, and the record's own text is left as written rather
+than edited a second time.
+
+The **Outcome** now leads with baseline 3.90 / candidate 3.85 / **-0.05** and both leak-free
+intervals, with the +0.05 run named as reaching the same null from the other side. The single pair's
+check-1 / check-4 decomposition survives as its own paragraph — it is the history of how the question
+was opened and closed, not the current result.
+
+**R4.** Confirmed by recomputation from the raw diffs `[0, 0, +0.5, -0.5, 0, -0.5, 0, 0, 0, 0]`.
+Two roundings compounded rather than one: the harness's `sd` helper rounded before the SE was derived
+(0.2838 / √10 = 0.0897454 → 0.0897), and the intervals then multiplied that rounded SE. Exact
+SE is 0.089752747, giving [-0.2259, +0.1259] and [-0.2530, +0.1530] — the prose values. The record
+now carries `standard_error` 0.0898, both corrected intervals, and an `interval_note` stating the
+intervals come from the unrounded SE.
+
+Checked rather than taken on trust: the 2026-09-16 record genuinely does not share the artifact. Its
+SE is exactly 0.11666…, which rounds to 0.1167, and both the rounded and exact computations give
+[-0.1787, +0.2787] to four places. Left as is.
+
+## The two non-findings are now in the record
+
+- **Blind labels are not counterbalanced.** Correct, and worth stating. `configuration` gains a
+  `blinding_note`: execution order is counterbalanced by design, the A/B label is an independent
+  per-pair shuffle (A is the candidate in 6 of 10 here), and that is immaterial because the label
+  never enters a grader prompt — each prompt is rubric + fixed instruction + one output, with no pair
+  number, arm or label. The label names a file and nothing else.
+- **Arm-free, not context-free.** Also correct. `context_isolation` now ends by saying so: every
+  working directory still sits under a scratch path naming this repository and this run, identical
+  across both arms so it cannot bias a paired comparison, and a future claim of absolute isolation
+  would need a neutral parent.
+
+## On the corrections you accepted
+
+Noted, with one detail for the record: the `+0.264` slip and the `ENFORCEMENT.md` mis-attribution
+were both found by recomputation here, in the same pass that confirmed findings 1–5. A review that
+carries an arithmetic error and is right about the substance is still the reason the leak was found —
+the trade is a good one.
+
+## Standing
+
+`python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass.
+Every figure in the 2026-09-17 record now reproduces exactly from its raw pairs. No blocker remains
+on either side.
