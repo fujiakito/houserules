@@ -416,3 +416,97 @@ the trade is a good one.
 `python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass.
 Every figure in the 2026-09-17 record now reproduces exactly from its raw pairs. No blocker remains
 on either side.
+
+---
+
+# Re-review — third pass, 2026-09-17
+
+Reviewer. Fetched `841d9b1`. Re-derived rather than read off the record.
+
+## Dispositions
+
+| # | Claimed | Verified |
+|---|---|---|
+| R1 | Fixed in `PORTABILITY.md`; record left as written | **Half fixed.** The doc is correct. The record now contradicts it — see R5 |
+| R2 | Outcome leads with the leak-free figures | **Confirmed** |
+| R3 | "Two limits" delivers two | **Confirmed** |
+| R4 | Intervals from the unrounded SE | **Confirmed exactly** — see below |
+
+**R4 is now exact, with no tolerance.** Every figure in `aggregate` equals the exact value computed
+from the raw diffs `[0, 0, +0.5, -0.5, 0, -0.5, 0, 0, 0, 0]` rounded to four places: sd
+`0.283823106 → 0.2838`, SE `0.089752747 → 0.0898`, `[-0.225915, +0.125915] → [-0.2259, +0.1259]`,
+`[-0.253021, +0.153021] → [-0.253, +0.153]`. The `interval_note`'s 1e-4 claim checks out (the actual
+shift is 9.3e-5). The 2026-09-16 record's SE really is exactly `0.11666…`, so it has no such artifact
+and was rightly left alone.
+
+**R2 and R3 read correctly now.** The Outcome opens on 3.90 / 3.85 / -0.05 with both leak-free
+intervals, the +0.05 run is named as reaching the same null from the other side, the check-1/check-4
+decomposition stands on its own as history, and the limits paragraph promises two and delivers two.
+
+**Nothing measured moved.** The `pairs` array of the 2026-09-17 record is byte-identical to
+`0bde2a6`, and both 2026-09-16 records are byte-identical to `0bde2a6`. All 50 `evidence_file_sha256`
+entries across the three records re-verify after deleting the evidence directories and forcing a
+re-checkout. `python check.py`, `python install.py --check` and `python -m unittest discover -s tests`
+(76 tests) all pass at `841d9b1`.
+
+**Both non-findings are now recorded accurately.** `blinding_note`'s "A is the candidate in 6 of 10
+pairs here" is the number I measured, and its reason is the right one — the label never enters a
+grader prompt. `context_isolation`'s arm-freedom-not-context-freedom wording matches the recorded
+paths.
+
+## Findings — third round
+
+### R5. `attempt-20260917-replication.json` `relation_to_prior_records` — now contradicts the doc that describes it
+
+The field still reads "both 2026-09-16 records are unchanged apart from the limitation recording the
+leak", while `research/PORTABILITY.md:203-204`, written in the same commit, says the 2026-09-16
+replication "additionally had one finding corrected and an evidence-hash block added". Both describe
+the same edits; only one is right. The response is explicit that this was a decision, so this is a
+disagreement rather than an oversight — but the stated reason does not survive contact with the
+commit:
+
+- The record is not a frozen prior run. It was created on this branch in `0bde2a6`, it is unmerged,
+  and `CONTRIBUTING.md`'s "do not edit a recorded one" protects earlier dated runs from later
+  rewriting — which is exactly the property this sentence is getting wrong about.
+- "Left as written rather than edited a second time" does not describe what happened: `841d9b1`
+  edits this record three times over (two interval literals, `standard_error`, `interval_note`,
+  `blinding_note`, `context_isolation`). One more clause in the same commit cost nothing.
+- The canonical-summary argument runs the wrong way here. A consumer who opens the record to check a
+  number is reading the record, not `PORTABILITY.md`; the doc's accuracy does not repair the
+  artifact's.
+
+Low severity — no number is affected — but in a repository whose thesis is that its records
+reproduce, a record that misstates its own provenance is the wrong thing to leave behind.
+
+### R6. The `aggregate` block has no committed producer, and R4's stated cause names code that does not exist
+
+The response and the commit message attribute R4 to "the harness's `sd` helper [rounding] before the
+SE was derived". There is no such helper. `attempt-20260917-replication-outputs/harness.py` computes
+no statistics at all — no mean, sd, sqrt, stdev, SE or interval anywhere in it. It writes
+`bundle.json` containing `surface_version`, `input_hashes_measured` and the raw `pairs`, and stops.
+
+So the step that actually did the rounding is not in the committed evidence, and neither is the step
+that turns `bundle.json` into the record: the record's pairs drop the harness's `grading` key and
+fold scores, `score_parse` and `grader_verbatim` up into `arms`. `bundle.json` and the
+`label-mapping-pNN.json` files the harness writes are not committed either.
+
+This is not a hole in *verifiability* — every per-call figure is checkable against the committed
+bytes, which is what I do each round, and everything checks out. It is a hole in *reproducibility of
+the derivation*, and R4 is what it costs: a rounding defect was fixed at the output while its cause
+was attributed to code that cannot have produced it, so whatever did produce it is still
+unexamined and will do the same thing on the next run.
+
+Cheapest fix: commit the aggregation step beside `harness.py` and add it to `evidence_file_sha256`,
+as `harness.py` already is. If that script no longer exists, say so in `evidence_note` — that the
+`aggregate` block is derived outside the committed harness and is checkable only by recomputation
+from `pairs` — and drop the `sd` helper explanation from the record's history.
+
+## Verdict — third pass
+
+R2, R3 and R4 are correctly and completely fixed, R4 now to the last decimal place. No measured value
+has moved across three rounds of correction, which is the property that matters most here.
+
+R5 is one clause. R6 is the only finding on this branch that is about the method rather than the
+prose, and even it does not put a number in doubt — every figure in all three records reproduces from
+the committed bytes. **No blocker.** If the branch merges as it stands, R6 is worth carrying forward
+as the next change to the instrument rather than a reason to hold this one.
