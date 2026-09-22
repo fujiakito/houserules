@@ -475,3 +475,121 @@ thing neither side could fake independently.
 All three gates pass on the current revision. No measured value has changed in any record across
 seven rounds of review; the only thing that ever changed was interpretation, and it now says so in
 the records themselves.
+
+---
+
+# Follow-up review — 2026-09-22 (hr-code-review)
+
+Repository: `fujiakito/houserules` (GitHub repository ID `1359058857`)  
+Branch: `docs/close-evaluation-and-reposition`  
+Reviewed target: `9e652ffbb2bea486a43a16cd2abe8e3c145ce734`  
+Incremental base: `c944e23b50ca4b4f63265cfbd84c10c0f1c693b0`  
+Main / verified merge base: `5d1206e3efe6091fcd292684914155dcd9e6c79c`  
+Skill: [hr-code-review](templates/skills/hr-code-review/SKILL.md), blob
+`2742c02e26ab6837f5fc9c3b21e798b6c54d04ad`. Applied sequentially in the same
+conversation as the preceding review; this is shared-context follow-up, not independent review.
+All linked source material was retrieved on 2026-09-22.
+
+Scope: the one new commit, its five changed files, and the historical commits cited by its
+new correction entries. The main-to-target merge-base comparison was established for context;
+the entire 22-commit branch was not freshly re-reviewed. Criteria: S-F1's requested explicit
+archival boundary and dated correction provenance, plus `AGENTS.md`, `CONTRIBUTING.md` and
+`.houserules/START.md`. Severity retains the earlier scale: Minor means a concrete local
+defect with limited consequence; P2 is normal priority and P3 is a lower-priority correction.
+
+## Verdict and disposition
+
+The interpretation exception and dated amendment entries address the core of S-F1, including the
+September 22 independence correction. The choice to correct false interpretation in place is
+reasonable. However, S-F1 is only partially resolved: the new boundary still conflates raw
+observations with corrected derived results, and the newly added history is incomplete.
+Two Minor Spec findings and one Minor Standards finding remain. No new numerical regression
+was found in this increment. This is not a renewed unconditional merge recommendation.
+
+## Standards
+
+### S-F2 — Minor / P3: name the actual amendment array in the policy
+
+Location: `CONTRIBUTING.md:75`; all three new `corrections` blocks
+(`attempt-20260916-executed.json:261`, `attempt-20260916-replication.json:1541`,
+`attempt-20260917-replication.json:1603`, under `tests/workflows/prior-art/v2/`).
+
+The policy requires adding an entry to the record's `corrections` array. Each actual
+`corrections` value is an object containing `note` and the `amendments` array.
+In-memory checks on all three records confirm `Array.isArray(record.corrections) === false`
+and `Array.isArray(record.corrections.amendments) === true`. A contributor following the
+documented append target cannot follow it literally while preserving the implemented shape.
+
+Next action: make the policy name `corrections.amendments`, or consistently implement the
+documented array shape. The policy quotation in this review's preceding response should be
+superseded by a dated correction if the canonical wording changes. No current automated
+consumer failure is asserted.
+
+## Spec
+
+### P-F1 — Minor / P2: distinguish unchanged observations from revised derivations
+
+Location: `tests/workflows/prior-art/v2/attempt-20260917-replication.json:1604-1612`;
+related new claims in `CONTRIBUTING.md:75` and `review.md:475-477`.
+
+The new correction note says that pairs, aggregate, scores, input and evidence hashes were
+never edited. The policy likewise classifies aggregate and evidence hashes as frozen measured
+values, while the response says only interpretation ever changed. The cited history contradicts
+that description:
+
+- [841d9b1](https://github.com/fujiakito/houserules/commit/841d9b19ae1ba4a209a832dbeb19ddc4822daec5)
+  changed the aggregate standard error from `0.0897` to `0.0898`, the normal interval from
+  `[-0.2258, 0.1258]` to `[-0.2259, 0.1259]`, and the t interval from
+  `[-0.2529, 0.1529]` to `[-0.253, 0.153]`.
+- [def6b13](https://github.com/fujiakito/houserules/commit/def6b13fd8a35279f7157d84719e2bb216ae57a2)
+  and [ee953f3](https://github.com/fujiakito/houserules/commit/ee953f3d2a9bc5a5ba3c5e9c41e2c321fa41c4e8)
+  changed the aggregation producer and its `evidence_file_sha256["aggregate.py"]` value;
+  they also amended the aggregate block.
+
+Those were corrections to derived results and their producer provenance, not new observations
+or regrading. They need not be undone. But a standalone consumer currently gets an incorrect
+immutability claim, and a future contributor cannot tell how to correct another calculation
+error under the new rule without pretending a new execution occurred.
+
+Next action: explicitly distinguish captured execution evidence/raw observations from derived
+statistics and producer provenance. Define how corrections to the latter retain their previous
+revision and are logged; narrow the never-edited claim accordingly. If the intended policy is
+instead to freeze the derived values from this revision onward, state that effective boundary
+and accurately describe the historical exceptions. Preserve the corrected statistics.
+
+### P-F2 — Minor / P2: include omitted fields in the amendment history
+
+Location: `tests/workflows/prior-art/v2/attempt-20260917-replication.json:1609-1612`,
+`:1627-1642`. Criterion: the new policy requires correction entries to identify the fields
+touched, so a standalone dated record can expose its later interpretation and provenance.
+
+The `841d9b1` entry lists only the paired aggregate block, but that commit also changed
+`configuration.context_isolation` and added `configuration.blinding_note`. Those are
+substantive qualifications of context isolation and A/B assignment, not incidental formatting.
+The `def6b13` and `ee953f3` entries both omit the changed
+`evidence_file_sha256["aggregate.py"]`. Thus the field lists do not fully document even the
+commits they identify; a consumer relying on them misses later changes to the execution account
+and producer identity.
+
+Next action: reconcile each amendment's field list with its referenced JSON diff, including the
+configuration qualifications and producer hash updates. Also include the added `evidence_note`
+in the `fa19186` entry and in the September 16 replication's `1b90990` entry. The existing
+commit links make these omissions recoverable, but the new in-record audit should be accurate.
+
+## Verification and limits
+
+- Parsed all three target JSON records and their versions at `c944e23`. In each, the only changed
+  top-level key is `corrections`; removing that newly inserted block reproduces the previous
+  file text exactly. The current increment preserves every pre-existing value and byte.
+- Checked amendment counts (1, 1, 5), the actual object/array shapes, and historical diffs for
+  `1b90990`, `841d9b1`, `fa19186`, `def6b13` and `ee953f3`.
+- The three evidence-hash maps contain 8 + 21 + 23 = 52 entries and are unchanged in this
+  increment. Counting/preserving those entries is not a fresh hash verification; the response's
+  52/52 rehash and producer execution remain author-reported in this review.
+- GitHub returned zero Actions runs, zero check runs and zero commit statuses for the exact
+  reviewed target. The workflow triggers on pushes to `main`, pull requests and manual
+  dispatch, so absence of a run on this branch is not evidence of test failure.
+- No repository was cloned and no Python commands were executed in this session. The reported
+  `python check.py`, `python install.py --check` and 76-test result were not independently
+  reproduced. The repository's required gates therefore remain unverified by this reviewer;
+  this limitation is neither a failing result nor a claimed pass.
