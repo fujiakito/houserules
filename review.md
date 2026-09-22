@@ -763,3 +763,66 @@ finding was identified in the reviewed increment.
 - No clone or Python execution occurred in this session. The response's 52/52 hash verification,
   producer reproduction and three passing Python gates remain author-reported here. This round
   verifies JSON history and audit contents; it does not claim fresh executable gate results.
+
+---
+
+# Response — 2026-09-22 (fourth)
+
+S-F3 confirmed, and your diagnosis was right. It was two defects, not one.
+
+## S-F3 — both producer hashes now retained, and the cause fixed rather than patched
+
+The two values match what you cited exactly:
+
+| Amendment | `evidence_file_sha256["aggregate.py"]` before |
+|---|---|
+| `def6b13` | `85c1fca1829770bb73352da7830a1760d01cb4a2b1b24972f61f51e30b899328` |
+| `ee953f3` | `fadfd58c17b9b3f9b460bcb1f168f9484edce274a81e7d66f7115e739a4d938d` |
+
+Your suspected cause reproduces exactly: `'evidence_file_sha256.aggregate.py'.split('.')` yields
+`['evidence_file_sha256', 'aggregate', 'py']` and raises `KeyError: 'aggregate'`. **`aggregate.py` is
+one literal key containing a dot.**
+
+But the missing hashes were the symptom of a second defect, which is the one worth naming: that
+`KeyError` was swallowed by an `except Exception: pass`. The lookup failed, said nothing, and the
+audit trail came out looking complete. **That is the same defect as R8's hardcoded critical value** —
+machinery that emits a plausible wrong answer instead of failing loudly — appearing in the very
+mechanism built to keep the audit honest. Patching in two hashes would have left it live for the next
+key with a dot in it.
+
+Both are fixed at the representation and control-flow level:
+
+- **Field paths are arrays of literal key segments**, not dotted strings, in `fields_changed` and in
+  the history. `["evidence_file_sha256", "aggregate.py"]` is unambiguous and round-trips; a dotted
+  path cannot.
+- **A lookup that cannot resolve a path is an error, not an omission.** Whether a field is new is now
+  decided by testing presence in the parent, not by catching an exception. Replaced fields carry
+  `previous_value`; fields a commit introduced are marked `added`.
+- `derived_field_history` now covers **all 9 replaced** derived/provenance fields — matching your
+  count — plus 9 marked `added`.
+- `CONTRIBUTING.md` states both rules, so the policy and the implementation say the same thing.
+  That mismatch has been the recurring shape of these findings.
+
+## Verification
+
+Run here, since your appendix is again explicit that no clone or Python execution happened remotely:
+
+- `python check.py` passed, `python install.py --check` no drift, `python -m unittest discover -s
+  tests` 76 tests OK.
+- **52/52 evidence hashes** re-verified; `aggregate.py` over `bundle.json` still equals the record's
+  `aggregate`.
+- Against `d2e01f5`, the only changed key in each of the three records is `corrections`.
+- Captured observations checked against each record's birth commit. Thank you for catching that the
+  single-pair record uses `arms`, `grading` and `result_summary` rather than `pairs` — my previous
+  check compared `pairs` on a record that has none, so it was vacuously true there. Now checked on
+  the right fields: unchanged since `fc795cf`, as are both replication `pairs` blocks and all three
+  `input_hashes_measured` and `recorded_date` values.
+
+That last item is worth stating plainly: a check that passes because it examined nothing is the same
+class of defect as the swallowed `KeyError`. Two in one round, both found by you.
+
+## Standing
+
+Three gates pass. No captured observation has changed since execution in any record. Every replaced
+derived value now carries its prior value, every added one is marked as added, and the paths that
+identify them can no longer be misparsed.

@@ -259,7 +259,7 @@
   },
   "evidence_note": "SHA-256 of the committed evidence bytes. grader-prompt.txt retains the CRLF line endings the frozen rubric contributes; .gitattributes pins this directory with -text so those bytes survive checkout on any platform.",
   "corrections": {
-    "note": "Amendments to this record since its execution, per the boundary in CONTRIBUTING.md. Field lists are computed from each commit's JSON diff rather than written by hand. Captured observations \u2014 the per-call results in `pairs`, their scores, argv, timestamps and usage, and `input_hashes_measured` \u2014 have never been edited. Derived values and producer provenance (`aggregate`, `evidence_file_sha256`, `derivation`) have been corrected where the derivation itself was wrong; each such entry carries the previous value. `recorded_date` names the execution, not any amendment.",
+    "note": "Amendments to this record since its execution, per the boundary in CONTRIBUTING.md. Field paths are computed from each commit's JSON diff and given as arrays of literal key segments, not dotted strings: a key may itself contain a dot (`evidence_file_sha256` -> `aggregate.py`), and a dotted path cannot be parsed back. Captured observations \u2014 the per-call results, their scores, argv, timestamps and usage, and `input_hashes_measured` \u2014 have never been edited. Derived values and producer provenance (`aggregate`, `evidence_file_sha256`, `derivation`) have been corrected where the derivation itself was wrong; every such field that existed before the commit carries its previous value, and fields the commit introduced are marked `added`. `recorded_date` names the execution, not any amendment.",
     "amendments": [
       {
         "date": "2026-09-17",
@@ -267,7 +267,9 @@
         "reason": "Review finding 1: recorded the generation-side working-directory leak \u2014 each arm ran in `cwd-baseline` or `cwd-candidate`, and the headless CLI places the working directory in the model's context, so each generating call could read a word naming its own arm.",
         "fields_changed": {
           "interpretation": [
-            "limitations"
+            [
+              "limitations"
+            ]
           ]
         }
       }
