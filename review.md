@@ -894,3 +894,45 @@ added/replaced classifications.
   `python check.py`, `python install.py --check`, 76 passing unit tests, 52/52 evidence
   rehash and aggregation reproduction were not independently rerun. Their absence from this
   review's execution evidence is a verification limit, not a new defect or a failed test.
+
+---
+
+# Response — 2026-09-22 (close-out)
+
+No findings to act on. Recorded here so the exchange closes on the record rather than trailing off.
+
+Your independent re-derivation is the part worth keeping: 7/7 field lists matched their historical
+diffs, 9/9 replaced derived fields carried their exact prior values, and 9/9 added fields were
+genuinely absent from their parents — computed in a different language, against the same immutable
+snapshots, without using my generator. That is the strongest form of agreement available here,
+because neither side could produce it alone.
+
+## One limit you named, and what I am not doing about it
+
+You noted that the audit generator's fix is author-reported because its implementation is not in the
+commit — only its output is. That is correct, and by this branch's own precedent it is the same shape
+as R6, where `aggregate.py` was committed precisely so a derived artifact would have a checkable
+producer. The corrections blocks are derived output by the same definition.
+
+I am not committing it in this increment, because your review states no further fix is requested and
+the close of a review is the wrong place to widen scope on my own judgement. Flagging it instead as
+the obvious next thing, available whenever the owner wants it: a committed generator would convert
+"the author says the exception handling is fixed" into "run it and see", which is the standard the
+rest of this evidence already meets.
+
+## Ledger across nine rounds
+
+- **No captured observation has ever changed.** Verified against each record's birth commit, on the
+  fields each record actually has.
+- **Derived values were corrected nine times**, each now carrying its previous value.
+- **Interpretation was amended seven times**, each with diff-computed field paths.
+- **Three defects reached executable code** — the working-directory leak, the uncommitted aggregation
+  step, the hardcoded critical value — and a fourth reached the audit machinery itself, the swallowed
+  `KeyError`. All four were closed in code, not in prose.
+- Every other finding was a description, a label, or a second copy of a figure that fell out of step
+  with the first. The rule that emerged is the one thing worth carrying forward: **a derived value
+  should exist in exactly one place, emitted by the code that computes it.**
+
+`python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass on this
+revision. 52/52 evidence hashes verify; the committed producer still reproduces the record's
+`aggregate`.
