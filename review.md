@@ -252,3 +252,72 @@ appropriately cautious, and strategically aligned with a fast-changing agent eco
 central claim exactly: the evaluated presentation showed no demonstrated advantage on this saturated
 instrument, so it was not promoted. Treat the AGI/RSI discussion above as a direction for future
 threat modeling—not as a capability claim or a request to expand this branch.
+
+---
+
+# Response — 2026-09-22
+
+Applied S-A1 now rather than deferring it. P-A1 describes existing practice and needs no change. The
+forward direction is acknowledged and deliberately not built.
+
+## S-A1 — applied, with a correction to where it lives
+
+The substance is right: "independently" claimed more than the runs support. They share the frozen
+scenario, the rubric, the model family and the grader family; what differs is a separate execution, a
+corrected harness and CLI 2.1.273 → 2.1.274. Nothing in that rules out a defect common to all of
+them, which is exactly what "independent" would imply.
+
+**One correction: `research/PORTABILITY.md` is the file that already worded it correctly.** It says
+"in all twenty gradings, in both replications" and makes no independence claim. The overclaim was in
+three other places, now all withdrawn:
+
+| Location | Was | Now |
+|---|---|---|
+| `tests/workflows/prior-art/v2/README.md` | "**Saturation reproduced independently**" | "**Saturation reproduced in the leak-free run**", plus what the two runs share |
+| `docs/ENFORCEMENT.md` | "in two independent runs" | "in both runs" |
+| `attempt-20260917-replication.json` `findings[2]` | "reproduces independently… Two independent runs" | "reproduces in the leak-free run… Both runs", plus the shared-scenario caveat |
+
+The record's `conclusion` is qualified the same way: reproduced on a leak-free instrument and a
+different CLI build, **though not on an independent scenario, rubric or grader**.
+
+**On deferring it to "the next natural edit":** declined, respectfully. Changing a word is not
+reopening the experiment, and this branch spent six rounds on exactly one failure mode — descriptions
+drifting behind the thing they describe. A known-imprecise word left in place because a better moment
+will come is how that drift accumulated in the first place. It cost one commit.
+
+No measured value moved: `pairs` and the producer-emitted `aggregate` are identical to `ef7fdd1`,
+both 2026-09-16 records are unchanged, and 23/23 evidence hashes verify. `findings` and `conclusion`
+are hand-written prose and are not producer output, so the record and `aggregate.py` remain in sync.
+
+## P-A1 — no change; this is the pattern already in place
+
+`derivation` already records that `harness.py` executed the trial and computed no statistics, that
+`aggregate.py` is a post-run producer committed afterwards, and which artifact is which. Adding a
+document to promise a practice the artifact already demonstrates would be the kind of speculative
+process work the intake rule in `research/PORTABILITY.md` exists to prevent. Recorded here as the
+disposition; the pattern stands.
+
+## The recommended direction
+
+Taken as direction, not as scope for this branch — as stated. Two observations rather than edits:
+
+- Items 1 and 5 (capability-independent invariants; containment and recovery as a first-class
+  portable contract) are the same gap `docs/ENFORCEMENT.md` already carries as a deferred item:
+  budgets bound effort, not scope, with a trigger naming a recorded adopter requirement or an
+  observed in-scope-budget run acting outside its assigned task. The direction converges with what
+  is written down; it does not need a second home.
+- Item 6 restates the discipline the deferred table implements. "Do not schedule an AGI evaluation"
+  is the same rule as "a gap with no fired trigger is not a backlog item", and none of the four
+  triggers has fired.
+
+The framing worth keeping from this review is the reformulation of the question: not "does this cope
+with AGI or RSI", which has no acceptance criterion here, but **which controls remain outside the
+executor's unilateral authority, and can the owner detect, contain and recover from violations**.
+That is answerable, and the honest answer today is the one the review gives — cooperative controls
+plus adopter-held external authority, which is a foundation and not a sufficiency claim.
+
+## Standing
+
+`python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass.
+23/23 evidence hashes verify and the committed producer still reproduces the record's `aggregate`.
+No Blocking, Major or Minor findings outstanding on either side.
