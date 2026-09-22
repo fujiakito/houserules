@@ -209,13 +209,16 @@ run is the leak-free instrument and the one the outcome below rests on.
 **Outcome: no advantage demonstrated; not promoted.** Baseline mean 3.90, candidate mean 3.85, paired
 difference -0.05, spanning zero on both a normal (z) and a t(9) interval — [-0.2259, +0.1259] and
 [-0.2530, +0.1530]. Seven of ten pairs tied. The leaky run reached the same null from the other side
-(+0.05); removing the leak tightened the result rather than moving it.
+(+0.05). Both runs failed to demonstrate an advantage. The corrected run has a smaller observed
+paired spread, but random variation and the changed CLI build prevent attributing that change to
+removal of the leak or ruling out its contribution to the earlier result.
 
-How the single pair's one-point gap was resolved, since that is the question this closed: it docked
-the baseline 0.5 on check 1 and 0.5 on check 4. Check 1 is cleanly contradicted — ten isolated
-gradings scored the baseline 1.0 there every time — so that half came from grading both outputs in
-one call. Check 4 is not contradicted: the baseline scored 0.5 there in 5 of 10, so that half is
-ordinary within-arm variation. Neither half is the treatment.
+The single pair's one-point gap was not reproduced consistently. It docked the baseline 0.5 on
+check 1 and 0.5 on check 4. In the September 16 replication, ten isolated gradings scored the
+baseline 1.0 on check 1, while it scored 0.5 on check 4 in 5 of 10. These observations are consistent
+with grading-procedure differences and within-arm variation, but newly generated outputs were
+also used; the comparison does not isolate their causal contributions or exclude a presentation
+effect. The original gap cannot be reliably attributed to the handoff presentation.
 
 Two limits keep this from being evidence of equivalence. The rubric is saturated — checks 1-3 scored
 1.0 for both arms in all twenty gradings, in both replications — so the instrument cannot resolve a

@@ -80,11 +80,12 @@ harness are in [attempt-20260916-replication-outputs/](attempt-20260916-replicat
 spanning zero on both a normal (z) and a t(9) interval — [-0.179, +0.279] and [-0.214, +0.314]. Five pairs tied, three
 favoured the candidate, two favoured the baseline; no call was indeterminate.
 
-The single pair recorded above **does not reproduce**, and its one-point gap decomposes into two
-halves. That run docked the baseline 0.5 on check 1 and 0.5 on check 4. Across ten isolated gradings
-the baseline scored 1.0 on check 1 in all ten, so that half came from grading both outputs in one
-call; it scored 0.5 on check 4 in 5 of 10, so that half is ordinary within-arm variation. Neither
-half is the handoff presentation.
+The single pair's one-point gap recorded above **was not reproduced consistently**. That run docked
+the baseline 0.5 on check 1 and 0.5 on check 4. Across ten isolated gradings the baseline scored 1.0
+on check 1 in all ten, and 0.5 on check 4 in 5 of 10. These observations are consistent with
+grading-procedure differences and within-arm variation. Because the replication also used newly
+generated outputs, it does not isolate those causes or exclude a presentation effect; the original
+gap cannot be reliably attributed to the handoff presentation.
 
 **The rubric is saturated.** Checks 1-3 scored 1.0 for both arms in all twenty gradings. Only
 check 4 varies, and it varies within each arm. On this scenario and model the instrument has
@@ -105,11 +106,12 @@ The harness now names every call's directory with an opaque random token and the
 The [2026-09-17 record](attempt-20260917-replication.json) carries the correction, the per-call
 tokens and the full evidence; the 2026-09-16 numbers stand as recorded, with the leak noted.
 
-**The conclusion survives and tightens.** Baseline mean 3.90, candidate 3.85, paired difference
+**No advantage demonstrated after correcting the harness.** Baseline mean 3.90, candidate 3.85, paired difference
 **-0.05**, spanning zero on both a normal interval [-0.2259, +0.1259] and a t(9) interval
 [-0.2530, +0.1530]. Seven pairs tied, two favoured the baseline, one the candidate. The difference
-changed sign and the paired sd fell from 0.369 to 0.284, so the leak was not producing the earlier
-result. **Saturation reproduced in the leak-free run**: checks 1-3 again scored 1.0 for both arms
+changed sign and the paired sd fell from 0.369 to 0.284. These are descriptive comparisons, not
+evidence that the leak had no effect: random variation and the changed CLI build prevent isolating
+its contribution. **Saturation reproduced in the leak-free run**: checks 1-3 again scored 1.0 for both arms
 in all twenty gradings. The two runs share the frozen scenario, the rubric, the model family and
 the grader family, so this is a second execution on a corrected harness and a different CLI build,
 not an independent replication. Note the CLI build differs (2.1.273 then, 2.1.274 now), so this is not a
