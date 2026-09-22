@@ -1539,17 +1539,22 @@
   },
   "evidence_note": "SHA-256 of the committed evidence bytes. Each grader prompt is additionally reconstructible as frozen rubric.md + the harness's fixed isolated-grading instruction + the committed blind output, and every grader_call.prompt_sha256 matches that reconstruction.",
   "corrections": {
-    "note": "Amendments to this record's interpretation, per the boundary in CONTRIBUTING.md. Measured values \u2014 pairs, aggregate, scores, input and evidence hashes \u2014 were never edited; recorded_date names the execution, not any amendment.",
+    "note": "Amendments to this record since its execution, per the boundary in CONTRIBUTING.md. Field lists are computed from each commit's JSON diff rather than written by hand. Captured observations \u2014 the per-call results in `pairs`, their scores, argv, timestamps and usage, and `input_hashes_measured` \u2014 have never been edited. Derived values and producer provenance (`aggregate`, `evidence_file_sha256`, `derivation`) have been corrected where the derivation itself was wrong; each such entry carries the previous value. `recorded_date` names the execution, not any amendment.",
     "amendments": [
       {
         "date": "2026-09-17",
         "commit": "1b90990",
-        "fields": [
-          "limitations",
-          "findings[1]",
-          "evidence_file_sha256"
-        ],
-        "reason": "Review findings 1 and 2. A generation-side working-directory leak was recorded (each arm ran in a directory named after its own arm), and findings[1] had claimed the 2026-09-16 single pair's whole one-point gap came from comparative grading; only the check-1 half did, the check-4 half being within-arm variation. A limitation on the normal-vs-t interval and an evidence-hash block were added."
+        "reason": "Review findings 1 and 2: a generation-side working-directory leak was recorded, and findings[1] had claimed the 2026-09-16 single pair's whole one-point gap came from comparative grading when only the check-1 half did. A limitation on the normal-vs-t interval and an evidence-hash block were added.",
+        "fields_changed": {
+          "derived value or producer provenance": [
+            "evidence_file_sha256"
+          ],
+          "interpretation": [
+            "evidence_note",
+            "findings",
+            "limitations"
+          ]
+        }
       }
     ]
   }

@@ -259,15 +259,17 @@
   },
   "evidence_note": "SHA-256 of the committed evidence bytes. grader-prompt.txt retains the CRLF line endings the frozen rubric contributes; .gitattributes pins this directory with -text so those bytes survive checkout on any platform.",
   "corrections": {
-    "note": "Amendments to this record's interpretation, per the boundary in CONTRIBUTING.md. Measured values \u2014 pairs, aggregate, scores, input and evidence hashes \u2014 were never edited; recorded_date names the execution, not any amendment.",
+    "note": "Amendments to this record since its execution, per the boundary in CONTRIBUTING.md. Field lists are computed from each commit's JSON diff rather than written by hand. Captured observations \u2014 the per-call results in `pairs`, their scores, argv, timestamps and usage, and `input_hashes_measured` \u2014 have never been edited. Derived values and producer provenance (`aggregate`, `evidence_file_sha256`, `derivation`) have been corrected where the derivation itself was wrong; each such entry carries the previous value. `recorded_date` names the execution, not any amendment.",
     "amendments": [
       {
         "date": "2026-09-17",
         "commit": "1b90990",
-        "fields": [
-          "limitations"
-        ],
-        "reason": "Review finding 1. Recorded the generation-side working-directory leak: each arm ran in `cwd-baseline` or `cwd-candidate`, and the headless CLI places the working directory in the model's context, so each generating call could read a word naming its own arm."
+        "reason": "Review finding 1: recorded the generation-side working-directory leak \u2014 each arm ran in `cwd-baseline` or `cwd-candidate`, and the headless CLI places the working directory in the model's context, so each generating call could read a word naming its own arm.",
+        "fields_changed": {
+          "interpretation": [
+            "limitations"
+          ]
+        }
       }
     ]
   }

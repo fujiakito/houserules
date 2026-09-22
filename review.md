@@ -593,3 +593,79 @@ commit links make these omissions recoverable, but the new in-record audit shoul
   `python check.py`, `python install.py --check` and 76-test result were not independently
   reproduced. The repository's required gates therefore remain unverified by this reviewer;
   this limitation is neither a failing result nor a claimed pass.
+
+---
+
+# Response — 2026-09-22 (third)
+
+All three confirmed from the actual JSON diffs, not from memory. P-F1 is the substantive one: my own
+correction note was false and my own new policy would have forbidden what I had already done.
+
+## P-F1 — the boundary was two-tier and the history needed three
+
+Confirmed by diffing each amending commit against its parent:
+
+| Commit | `aggregate` changed | `evidence_file_sha256` changed |
+|---|---|---|
+| `841d9b1` | yes — SE `0.0897`→`0.0898`, both intervals | no |
+| `fa19186` | no | yes — `aggregate.py`, `bundle.json` added |
+| `def6b13` | yes | yes — `aggregate.py` |
+| `ee953f3` | yes | yes — `aggregate.py` |
+
+So "pairs, aggregate, scores, input and evidence hashes were never edited" was wrong on two of its
+five terms, and the policy I wrote in the same commit classified `aggregate` and the hash map as
+frozen — which would have made every one of those corrections a violation. Left as it stood, a future
+contributor facing another miscomputed statistic would have had no legitimate way to fix it short of
+pretending a new execution had occurred.
+
+The boundary is now three-tier, and the middle tier is the one that was missing:
+
+- **Captured observations** — the evidence files, and a record's per-call results in `pairs` with
+  their scores, argv, timestamps and usage, plus `input_hashes_measured`. Never edited; append a new
+  dated run. **Verified true**: identical to each record's birth commit (`0bde2a6`, `f5f987f`,
+  `fc795cf`).
+- **Derived values and producer provenance** — `aggregate`, `evidence_file_sha256`, `derivation`.
+  Correctable when the derivation itself was wrong, never to alter what was observed, and **the
+  correction entry now carries the previous value**.
+- **Interpretation** — `findings`, `conclusion`, `limitations` and the notes. Amendable as before.
+
+## P-F2 — field lists are now computed, not written
+
+Confirmed: the hand-written lists omitted `configuration.blinding_note` and
+`configuration.context_isolation` from `841d9b1`, `evidence_note` from `fa19186`, and
+`evidence_file_sha256["aggregate.py"]` from `def6b13` and `ee953f3`.
+
+Rather than patch the lists, they are now **derived from each commit's JSON diff** and grouped by the
+three kinds above, with `previous_values` recorded for every derived-value change. The same lesson
+this branch has hit in every round applies to an audit trail as much as to a statistic: a
+hand-maintained description of a computed thing is a second copy waiting to drift. `corrections.note`
+says the lists are diff-computed so the next reader knows not to hand-edit them.
+
+## S-F2 — policy now names the real path
+
+Confirmed: `corrections` is an object of `note` + `amendments`, so `Array.isArray(corrections)` is
+false. The policy now names `corrections.amendments`. The object shape is kept rather than flattened:
+the note is what tells a standalone consumer which tier a field belongs to, and it travels with the
+record rather than requiring `CONTRIBUTING.md`.
+
+## Verification
+
+- `python check.py` passed, `python install.py --check` no drift,
+  `python -m unittest discover -s tests` 76 tests OK — run here, on this working tree, since your
+  appendix is explicit that none of this was reproduced remotely.
+- **52/52 evidence hashes** re-verified; `aggregate.py` over `bundle.json` still equals the record's
+  `aggregate`.
+- Against `7c28bb4`, the only changed key in each of the three records is `corrections`.
+- Captured observations checked against each record's birth commit, not merely against the previous
+  revision: `pairs`, `input_hashes_measured` and `recorded_date` are unchanged since execution.
+
+Your point that counting hash entries is not verifying them is right, and it is the reason that last
+check is stated as run here rather than inferred. The one thing neither side can verify alone stays
+the same: your independent recomputation of the ten pairs agrees with what the committed producer
+emits.
+
+## Standing
+
+Three gates pass. No captured observation has changed since execution in any record. Derived values
+were corrected four times, each now logged with its previous value; interpretation was amended seven
+times, each now logged with diff-computed fields. The record says all of that itself.
