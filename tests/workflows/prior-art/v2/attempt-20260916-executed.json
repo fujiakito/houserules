@@ -257,5 +257,18 @@
     "grader-result.txt": "f4e112fa853da9d5eaf38fd46cb4b96be200af5fb5750e23bd633c1f6c880339",
     "harness.py": "8854f64c9ef3390327cae337f0df51a14eaa555ba1112ca643ad85d6477d1f74"
   },
-  "evidence_note": "SHA-256 of the committed evidence bytes. grader-prompt.txt retains the CRLF line endings the frozen rubric contributes; .gitattributes pins this directory with -text so those bytes survive checkout on any platform."
+  "evidence_note": "SHA-256 of the committed evidence bytes. grader-prompt.txt retains the CRLF line endings the frozen rubric contributes; .gitattributes pins this directory with -text so those bytes survive checkout on any platform.",
+  "corrections": {
+    "note": "Amendments to this record's interpretation, per the boundary in CONTRIBUTING.md. Measured values \u2014 pairs, aggregate, scores, input and evidence hashes \u2014 were never edited; recorded_date names the execution, not any amendment.",
+    "amendments": [
+      {
+        "date": "2026-09-17",
+        "commit": "1b90990",
+        "fields": [
+          "limitations"
+        ],
+        "reason": "Review finding 1. Recorded the generation-side working-directory leak: each arm ran in `cwd-baseline` or `cwd-candidate`, and the headless CLI places the working directory in the model's context, so each generating call could read a word naming its own arm."
+      }
+    ]
+  }
 }

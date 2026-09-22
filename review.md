@@ -404,3 +404,74 @@ pair scores, hashes, or measured aggregates to resolve a wording issue.
 - No local clone was made and no Python suite was executed during this remote review. The
   repository's required verification remains to be evidenced for the final revision in an
   execution environment; this appendix does not replace that gate.
+
+---
+
+# Response — 2026-09-22 (second)
+
+S-F1 confirmed, and it is wider than the one commit it names. Resolved by defining the boundary the
+rule was missing, and by giving every amended record dated correction provenance.
+
+## S-F1 — confirmed, and broader than stated
+
+The rule is real and I had been breaking it repeatedly, not once. `CONTRIBUTING.md:75` reads
+"Append a new dated run; do not edit a recorded one", and on this branch the 2026-09-17 record was
+touched in **six** commits and each 2026-09-16 record in **two** — the S-A1 edit was the last of
+seven, not an isolated lapse. Naming those fields hand-written prose was a description of what they
+are, not the exception I implicitly treated it as.
+
+What the rule does not distinguish is the thing that makes it ambiguous. Its stated rationale is
+"frozen bytes referenced by SHA-256 records", which describes the **evidence files** — captured
+outputs, harness, bundle — and those have never been edited across any round. But the **record JSON
+itself is not hashed by anything**; it is the artifact that holds the hashes. The rule's text covers
+it, its rationale does not, and that gap is what let seven edits look defensible one at a time.
+
+**Resolution: the second option, not the first.** Reverting to the original interpretations and
+appending corrections would leave the standalone records asserting things now known false — the
+uncorrected one-point-gap claim, no leak limitation, the independence overclaim. A record that states
+something false is worse for its next consumer than one carrying a correction, which is the same
+reasoning the earlier round used to accept annotating a superseded record.
+
+So the boundary is now explicit in `CONTRIBUTING.md`:
+
+> **Execution evidence** — captured outputs, harness and aggregation inputs, and the measured values
+> in an attempt record (`pairs`, `aggregate`, scores, input and evidence hashes) — is frozen. Never
+> edit it; append a new dated run. **Interpretation** — `findings`, `conclusion`, `limitations`,
+> notes and provenance fields — may be amended when a later review shows it wrong. An amendment adds
+> an entry to the record's `corrections` array giving the date, the fields touched and why; it never
+> changes a measured value, and `recorded_date` keeps naming the execution, not the edit.
+
+And every amended record now carries that provenance: a `corrections` block with **five** amendments
+on the 2026-09-17 record and **one** on each 2026-09-16 record, each naming its date, commit, fields
+and reason. A consumer of a standalone dated record can now see that a September 22 interpretation
+sits on a September 17 execution, and why.
+
+## Verification, including what the review could not run
+
+Your appendix is explicit that the gates were author-reported and that no clone or Python run
+happened remotely. Run here on the current working tree:
+
+- `python check.py` — passed. `python install.py --check` — no drift. `python -m unittest discover -s
+  tests` — 76 tests, OK.
+- **52/52 evidence hashes** re-verified across the three records.
+- `aggregate.py` over the committed `bundle.json` still equals the record's `aggregate`.
+- Diffed all three records against `c944e23`: the **only** changed key in each is `corrections`.
+  `pairs`, `aggregate`, `input_hashes_measured` and `evidence_file_sha256` are byte-identical.
+
+Your independent recomputation of the ten pairs — 3.90 / 3.85 / -0.05, sd 0.2838, SE 0.0898, both
+intervals, 7/1/2, checks 1-3 all 1.0 — matches what the producer emits here, from a different
+arithmetic implementation. That is the most useful check in this appendix, because it is the one
+thing neither side could fake independently.
+
+## Dispositions
+
+- **S-A1**: accepted as resolved, and your correction about which file carried the overclaim matches
+  what I found — `research/PORTABILITY.md` was already right.
+- **P-A1**: unchanged, as agreed.
+- **Future direction**: still outside this branch, as agreed.
+
+## Standing
+
+All three gates pass on the current revision. No measured value has changed in any record across
+seven rounds of review; the only thing that ever changed was interpretation, and it now says so in
+the records themselves.
