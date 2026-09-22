@@ -826,3 +826,71 @@ class of defect as the swallowed `KeyError`. Two in one round, both found by you
 Three gates pass. No captured observation has changed since execution in any record. Every replaced
 derived value now carries its prior value, every added one is marked as added, and the paths that
 identify them can no longer be misparsed.
+
+---
+
+# Follow-up review — 2026-09-22 (S-F3 verification and closure)
+
+Repository: `fujiakito/houserules` (ID `1359058857`)  
+Branch: `docs/close-evaluation-and-reposition`  
+Reviewed target: `53851e0d638b8d80a2c5da9f736e2a0bfdd941d5`  
+Incremental base: `d2e01f541a6e5cafffa26b7f6c2825584d52ce1a`  
+Main / verified merge base: `5d1206e3efe6091fcd292684914155dcd9e6c79c`  
+Method: [hr-code-review](templates/skills/hr-code-review/SKILL.md), unchanged blob
+`2742c02e26ab6837f5fc9c3b21e798b6c54d04ad`, applied sequentially in this shared-context
+conversation. This is not an independent review. Source retrieval date: 2026-09-22.
+
+Scope: the one new commit and its five changed files. Reviewed the updated policy, all three
+correction blocks and the appended response. Rechecked the historical amendment data against
+the immutable parent/commit JSON snapshots retrieved in the previous round. The main merge
+base and unchanged instruction/skill blobs were verified; this is not a fresh review of the
+whole branch.
+
+## Verdict
+
+**S-F3 is resolved. No further fix is requested for this increment.** Both previously missing
+producer hashes are present and exactly match their parent records. The new literal-segment
+paths and `derived_field_history` consistently represent every recorded derived/provenance
+change, including additions.
+
+The earlier Standards and Spec findings remain resolved after reassessment. No Blocking,
+Major or Minor finding remains within this follow-up's scope. This concludes the correction
+review; it does not independently certify the repository's Python verification gates.
+
+## Standards
+
+**No findings.** `CONTRIBUTING.md:75` and the records agree on literal key-segment arrays,
+complete derived-field history, previous values for replacements, and explicit addition
+markers. Every recorded changed path resolves in its referenced amended record. The literal
+`aggregate.py` key stays intact rather than being interpreted as two nested keys.
+
+## Spec
+
+**No findings.** The requirement behind S-F3 is met: the `def6b13` entry retains the prior
+producer hash beginning `85c1fca1`, and `ee953f3` retains the one beginning `fadfd58c`.
+The full hashes were compared, not only these prefixes. Checking the complete history also
+found no missing, extra or duplicate paths, incorrect previous values, or incorrect
+added/replaced classifications.
+
+## Verification and limits
+
+- Executed in-memory JavaScript comparisons against the historical JSON, independently of
+  the author's audit-generation procedure. All **7 amendment field lists** match their
+  historical diffs. All **9 replaced derived/provenance fields** retain their exact prior
+  value; all **9 added fields** were absent from the parent and are explicitly marked added.
+  History coverage and field-category membership match the changed paths.
+- Compared all three current records with the preceding reviewed state: only `corrections`
+  changed, and the file text preceding that block is identical. Captured results, published
+  aggregates and evidence-hash maps are unchanged by this increment.
+- Rechecked captured fields against the original record snapshots: single-pair `arms`,
+  `grading` and `result_summary`; both replication `pairs` blocks; and all three
+  `input_hashes_measured` and `recorded_date` values. Required fields were explicitly
+  checked for presence before equality, and all match their originals.
+- The response's account of fixing the audit generator's exception handling is author-reported:
+  that generator's executable implementation is not included in this commit. The committed
+  output and its compliance with the new policy were verified directly.
+- GitHub returned zero Actions runs, zero check runs and zero commit statuses for the exact
+  target. No clone or Python execution occurred here. The author's reported
+  `python check.py`, `python install.py --check`, 76 passing unit tests, 52/52 evidence
+  rehash and aggregation reproduction were not independently rerun. Their absence from this
+  review's execution evidence is a verification limit, not a new defect or a failed test.
