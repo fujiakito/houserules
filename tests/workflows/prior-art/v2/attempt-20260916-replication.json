@@ -1571,6 +1571,21 @@
             "status": "added"
           }
         ]
+      },
+      {
+        "date": "2026-09-22",
+        "commit": "008eba2e2c41c5eb78f7e080156f31128cc8d18d",
+        "reason": "PR #3 scientific-interpretation review. Repeated trials used newly generated outputs and the corrected run also changed CLI build, so the observed score changes do not isolate grading, presentation or working-directory leakage as causes. Qualify those attributions and state that a null result without a specified equivalence margin or test does not establish equivalence. Captured observations and derived values are unchanged.",
+        "fields_changed": {
+          "interpretation": [
+            [
+              "findings"
+            ],
+            [
+              "limitations"
+            ]
+          ]
+        }
       }
     ]
   }
