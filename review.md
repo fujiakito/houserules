@@ -669,3 +669,97 @@ emits.
 Three gates pass. No captured observation has changed since execution in any record. Derived values
 were corrected four times, each now logged with its previous value; interpretation was amended seven
 times, each now logged with diff-computed fields. The record says all of that itself.
+
+---
+
+# Follow-up review — 2026-09-22 (three-tier archival correction)
+
+Repository: `fujiakito/houserules` (ID `1359058857`)  
+Branch: `docs/close-evaluation-and-reposition`  
+Reviewed target: `2c9568e27cafe6453cd1865a9b3a4a90cb8f20ed`  
+Incremental base: `7c28bb49ad95ab7548d5a46001f6b511481e08a9`  
+Main / verified merge base: `5d1206e3efe6091fcd292684914155dcd9e6c79c`  
+Method: [hr-code-review](templates/skills/hr-code-review/SKILL.md), unchanged skill blob
+`2742c02e26ab6837f5fc9c3b21e798b6c54d04ad`, applied sequentially with shared conversation
+context. This is not independent review. Sources retrieved on 2026-09-22.
+
+Scope: the one new commit and its five changed files, with the referenced historical JSON
+versions checked against their parents. The branch's merge base was verified; this round
+does not renew the earlier review of the entire branch. Applicable instructions and the
+review skill are unchanged; the revised `CONTRIBUTING.md:75` is the criterion for the audit.
+
+## Verdict and previous findings
+
+The three-tier boundary now distinguishes captured observations, derived results/producer
+provenance, and interpretation. The correction path is right, and the historical field lists
+are now complete. One new Minor / P2 omission remains in the promised previous-value data.
+
+- **S-F2 resolved:** the policy now names the actual `corrections.amendments` array.
+- **P-F1 resolved:** the blanket claim that aggregates and evidence hashes were never edited
+  has been withdrawn; derived results and producer provenance are explicitly correctable.
+- **P-F2 resolved:** all seven recorded amendment field lists match the corresponding JSON
+  changes, including the previously omitted configuration notes and producer hash fields.
+- **S-F1's archival-boundary issue is resolved.** The remaining finding concerns completeness
+  of the new previous-value requirement, not permission to correct interpretation.
+
+Severity follows the existing review scale: Minor is a concrete local defect with limited
+consequence; P2 means normal priority. No Blocking or Major finding was identified in this
+increment, and no numerical regression was found.
+
+## Standards
+
+### S-F3 — Minor / P2: retain both previous producer hashes
+
+Location: `tests/workflows/prior-art/v2/attempt-20260917-replication.json:1668-1671`
+and `:1685-1688`. Rule: `CONTRIBUTING.md:75` explicitly includes `evidence_file_sha256`
+in derived values/producer provenance and requires the correction entry to carry its
+previous value.
+
+The `def6b13` and `ee953f3` amendments correctly list
+`evidence_file_sha256.aggregate.py` in `fields_changed`, but each `previous_values`
+object contains only the interval note and derivation note. Both commits replaced an
+existing hash, so these are not newly introduced fields with no prior value:
+
+| Amendment | Missing previous value of `evidence_file_sha256["aggregate.py"]` |
+|---|---|
+| [def6b13](https://github.com/fujiakito/houserules/commit/def6b13fd8a35279f7157d84719e2bb216ae57a2) | `85c1fca1829770bb73352da7830a1760d01cb4a2b1b24972f61f51e30b899328` |
+| [ee953f3](https://github.com/fujiakito/houserules/commit/ee953f3d2a9bc5a5ba3c5e9c41e2c321fa41c4e8) | `fadfd58c17b9b3f9b460bcb1f168f9484edce274a81e7d66f7115e739a4d938d` |
+
+A standalone record therefore cannot recover those prior producer identities from the new
+audit data, despite the policy and response claiming previous values are retained. The
+committed history still makes them recoverable; no raw evidence loss is alleged.
+
+Next action: include those two hashes and check that every changed derived/provenance field
+that existed in the parent has the exact parent value recorded. Keep JSON key segments
+intact during lookup: `aggregate.py` is one literal key under `evidence_file_sha256`.
+Splitting the displayed dotted path would address nonexistent nested keys; that is a possible
+cause, not a verified diagnosis, because the audit-generation implementation is not part of
+this diff. Do not invent prior values for fields newly added by a commit.
+
+## Spec
+
+The intended three-tier policy and complete historical field lists are implemented. The
+claim that every replaced derived value has its prior value is not yet fully met, for the
+same two omissions in S-F3; this is one defect, not an additional finding. No other Spec
+finding was identified in the reviewed increment.
+
+## Verification and limits
+
+- Parsed all three current JSON records and compared with the preceding reviewed state.
+  Only `corrections` changed; all text preceding that block is identical.
+- Independently computed historical changed paths for all seven amendment entries, preserving
+  literal JSON key segments and treating arrays as whole fields. Every field list matched.
+- Compared previous values with their actual parent records: seven of nine replaced
+  derived/provenance fields retain the correct old value; two producer hashes are missing.
+  Newly added fields were excluded from that replacement count.
+- Compared captured data with their original records: `fc795cf` for the single-pair run,
+  `f5f987f` for the September 16 replication, and `0bde2a6` for September 17.
+  The single-pair record uses `arms`, `grading` and `result_summary`, not `pairs`;
+  those fields are unchanged. Both replication `pairs` blocks, all three
+  `input_hashes_measured` blocks and all three `recorded_date` values are unchanged.
+- GitHub reports zero Actions runs, zero check runs and zero commit statuses for the exact
+  reviewed target. This is not a test failure; the previously inspected workflow does not
+  automatically run on pushes to this branch.
+- No clone or Python execution occurred in this session. The response's 52/52 hash verification,
+  producer reproduction and three passing Python gates remain author-reported here. This round
+  verifies JSON history and audit contents; it does not claim fresh executable gate results.
