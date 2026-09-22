@@ -321,3 +321,86 @@ plus adopter-held external authority, which is a foundation and not a sufficienc
 `python check.py`, `python install.py --check` and `python -m unittest discover -s tests` pass.
 23/23 evidence hashes verify and the committed producer still reproduces the record's `aggregate`.
 No Blocking, Major or Minor findings outstanding on either side.
+
+
+---
+
+# Follow-up review — 2026-09-22
+
+Repository: `fujiakito/houserules`  
+Branch: `docs/close-evaluation-and-reposition`  
+Reviewed head: `cdb2a5ec0bd5c0b7c80a9a8be200ae8590f6f906`  
+Previous reviewed state plus review transfer: `ef7fdd1ebdb6a2ccf02bc9ed680826535568a169`  
+Main / merge base: `5d1206e3efe6091fcd292684914155dcd9e6c79c`  
+Method: remote GitHub file/diff inspection and in-memory numerical cross-checks. This is a
+follow-up review of the one new commit, not a fresh execution or independent re-review of the
+entire historical experiment. All source references below were retrieved on 2026-09-22.
+
+## Verdict
+
+The independence correction is scientifically appropriate and the response to S-A1 is accepted
+on substance. P-A1 needs no new implementation. No numerical or executable regression was found
+in this increment. One Minor Standards finding remains concerning the project's own archival
+rule; resolve that mismatch before calling the branch unconditionally ready under those rules.
+
+## Correction to the earlier review
+
+The earlier S-A1 named the wrong file. `research/PORTABILITY.md:220-225` already said "in both
+replications" and is unchanged by this commit. The actual overclaims were in the v2 README,
+`docs/ENFORCEMENT.md`, and the 2026-09-17 record. The response identifies them correctly.
+Withdrawing the wording now is reasonable; it does not require reopening or rerunning the trial.
+The earlier suggestion to wait until a natural edit was optional, not an evidence requirement.
+
+## Standards finding S-F1 — Minor / P2: reconcile the edit with the archival rule
+
+Location: `tests/workflows/prior-art/v2/attempt-20260917-replication.json:1558-1560`.  
+Rule: `CONTRIBUTING.md:75` says files under `tests/workflows/prior-art/` are frozen and instructs:
+"Append a new dated run; do not edit a recorded one."
+
+This commit replaces `findings[2]` and `conclusion` inside the existing record, whose
+`recorded_date` remains `2026-09-17`. The replacements improve the interpretation, but calling
+these fields hand-written rather than producer output does not establish an exception to that
+rule. A consumer of the standalone dated record now sees a September 22 interpretation without
+an in-record correction date. Git history and the dated response here retain provenance, and the
+measurements are intact; this is a narrow archival-policy mismatch, not evidence corruption or a
+reason to repeat the experiment.
+
+Recommended resolution: retain the original recorded interpretation and append a separately dated
+correction that the current summaries reference. Alternatively, explicitly define the boundary
+between immutable execution evidence and editable interpretation metadata in the contributing
+policy, and give amended records dated correction provenance. Do not change captured outputs,
+pair scores, hashes, or measured aggregates to resolve a wording issue.
+
+## Spec review and advisory dispositions
+
+- S-A1: substance resolved. The v2 README now names the shared scenario, rubric, model and grader
+  families and the changed harness/CLI build; the enforcement map avoids independence language;
+  the record's revised interpretation carries the same qualification.
+- P-A1: no change required. `derivation` already distinguishes the executing harness from the
+  later aggregation producer and names its committed input. That block is unchanged.
+- Keeping the suggested future direction outside this branch is appropriate. The deferred
+  scope/budget entry overlaps the authority and containment discussion; it does not establish
+  that every recovery or evidence-integrity control exists. No such implementation is claimed
+  by this increment, and no speculative feature work is requested by this review.
+
+## Verification performed and limits
+
+- Inspected the complete four-file diff from `ef7fdd1` to `cdb2a5e`. No scripts, captured output
+  files, aggregation inputs, or 2026-09-16 records changed.
+- Parsed both versions of the 2026-09-17 JSON record and recursively compared them. The only
+  changed values are `findings[2]` and `conclusion`; `pairs`, `aggregate`, `derivation`, input
+  hashes, and the 23-entry evidence-hash map are identical.
+- Recomputed from the ten pairs in the current record: baseline mean 3.90, candidate mean 3.85,
+  paired difference -0.05, sample SD 0.2838, SE 0.0898, normal interval [-0.2259, 0.1259], and
+  t(9) interval [-0.2530, 0.1530]. Seven ties, one candidate win and two baseline wins match the
+  record. Every score on checks 1-3 is 1.0 for both arms. This used JavaScript arithmetic over
+  fetched JSON, not execution of the Python producer or a new model trial.
+- Read `aggregate.py` and the derivation block. Did not independently rehash all 23 evidence
+  files or rerun `aggregate.py`; the response's fresh 23/23 claim remains author-reported here.
+- GitHub returned zero Actions runs, zero check runs, and zero commit statuses for the reviewed
+  head. The combined status endpoint's "pending" with an empty list is not evidence of a running
+  check. `python check.py`, `python install.py --check`, and the unittest pass stated in the
+  response/commit message are author-reported, not independently verified by this review.
+- No local clone was made and no Python suite was executed during this remote review. The
+  repository's required verification remains to be evidenced for the final revision in an
+  execution environment; this appendix does not replace that gate.
