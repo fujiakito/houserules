@@ -1,0 +1,10 @@
+**Disposition:** F-1 is not verifiably resolved. S2's text change (whitespace-only input now rejected under AC-1) is a plausible fix, but the sole verification claim, V-1, cites evidence/whitespace.txt, which the transfer manifest lists as missing. No command output, test log, or other evidence made it into this packet. R-1's pass verdict applies to S1 and cannot be carried forward to S2 since AC-1's scope changed. Per protocol, an unverifiable verification event is treated as no verification — not as a pass and not as a failure of S2 itself, just an open gap.
+
+**Evidence gaps:** (1) evidence/whitespace.txt absent — need the file or a regenerated equivalent (test run, transcript, or reviewer's own reproduction) tied to S2's revision identity. (2) No content-hash/commit identity given for spec.md S2 itself in this packet — should be pinned before any verdict is recorded.
+
+**Next action / owner:** next-reviewer cannot close this — action is limited to document review and proposing updates, and release requires project-owner approval that is absent. Recommend: next-reviewer requests the original evidence file from whoever ran V-1, or re-runs the whitespace-rejection check against S2 and records a new verification event (V-2) with proper artifact identity. This falls to whoever holds execution/testing capability next, with project-owner sign-off required before release.
+
+**Proposed updates to append (not rewrite):**
+- New finding or note: "V-1 evidence untransferred; verification unconfirmed for S2."
+- New event when evidence arrives: V-2, referencing F-1 and S2's identity, with actual pass/fail result.
+- Handoff: owner unchanged, action → `obtain-evidence` or `re-verify`, blocker = missing evidence/whitespace.txt.

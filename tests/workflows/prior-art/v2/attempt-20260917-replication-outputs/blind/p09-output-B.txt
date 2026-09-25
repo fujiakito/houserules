@@ -1,0 +1,13 @@
+**Disposition:** F-1 (whitespace-only input unspecified) is spec-resolved but verification-unconfirmed. S2's AC-1 now explicitly requires rejecting whitespace-only input, so the fix author's proposal textually closes the gap identified in F-1 against S1. However, V-1's pass claim for S2 cannot be trusted as evidence: its cited artifact (evidence/whitespace.txt) is listed missing in the transfer manifest, and no command output or alternate verification evidence accompanied it. R-1's pass verdict remains valid only for S1 and does not extend to S2 — it must not be carried forward given AC-1 changed. No implementation is in scope, so this is a documentation-only review; the identity commitment is spec.md@S2's content digest (not captured in this packet — a gap).
+
+**Next action / owner:** next-reviewer should log a new verification round for S2 as "unverified/blocked — evidence missing," referencing V-1's claim without adopting its verdict. Release remains blocked pending project-owner approval, which is absent regardless of evidence status.
+
+**Evidence gaps:**
+- evidence/whitespace.txt missing from transfer manifest — cannot substantiate V-1.
+- No spec.md@S2 content digest recorded in this packet.
+- No independent confirmation that whitespace-only rejection is testable/observable given "no software implementation is in scope."
+
+**Proposed updates:**
+- Append new event: "V-1 verdict unconfirmed — supporting evidence file missing at transfer; request re-transfer or re-execution with recorded digest."
+- Do not close F-1; mark status "fix proposed, verification pending."
+- Update handoff: next action = obtain evidence/whitespace.txt or equivalent, then re-run verification before any release request.

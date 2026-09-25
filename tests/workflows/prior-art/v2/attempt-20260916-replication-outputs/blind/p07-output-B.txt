@@ -1,0 +1,10 @@
+**Disposition:** F-1 remains unresolved/open. S2's spec text plausibly addresses the gap (AC-1 now requires rejecting whitespace-only input), but V-1's claimed pass cannot be credited: its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the packet transfer manifest, and no command output or alternate verification artifact was transferred. A fix proposal plus an unsubstantiated verification claim is not equivalent to a completed, evidenced review pass. R-1's historical pass verdict applies only to S1 and does not carry forward to S2 given the AC-1 revision change.
+
+**Evidence gaps:** (1) evidence/whitespace.txt absent — no test input/output showing whitespace-only input is actually rejected by any implementation or check; (2) no record of who/what produced V-1's "pass" claim or how; (3) no independent verification event post-fix.
+
+**Next action / owner:** next-reviewer (or whoever holds V-1's evidence) must supply the missing evidence/whitespace.txt or equivalent verification output before V-1 can be treated as valid. Until then, this session's action is limited to documenting the gap, not resolving it — release approval is out of scope regardless (requires project-owner, currently absent).
+
+**Proposed updates to carry forward:**
+- Append new finding event: F-1 status = "spec revised, verification unsubstantiated" (do not overwrite F-1 or V-1's original records).
+- Record new review note: S2 document-level comparison confirms AC-1 wording now covers whitespace-only input, satisfying F-1 *on paper*; formal closure blocked pending evidence.
+- Handoff next action: obtain/attach missing verification evidence; do not mark F-1 closed or release-ready until evidence arrives and is reviewed.

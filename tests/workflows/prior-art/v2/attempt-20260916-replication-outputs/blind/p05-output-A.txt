@@ -1,0 +1,10 @@
+**Disposition:** F-1 remains open/unverified. Spec S2 textually addresses F-1 (AC-1 now requires rejecting whitespace-only input, matching the gap R-1/F-1 identified against S1). However, V-1's claimed "pass" for S2 cannot be credited: its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the packet transfer manifest, and no command output or alternate verification evidence was transferred. A verification verdict without its supporting evidence is not usable to close the finding. R-1's historical pass verdict stands unchanged as a record against S1 — it is not reinterpreted as covering S2.
+
+**Next action / owner:** next-reviewer (this role) can only perform document review and propose updates, not release. The next action is: request re-transfer or regeneration of evidence/whitespace.txt (or equivalent verification artifact) from whoever holds it, then re-run/re-confirm V-1 against S2 once evidence is present. Release still additionally requires project-owner approval, which remains absent regardless of evidence outcome.
+
+**Evidence gap:** Missing evidence/whitespace.txt is the sole blocker to accepting V-1's pass claim. No other verification artifacts exist in the packet.
+
+**Proposed updates:**
+- Append new finding event: "F-1 verification evidence missing; V-1 pass claim unsubstantiated pending evidence/whitespace.txt" (do not overwrite V-1).
+- Update handoff: current disposition = F-1 open pending evidence; next action = obtain missing evidence and re-verify; owner = evidence holder, then next-reviewer; release blocked pending project-owner approval.
+- Leave R-1 and V-1 records as-is; do not carry V-1's pass forward as authoritative.

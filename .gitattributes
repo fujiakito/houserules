@@ -10,3 +10,15 @@ tests/workflows/prior-art/rubric.md -text whitespace=blank-at-eol,-blank-at-eof,
 tests/workflows/prior-art/v2/baseline-prompt.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/prior-art/v2/candidate-prompt.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/prior-art/v2/rubric.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Captured execution evidence: preserve exact bytes, including the CRLF the frozen
+# v2 rubric contributes to the grader prompt. Recorded by SHA-256 in the attempt record.
+tests/workflows/prior-art/v2/attempt-20260916-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Replication evidence: preserve exact bytes of graded outputs and harness.
+# Recorded by SHA-256 in the attempt record.
+tests/workflows/prior-art/v2/attempt-20260916-replication-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Leak-free replication evidence: preserve exact bytes of graded outputs and harness.
+# Recorded by SHA-256 in the attempt record.
+tests/workflows/prior-art/v2/attempt-20260917-replication-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol

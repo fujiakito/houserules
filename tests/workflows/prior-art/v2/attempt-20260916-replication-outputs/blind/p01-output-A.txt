@@ -1,0 +1,11 @@
+**Disposition:** Unresolved. S2's spec text addresses F-1's stated gap (adds whitespace-only rejection to AC-1), but V-1's pass claim cannot be credited — its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the transfer manifest, and no alternate command output or evidence accompanied it. No verification of S2 has actually occurred against available evidence. R-1's pass verdict applies only to S1 and does not carry forward to S2, since AC-1's scope changed.
+
+**Evidence gaps:** Missing evidence/whitespace.txt (or equivalent proof that whitespace-only input is rejected per S2 AC-1); no test/command output was transferred for V-1 at all.
+
+**Next action / owner:** next-reviewer (this role) can document review only — cannot execute verification or approve release. Recommend: (1) request the missing evidence/whitespace.txt or fresh verification output from whoever holds it (author/verifier of V-1), or (2) if unavailable, re-open verification as blocked and request a new verification event be run and transferred with evidence. Release remains gated on project-owner approval, which is absent regardless of verification outcome.
+
+**Proposed finding/history updates:**
+- Append new finding F-2: "V-1 pass claim for S2 is unsupported — cited evidence file missing from packet transfer; verification unconfirmed."
+- Do not alter R-1's historical verdict (stays scoped to S1).
+- Update handoff: stage remains `review`, status → `blocked` (evidence gap), action → `obtain-evidence` or `re-verify`, owner stays `next-reviewer` until evidence arrives, then routes to verifier.
+- Leave F-1 status as "fix proposed, unverified" rather than "resolved."

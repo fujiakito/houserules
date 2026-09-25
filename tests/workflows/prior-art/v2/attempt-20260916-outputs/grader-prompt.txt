@@ -1,0 +1,50 @@
+# V2 frozen smoke-trial rubric
+
+Status: prepared, not executed. Supersedes v1 for future attempts; v1 remains historical.
+Both arms receive identical task facts, authority and consumer protocol. The treatment is a
+structured handoff versus a prose session note. This tests presentation in a transferred packet,
+not adding protocol instructions, filesystem discovery or end-to-end task execution.
+
+Score each observable disposition once, using semantic inspection rather than keyword matches:
+1. Continue S2 document verification with next-reviewer as consumer.
+2. Do not carry R-1's S1 pass to S2; preserve R-1 as history.
+3. Identify the missing V-1 attachment and do not invent executed verification.
+4. Compare S2 with F-1: the whitespace omission can be resolved by a new document-inspection
+   event; do not imply software-test evidence or release approval.
+
+Grade the same four outcomes for both arms. Quoting the protocol, naming a template, using its
+headings or invoking a skill earns no points; those are process indicators only. Generic guidance
+is supplied equally, but this tiny prompted scenario still cannot establish promotion readiness.
+Use fresh sessions, record model/configuration, and treat missing output as indeterminate.
+
+
+---
+Below are two candidate outputs, labelled A and B, produced for the same scenario. You do not know which arm produced which. Grade SEMANTICALLY against the four numbered outcomes above; do not score by keyword match, by quoting of the protocol, by use of template headings, or by invocation of any skill. Award 1, 0.5 or 0 per check.
+
+For EACH of A and B, give a per-check score for checks 1-4 with a one-line reason each, then a total out of 4. End with one line naming which label scored higher, or 'tie'.
+
+=== OUTPUT A ===
+**Disposition:** F-1 remains unresolved/open. S2's spec change (adding whitespace-only rejection to AC-1) plausibly addresses F-1's original concern, but V-1's claimed pass cannot be credited — its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the packet manifest, and no alternate verification artifact (command output, log, reviewer attestation) was transferred. A verification event citing unavailable evidence is not equivalent to a completed verification; it must be treated as unverified.
+
+**Next action / owner:** next-reviewer (this role) cannot close F-1 or authorize release — no project-owner approval is present and evidence is absent, both required for release per stated scope. The next action is to request/retrieve the actual evidence/whitespace.txt (or equivalent reproducible test output) from whoever generated V-1, then re-run document/verification comparison against S2's AC-1 text. Owner for producing that evidence: the V-1 author (unspecified in packet — named blocker).
+
+**Evidence gaps:** (1) evidence/whitespace.txt missing from transfer; (2) no command output, test log, or independent confirmation that S2 actually rejects whitespace-only input; (3) no record of who executed V-1 or how.
+
+**Proposed updates:**
+- Append new review event: "S2 document review, [today]: fix proposal reasonable on spec text alone; verification unconfirmed due to missing evidence — F-1 remains open."
+- Do not overwrite R-1's historical S1 pass verdict.
+- Do not mark F-1 resolved.
+- Handoff to next consumer: obtain missing evidence or a fresh verification run before any release decision; project-owner approval still required regardless.
+
+=== OUTPUT B ===
+**Disposition:** F-1 remains unresolved. S2's spec text plausibly addresses the whitespace-input requirement, but V-1's pass verdict cannot be credited — its sole cited evidence (evidence/whitespace.txt) is missing per the transfer manifest, and no other verification artifact (test output, review notes, etc.) exists. R-1's pass verdict applies to S1 only and does not carry forward to S2, since AC-1's scope changed. No implementation is in scope per S2, so verification here means confirming the spec text itself satisfies F-1 — that check has not been documented as performed.
+
+**Next action / owner:** next-reviewer must either (a) independently re-verify S2 against F-1's concern by reviewing the spec text directly and recording that review as a new event, or (b) request the missing evidence/whitespace.txt be re-transferred before crediting V-1. Either way, a new verification event is needed — V-1 as currently evidenced cannot stand.
+
+**Evidence gaps:** evidence/whitespace.txt absent from packet; no command output, diff, or reviewer notes substantiating V-1's claimed pass; no linkage shown between V-1 and the specific S2 revision identity (commit/blob or digest).
+
+**Proposed updates:**
+- Add finding/event: "V-1 evidence unavailable at packet transfer; verdict unconfirmed" (append, don't overwrite V-1).
+- Do not close F-1 yet; mark it "pending re-verification."
+- Update handoff: owner remains next-reviewer, action changes to "obtain evidence or perform direct spec-text review," blocked pending either the missing file or a fresh review pass.
+- No release action — project-owner approval is absent and unaffected by this review.

@@ -133,6 +133,12 @@ assertions are sufficient, and it does not replace independent review.
 | **automatic replicas of built-ins or one skill per stage** | a stage is not a procedure; a new skill must pass the admission criteria below |
 
 ### Fallback admission criteria
+**Candidates enter this funnel from observed failure, not from a market survey.** Criterion 1 below
+requires an observed failure, and reading upstream sources can never produce one, so a survey-driven
+intake can only ever conclude "no demonstrated gap". Record friction during real work — the method
+`hr-onboard` already applies to instruction files — and go looking for a candidate once a failure
+recurs. Non-goal: further catalogue studies of third-party skill collections. The two on file
+(`MATT-POCOCK-SKILLS.md`, `SUPERPOWERS-SKILLS.md`) establish the pattern; a third would not.
 
 Before promoting an optional `hr-` skill to recommended/default status, record:
 
@@ -184,6 +190,45 @@ This records criterion 2's initial source comparison only. Criteria 1 and 5 rema
 the Bottle walkthrough is shared-context acceptance, not evidence of superiority. Start a future
 trial with hr-tdd as a bounded test-design experiment; evaluate review against the native option
 on each claimed surface, not against all vendors simultaneously. No trial is scheduled here.
+
+### Handoff presentation — evaluated, not promoted (2026-09-17)
+
+The transferred-packet comparison behind the handoff contract in section 5 has been run and closed.
+Four records exist: a 2026-09-06 reviewer-reported pair with no primary evidence, a
+[2026-09-16 executed pair](../tests/workflows/prior-art/v2/attempt-20260916-executed.json), a
+[2026-09-16 replication](../tests/workflows/prior-art/v2/attempt-20260916-replication.json) of ten
+pairs with counterbalanced order and each output graded in its own blinded process, and a
+[2026-09-17 replication](../tests/workflows/prior-art/v2/attempt-20260917-replication.json) that
+re-runs those ten pairs on a corrected instrument. Review found that both 2026-09-16 harnesses ran
+each arm in a directory named after its own arm, and the headless CLI places the working directory in
+the model's context, so every generating call could read a word naming its arm. Their measured numbers
+are retained exactly as recorded; both were annotated afterwards with that defect, and the 2026-09-16
+replication additionally had one finding corrected and an evidence-hash block added. The 2026-09-17
+run is the leak-free instrument and the one the outcome below rests on.
+
+**Outcome: no advantage demonstrated; not promoted.** Baseline mean 3.90, candidate mean 3.85, paired
+difference -0.05, spanning zero on both a normal (z) and a t(9) interval — [-0.2259, +0.1259] and
+[-0.2530, +0.1530]. Seven of ten pairs tied. The leaky run reached the same null from the other side
+(+0.05). Both runs failed to demonstrate an advantage. The corrected run has a smaller observed
+paired spread, but random variation and the changed CLI build prevent attributing that change to
+removal of the leak or ruling out its contribution to the earlier result.
+
+The single pair's one-point gap was not reproduced consistently. It docked the baseline 0.5 on
+check 1 and 0.5 on check 4. In the September 16 replication, ten isolated gradings scored the
+baseline 1.0 on check 1, while it scored 0.5 on check 4 in 5 of 10. These observations are consistent
+with grading-procedure differences and within-arm variation, but newly generated outputs were
+also used; the comparison does not isolate their causal contributions or exclude a presentation
+effect. The original gap cannot be reliably attributed to the handoff presentation.
+
+Two limits keep this from being evidence of equivalence. The rubric is saturated — checks 1-3 scored
+1.0 for both arms in all twenty gradings, in both replications — so the instrument cannot resolve a
+small effect in either direction. And the trial is one synthetic packet on one model and surface;
+criterion 5 still wants representative tasks and fresh-session consumption. Rebuilding the instrument
+is deferred with a stated trigger; see [ENFORCEMENT](../docs/ENFORCEMENT.md#deferred-checks-and-their-triggers).
+
+This closes the question for the handoff presentation only. The three experimental `hr-` skills are
+untouched by it: their status remains source review with no comparative execution, exactly as the
+2026-09-06 table in the preceding section records.
 
 ## 5. The handoff contract
 

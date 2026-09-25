@@ -1,0 +1,10 @@
+**Disposition:** F-1 remains unresolved. S2 correctly extends AC-1 to reject whitespace-only input, which textually addresses F-1, but V-1's pass verdict cannot be accepted as evidence: its cited evidence/whitespace.txt is confirmed missing from the transfer manifest, and no command output, test log, or alternate verification artifact exists in the packet. A verification claim without retrievable evidence is equivalent to no verification for review purposes — it should not be treated as a passed check, and R-1's historical pass (scoped to S1) does not carry forward to S2 since AC-1's text changed.
+
+**Next action / owner:** next-reviewer must request re-verification of S2 against the updated AC-1, with evidence (test output or file) actually included in the artifact transfer this time. Owner remains next-reviewer for this review step; release still requires project-owner approval, which is separately absent and unaffected by this finding.
+
+**Evidence gaps:** (1) evidence/whitespace.txt missing per manifest; (2) no raw command output or test log substituting for it; (3) no confirmation of what identity/revision (commit or digest) V-1 actually tested against.
+
+**Proposed updates:**
+- Append a new verification event (not overwrite V-1) noting evidence unavailable, verdict unconfirmed, pending re-run.
+- Leave F-1 status open/unresolved-pending-verification rather than closed.
+- Update handoff: action → "reverify," blocker → "V-1 evidence file missing," owner → next-reviewer, note that release approval is still outstanding regardless of verification outcome.

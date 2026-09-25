@@ -1,0 +1,10 @@
+**Disposition:** Unverified. S2 amends AC-1 to require rejecting whitespace-only input, which textually addresses F-1's gap (raised against S1). However, V-1's claimed pass for S2 cannot be trusted: its cited evidence file (evidence/whitespace.txt) is marked missing in the transfer manifest, and no command output or other verification artifact accompanied it. R-1's pass verdict applies to S1 only and does not carry forward to S2, since AC-1's text changed. No implementation is in scope for this artifact, so this is a spec-language review, not a code check.
+
+**Next action / owner:** next-reviewer should perform a fresh document comparison of S2's AC-1 against F-1's stated gap and record whether the language sufficiently closes it. This reviewer is authorized only for document review and proposed updates — not for asserting verification passed, since V-1's evidence is unavailable, and not for release, which requires project-owner approval (absent).
+
+**Evidence gaps:** evidence/whitespace.txt (missing per manifest); no test/command output substantiating V-1's pass claim for S2.
+
+**Proposed updates:**
+1. Append a new verification event (not an edit to V-1) noting V-1's evidence is unavailable and its pass claim is unconfirmed for S2.
+2. Record a new review round assessing S2's AC-1 wording against F-1 on textual grounds only, distinct from and not overwriting R-1 (which remains valid for S1).
+3. Update handoff: owner next-reviewer, action = "resolve evidence gap or re-verify," blocker = missing evidence/whitespace.txt, status = still `ready`/unresolved, explicitly noting release requires project-owner approval not yet obtained.

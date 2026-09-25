@@ -1,0 +1,11 @@
+**Current disposition:** F-1 is not resolved and cannot be closed. S2's AC-1 text now includes whitespace-only rejection, which does textually address F-1 as raised against S1. However, V-1's pass verdict is unsupported: its cited evidence file (evidence/whitespace.txt) is listed as missing in the packet transfer manifest, and no command output or other verification artifact was transferred. R-1's pass verdict applies to S1 only and does not carry forward to S2 — S1 and S2 differ on the exact scope of AC-1, so R-1 cannot be treated as covering the whitespace requirement.
+
+**Next action / owner:** next-reviewer should record a new review event (not overwrite R-1) stating: S2 document review complete, finding F-1 open pending verification evidence. Do not mark F-1 closed on the strength of the proposed fix or V-1's claim alone. Owner for producing the missing evidence is whoever holds V-1 (verifier), not next-reviewer, since next-reviewer's allowed action is document review only. Release remains blocked on project-owner approval regardless.
+
+**Evidence gaps:** evidence/whitespace.txt is missing per the transfer manifest; no test/command output substantiates V-1's pass claim for S2. This is a named blocker, not something to infer or assume as satisfied.
+
+**Proposed ledger updates:**
+- Append new review event: "S2 doc review — AC-1 text change verified against F-1 intent; verification evidence absent, disposition: open/unverified."
+- Leave R-1's historical verdict untouched (applies to S1).
+- Leave V-1 as recorded (claimed pass) but flag it as unsupported pending evidence transfer.
+- Update handoff: next action = "obtain/re-transfer evidence/whitespace.txt or equivalent verification artifact for S2"; next owner = verifier/project-owner; identity references (spec.md S2 revision, V-1) should be pinned to content digests once available — none were provided here.
