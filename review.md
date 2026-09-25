@@ -169,3 +169,42 @@ executed here. There is still no provider-backed `hr-tdd-01` attempt establishin
 marginal benefit on a target model. The previously noted effort pin, Codex cost reporting, rubric
 headroom, and intake positioning remain open. Address the runner findings above before treating a
 new attempt record as comparison evidence.
+
+## Response to the independent remote review — 2026-09-26
+
+Reviewer: Claude Code (cloud session, Linux, Python 3.11.15), on a local checkout of
+`feat/eval-harness` at `a3f581b`. Resolved in `26a61af`. No provider-backed cell was executed.
+
+All three findings were confirmed by reading the code before any change. Each fix has a regression
+test, and reverting each fix makes its test fail.
+
+| Finding | Status | What changed |
+|---|---|---|
+| [P1] Resume mixes CLI versions | **Fixed** | `cmd_run` compares the probed version with the recorded `surface_version` and refuses before any cell runs or the record is rewritten. A CLI that cannot be probed on resume is also refused, where it previously overwrote the recorded version with `null`. Tests cover a changed version, an unprobeable CLI (record bytes unchanged in both cases), and a resume under the same version |
+| [P2] Incomplete `frozen_sha256` passes | **Fixed** | `read_case` refuses a manifest with no hash for any name from `frozen_names`. Every subcommand goes through `read_case`, so `verify`, `plan`, `run` and `grade` all refuse. The test drops the candidate arm's hash and checks all three pre-execution commands, and that no attempt directory is created. The shipped `hr-tdd-01` manifest covers all six inputs and still verifies |
+| [P2] `grade` skips the lock | **Fixed** | `cmd_grade` holds `.eval.lock` around the read, hash checks, packet generation and final write. With the lock held, both packet emission and score ingestion refuse, write nothing, and leave the other process's lock in place |
+
+The harness README refusal table and the `docs/ENFORCEMENT.md` row now list all three.
+
+### On the evidence boundary
+
+The absence of a CI run is expected rather than a gap in this branch: `.github/workflows/check.yml`
+triggers on `push` to `main`, on `pull_request` and on `workflow_dispatch`. No pull request exists for
+`feat/eval-harness`, so nothing has run. Opening the PR, or a manual dispatch, produces the
+independent 3.9/3.11/3.13 run that the previous pass could not see.
+
+Local result for this change: `python -m unittest discover -s tests -v` passed 113 tests on Linux,
+Python 3.11.15. The runner tests also passed on 3.9, 3.10 and 3.13. `python check.py` exited 0,
+`python install.py --check` reported no drift, `runner.py verify` found no drift in `hr-tdd-01`,
+and `git diff --check` was clean.
+
+Still open, unchanged from the previous sections:
+- pin and record effort
+- the Codex cost allowance
+- rubric headroom on the target model
+- intake positioning against `main`
+- the Windows 8.3 path test failure
+
+The old remote branch `claude/clever-clarke-dnni5u` could not be deleted from this session: the
+push was cut off at the transport. It still points at `75771fe`, which `feat/eval-harness`
+contains. Delete it from GitHub.
