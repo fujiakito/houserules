@@ -51,17 +51,33 @@ python tests/eval/runner.py grade  --case tests/workflows/skill-eval/<case> \
 | `--timeout-seconds` above the deadline `case.json` records | Raising a deadline until the score improves is not a control |
 | An existing `attempt.json` without `--resume` | Existing work is never replaced — `workflow.py`'s posture |
 | A resume whose inputs changed since the recorded attempt | Same reason as the first row |
+| A resume that would change a recorded setting: runner, model, argv, deadline, `--max-usd`, `--allow-unmetered-cells`, the harness digest or `--trials` | Cells run under two configurations in one record are not one comparison, and the record would still name only the first. Start a new `--attempt` instead |
+| A resume or a second `grade --scores` on an attempt already graded | A recorded grade is not overwritten |
+| `grade` when a completed cell's output no longer hashes to its `output_sha256` | The grader would score text the record does not describe |
+| An `--attempt` that is not one directory name starting with `attempt-` | Keeps every attempt under the `-text` rule in `.gitattributes` |
 
 Isolation is **not caller-settable**. `RUNNERS` fixes one profile per surface — `claude`:
 `--setting-sources ""`, `--strict-mcp-config`, `--tools ""`; `codex`: `--ignore-user-config`,
 `--ephemeral`, `--sandbox read-only`, `--skip-git-repo-check` — recorded verbatim in the attempt.
-This repository installs an always-on `AGENTS.md` workflow block; without those flags it reaches
-the baseline arm and the comparison measures the skill against itself.
+The codex flags are taken from the local `codex exec --help` reported in [review.md](../../review.md)
+(Codex CLI 0.155.0-alpha.16.4, 2026-09-25); whether each is honoured is not verified here.
+
+The flags alone do not keep project context out. On Claude Code CLI 2.1.282, `claude --help`
+(read 2026-09-25) describes `--setting-sources` as selecting *settings* files; `CLAUDE.md`
+auto-discovery is a separate behaviour, switched off only by `--bare` (which accepts API-key auth
+only) or `--safe-mode`. This repository's own `CLAUDE.md` imports `AGENTS.md`, so a cell run from
+the repository would load it into every arm, baseline included. Each cell therefore runs in a
+**fresh, empty, system-named temporary directory** outside the repository, removed afterwards; the
+record states the policy, not the path. The name matters too: the headless CLI shows the model its
+working directory, which is how the 2026-09-16 prior-art runs leaked arm names. User-level context
+(a user memory file, for example) is not proven excluded, and a `limitations[]` entry says so.
 
 ## Outcomes
 
-A cell is `completed`, `failed`, `timeout` or `blocked`. An attempt is `completed` only when every
-planned cell completed; anything else is `indeterminate`. A timeout retains whatever partial output
+A cell is `completed`, `failed`, `timeout` or `blocked`. An attempt records its `plan` when it is
+created: every arm the case declares, times `--trials`. `--arm` only chooses which pending cells run
+in one invocation. An attempt is `completed` only when every planned cell completed; anything
+else, including a run of one arm, is `indeterminate`. A timeout retains whatever partial output
 the process produced and is recorded as indeterminate, **not** as a diagnosed defect.
 
 Unknown values are `null`. Never `0` — a zero cost reads as free, and an absent cost is not free.
@@ -79,8 +95,14 @@ records be read side by side under one schema.
 Added by this schema: `case`, `case_dir`, `harness{path,sha256}`, `isolation{profile,flags}`,
 `budget{max_usd,spent_usd,cost_source,allow_unmetered_cells}`,
 `blinding{method,group_key_template,judge_marker,revealed}`,
-`grading{grader,blinded,rubric_sha256,graded_utc}`, and per-cell `trial`, `output_sha256`,
-`cost_source`, `score_breakdown`.
+`grading{grader,blinded,rubric_sha256,graded_utc}`, `plan{arms,trials}`, and per-cell `trial`,
+`output_sha256`, `cost_source`, `score_breakdown` and, when set, `workdir_left_nonempty`.
+`working_directory` is the policy string `fresh-empty-system-temp-per-cell`, never a local path.
+
+The blind packet holds the answer only. For `claude` that is the JSON `result`; for `codex` it is
+the text of the last `item.completed` event whose item type is `agent_message`, per the event
+definitions in `openai/codex` `codex-rs/exec/src/exec_events.rs` (branch `main`, retrieved
+2026-09-25). A payload with no extractable answer is emitted raw.
 
 ## Blinding
 
@@ -90,9 +112,13 @@ Grading is done by a person against the frozen rubric — there is no model judg
 
 `blind_labels` ranks arms by `sha256(group_key + b"\x00" + arm)` and assigns labels in rank order.
 Deterministic rather than random, so a resumed run reproduces its labels; it raises on a digest
-collision rather than dropping an arm. `group_key` is `{case}|{trial}|{runner}|{model}`, and **only
-the group key is written to the record before grading** — the mapping is recomputed by `grade`, so
-a grader can hold the packet and the record without holding the answer.
+collision rather than dropping an arm. `group_key` is `{case}|{trial}|{runner}|{model}`, and only
+the group key is written to the record before grading; the mapping is recomputed by `grade`.
+
+That hides the mapping from a reader, not from a determined grader: the record names the arms and
+the key, and the function is public, so anyone holding the record can recompute the labels. The
+attempt directory also holds `cell-<arm>-<trial>.out`, named by arm. **Hand a grader the `blind/`
+directory alone**, not the attempt record or directory.
 
 The rubric's gradable checks sit between `<!-- judge:begin -->` and `<!-- judge:end -->`; only that
 span reaches the blind packet. Gate wording names the arms, so sending a whole rubric would leak
@@ -116,5 +142,6 @@ tests/workflows/skill-eval/<case>/
 ```
 
 Frozen inputs need a `-text` line in `.gitattributes`, or checkout normalisation invalidates their
-recorded SHA-256. Attempt files are generated, not frozen, and stay under the global `eol=lf`.
+recorded SHA-256. Attempt output is hashed too (`output_sha256`, checked again at grading), so
+`attempt-*/` directories carry a `-text` rule for the same reason.
 `CONTRIBUTING.md` applies: append a new dated attempt; never edit a recorded one.

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Run a frozen baseline-vs-candidate skill evaluation and record revision-bound evidence.
 
-Implements the requirements written in tests/workflows/prior-art/v2/README.md, which specified a
-runner that was never built. Standard library only; distribution-only, never an installed asset.
+Implements the requirements written in tests/workflows/prior-art/v2/README.md as one reusable
+runner, in place of the per-attempt harness scripts recorded beside the prior-art attempts.
+Standard library only; distribution-only, never an installed asset.
 
 Bounding attempts, deadlines and spend is a usage control, not a sandbox. This runner does not
 restrict what the provider CLI it spawns may do, and it cannot prove that CLI honoured the
@@ -10,9 +11,10 @@ isolation flags it was given.
 
 The runner refuses rather than degrades. It stops when a frozen input no longer matches its
 recorded hash, when a runner would execute without an explicit model pin, when no spend ceiling is
-given, or when a deadline is raised above the one the case recorded. Each refusal exists because an
-arm that differs from another arm in more than the declared variable produces a number that looks
-like a result and is not one.
+given, when a deadline is raised above the one the case recorded, when a resumed attempt would
+run under settings other than the ones it recorded, and when a recorded output no longer hashes to
+its record at grading time. Each refusal exists because an arm that differs from another arm in more
+than the declared variable produces a number that looks like a result and is not one.
 """
 from __future__ import annotations
 
@@ -26,6 +28,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 SCHEMA_VERSION = 2
@@ -55,6 +58,9 @@ RUNNERS = {
         'version_argv': ['codex', '--version'],
     },
 }
+
+# A single path segment, so every attempt directory is covered by the -text rule in .gitattributes.
+ATTEMPT_NAME = re.compile(r'attempt-[A-Za-z0-9._-]{1,120}')
 
 JUDGE_BEGIN = '<!-- judge:begin -->'
 JUDGE_END = '<!-- judge:end -->'
@@ -89,7 +95,12 @@ def positive(value):
 @contextmanager
 def locked(folder):
     lock = folder / '.eval.lock'
-    with lock.open('x', encoding='utf-8') as stream:
+    try:
+        stream = lock.open('x', encoding='utf-8')
+    except FileExistsError:
+        raise ValueError(f'{lock} exists: another run holds this attempt. If no run is active, '
+                         'a previous one crashed; delete the lock file and pass --resume') from None
+    with stream:
         stream.write(str(os.getpid()))
     try:
         yield
@@ -98,8 +109,9 @@ def locked(folder):
 
 
 def write_record(path, record):
+    # Callers hold the attempt lock, so a leftover temporary is from a crashed run, never a live one.
     temporary = path.with_suffix('.json.tmp')
-    with temporary.open('x', encoding='utf-8') as stream:
+    with temporary.open('w', encoding='utf-8') as stream:
         json.dump(record, stream, indent=2, allow_nan=False)
         stream.write('\n')
     temporary.replace(path)
@@ -226,11 +238,40 @@ def parse_payload(text):
             usage = event['usage']
         if isinstance(event.get('total_cost_usd'), (int, float)):
             cost = event['total_cost_usd']
+        # codex exec --json: {"type": "item.completed", "item": {"type": "agent_message",
+        # "text": ...}}. The last agent message is the answer; reasoning and tool items are not.
+        item = event.get('item')
+        if (event.get('type') == 'item.completed' and isinstance(item, dict)
+                and item.get('type') == 'agent_message' and isinstance(item.get('text'), str)):
+            response = item['text']
     return usage, cost, response
 
 
 def planned_cells(case, arms, trials):
     return [(arm, trial) for trial in range(1, trials + 1) for arm in arms]
+
+
+def recorded_plan(record):
+    """The campaign an attempt committed to when it was created: every case arm, every trial."""
+    plan = record.get('plan')
+    if not isinstance(plan, dict) or not plan.get('arms') or not plan.get('trials'):
+        raise ValueError('The attempt record carries no campaign plan')
+    return planned_cells(None, plan['arms'], plan['trials'])
+
+
+def resume_conflicts(record, expected):
+    """Recorded settings the resumed invocation would change. Any of them splits the attempt."""
+    recorded = {
+        'surface': record.get('surface'),
+        'model': record.get('model'),
+        'argv': record.get('argv'),
+        'timeout_seconds': record.get('timeout_seconds'),
+        'budget.max_usd': (record.get('budget') or {}).get('max_usd'),
+        'budget.allow_unmetered_cells': (record.get('budget') or {}).get('allow_unmetered_cells'),
+        'harness.sha256': (record.get('harness') or {}).get('sha256'),
+        'plan.trials': (record.get('plan') or {}).get('trials'),
+    }
+    return sorted(name for name, value in expected.items() if recorded.get(name) != value)
 
 
 def pending_cells(record, cells):
@@ -274,7 +315,7 @@ def probe_version(runner):
 
 
 def new_record(case, case_dir, runner, model, timeout_seconds, budget, hashes, marker, argv,
-               harness_sha):
+               harness_sha, trials):
     return {
         'schema_version': SCHEMA_VERSION,
         'status': 'indeterminate',
@@ -292,7 +333,11 @@ def new_record(case, case_dir, runner, model, timeout_seconds, budget, hashes, m
         'utc_start': None,
         'utc_end': None,
         'timeout_seconds': timeout_seconds,
-        'working_directory': None,
+        # A fresh empty directory per cell, outside the repository and named by the system, not
+        # by the arm: the headless CLI shows the model its cwd, and a repository cwd loads the
+        # project's own context file into every arm.
+        'working_directory': 'fresh-empty-system-temp-per-cell',
+        'plan': {'arms': sorted(case['arms']), 'trials': trials},
         'isolation': {'profile': RUNNERS[runner]['profile'], 'flags': isolation_flags(runner)},
         'budget': budget,
         'input_hashes_current': hashes,
@@ -308,6 +353,9 @@ def new_record(case, case_dir, runner, model, timeout_seconds, budget, hashes, m
             'Isolation flags are recorded as passed, not verified as honoured. No offline check '
             'can prove the provider CLI applied them.',
             'Bounded attempts, deadlines and spend are usage control, not a sandbox.',
+            'Each cell runs in an empty temporary directory, so no project context file is '
+            'discovered. User-level context (for example a user memory file) is not proven '
+            'excluded by the recorded flags.',
         ],
     }
 
@@ -364,7 +412,10 @@ def resolve_arms(case, requested):
 def cmd_run(repo, args):
     case = read_case(repo, args.case)
     arms = resolve_arms(case, args.arm)
-    cells = planned_cells(case, arms, args.trials)
+    # The attempt is planned over every case arm; --arm only selects which cells run now. Status
+    # is judged against the whole plan, so running one arm can never report a completed attempt.
+    plan = planned_cells(case, sorted(case['arms']), args.trials)
+    cells = [cell for cell in plan if cell[0] in arms]
     timeout_seconds = args.timeout_seconds or case['timeout_seconds']
     if timeout_seconds > case['timeout_seconds']:
         raise ValueError(
@@ -380,6 +431,8 @@ def cmd_run(repo, args):
 
     hashes, marker = input_hashes(repo, args.case, case)
     attempt_dir = args.attempt or f"attempt-{time.strftime('%Y%m%d', time.gmtime())}-{args.runner}"
+    if not ATTEMPT_NAME.fullmatch(attempt_dir):
+        raise ValueError('--attempt must be a single directory name starting with attempt-')
     folder = safe_path(repo, f'{args.case}/{attempt_dir}')
     record_path = safe_path(repo, f'{args.case}/{attempt_dir}/attempt.json')
 
@@ -403,15 +456,26 @@ def cmd_run(repo, args):
             stale = frozen_drift(repo, args.case, case, record.get('input_hashes_current', {}))
             if stale:
                 raise ValueError(f"Inputs changed since this attempt: {', '.join(stale)}")
+            conflicts = resume_conflicts(record, {
+                'surface': args.runner, 'model': args.model, 'argv': argv,
+                'timeout_seconds': timeout_seconds, 'budget.max_usd': args.max_usd,
+                'budget.allow_unmetered_cells': args.allow_unmetered_cells,
+                'harness.sha256': harness_sha, 'plan.trials': args.trials})
+            if conflicts:
+                raise ValueError('Resume would change what this attempt recorded: '
+                                 f"{', '.join(conflicts)}. Start a new --attempt instead")
+            if record.get('blinding', {}).get('revealed'):
+                raise ValueError('This attempt is already graded; start a new --attempt')
         else:
             budget = {'max_usd': args.max_usd, 'spent_usd': None, 'cost_source': None,
                       'allow_unmetered_cells': args.allow_unmetered_cells}
             record = new_record(case, args.case, args.runner, args.model, timeout_seconds,
-                                budget, hashes, marker, argv, harness_sha)
-            record['working_directory'] = str(repo)
+                                budget, hashes, marker, argv, harness_sha, args.trials)
             record['utc_start'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
             write_record(record_path, record)
 
+        plan = recorded_plan(record)
+        cells = [cell for cell in plan if cell[0] in arms]
         version = probe_version(args.runner)
         record['surface_version'] = version
         if version is None:
@@ -443,16 +507,16 @@ def cmd_run(repo, args):
                 unmetered += 1
             record['budget']['spent_usd'] = spent
             record['budget']['cost_source'] = 'unavailable' if spent is None else 'reported'
-            record['status'] = attempt_status(record, cells)
+            record['status'] = attempt_status(record, plan)
             record['utc_end'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
             write_record(record_path, record)
 
-        record['status'] = attempt_status(record, cells)
+        record['status'] = attempt_status(record, plan)
         record['utc_end'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
         write_record(record_path, record)
 
     print(json.dumps({'status': record['status'], 'attempt': attempt_dir,
-                      'cells_recorded': len(record['arms']), 'cells_planned': len(cells),
+                      'cells_recorded': len(record['arms']), 'cells_planned': len(plan),
                       'spent_usd': record['budget']['spent_usd']}, indent=2))
     return 0 if record['status'] == 'completed' else 1
 
@@ -469,8 +533,9 @@ def run_cell(repo, args, case, folder, arm, trial, argv, timeout_seconds):
              'score_max': case['score_max'], 'score_breakdown': None}
     started = time.monotonic()
     stdout, stderr = b'', b''
+    workdir = Path(tempfile.mkdtemp())  # System-named: no arm, case or repository word in it.
     try:
-        completed = subprocess.run(argv, shell=False, cwd=repo, input=prompt,
+        completed = subprocess.run(argv, shell=False, cwd=workdir, input=prompt,
                                    capture_output=True, timeout=timeout_seconds)
         stdout, stderr = completed.stdout, completed.stderr
         entry['exit_code'] = completed.returncode
@@ -485,6 +550,10 @@ def run_cell(repo, args, case, folder, arm, trial, argv, timeout_seconds):
         entry['status'] = 'blocked'
     finally:
         entry['elapsed_seconds'] = time.monotonic() - started
+        try:
+            workdir.rmdir()  # Only ever an empty directory; anything left in it stays for review.
+        except OSError:
+            entry['workdir_left_nonempty'] = True
     out_path.write_bytes(stdout)
     err_path.write_bytes(stderr)
     entry['output_sha256'] = digest(out_path)
@@ -497,12 +566,20 @@ def run_cell(repo, args, case, folder, arm, trial, argv, timeout_seconds):
 
 def cmd_grade(repo, args):
     case = read_case(repo, args.case)
+    if not ATTEMPT_NAME.fullmatch(args.attempt):
+        raise ValueError('--attempt must be a single directory name starting with attempt-')
     record_path = safe_path(repo, f'{args.case}/{args.attempt}/attempt.json')
     folder = record_path.parent
     record = json.loads(record_path.read_text(encoding='utf-8'))
+    if record.get('blinding', {}).get('revealed'):
+        raise ValueError('This attempt is already graded; a recorded grade is not overwritten')
     completed = [e for e in record.get('arms', []) if e.get('status') == 'completed']
     if not completed:
         raise ValueError('No completed cell to grade')
+    changed = sorted(entry['output_path'] for entry in completed
+                     if digest(folder / entry['output_path']) != entry.get('output_sha256'))
+    if changed:
+        raise ValueError(f"Recorded output no longer matches its hash: {', '.join(changed)}")
     groups = {}
     for entry in completed:
         groups.setdefault(entry['trial'], []).append(entry['arm'])
@@ -538,8 +615,10 @@ def cmd_grade(repo, args):
                 missing.append(f'trial {trial} label {label}')
                 continue
             value = supplied[label]
-            if not isinstance(value, (int, float)) or not math.isfinite(value):
-                raise ValueError(f'Score for trial {trial} label {label} is not a finite number')
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or not 0 <= value <= case['score_max']):
+                raise ValueError(f'Score for trial {trial} label {label} is not a number '
+                                 f"between 0 and {case['score_max']:g}")
             graded[(arm, trial)] = float(value)
     if missing:
         raise ValueError(f"Incomplete scores, nothing written: {', '.join(missing)}")

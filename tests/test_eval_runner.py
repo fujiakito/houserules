@@ -120,12 +120,12 @@ class EvalRunnerTest(unittest.TestCase):
 
     def run_args(self, **over):
         base = ['run', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1',
-                '--trials', '1', '--attempt', 'att', '--max-usd', '5']
+                '--trials', '1', '--attempt', 'attempt-t', '--max-usd', '5']
         for flag, value in over.items():
             base.extend([flag] if value is True else [flag, str(value)])
         return base
 
-    def record(self, attempt='att'):
+    def record(self, attempt='attempt-t'):
         return json.loads((self.case_dir / attempt / 'attempt.json').read_text(encoding='utf-8'))
 
     # -- frozen inputs ---------------------------------------------------
@@ -172,7 +172,7 @@ class EvalRunnerTest(unittest.TestCase):
         code, _, err = self.call(*self.run_args(), cells=[])
         self.assertEqual(code, 2)
         self.assertIn('arm-candidate.md', err)
-        self.assertFalse((self.case_dir / 'att').exists())
+        self.assertFalse((self.case_dir / 'attempt-t').exists())
 
     def test_verify_reports_drift_without_executing_anything(self):
         code, out, _ = self.call('verify', '--case', self.case)
@@ -214,9 +214,9 @@ class EvalRunnerTest(unittest.TestCase):
 
     def test_blind_packet_excludes_arm_names_and_gate_vocabulary(self):
         self.call(*self.run_args(), cells=[completed(payload(f'reply {n}')) for n in range(3)])
-        code, _, _ = self.call('grade', '--case', self.case, '--attempt', 'att')
+        code, _, _ = self.call('grade', '--case', self.case, '--attempt', 'attempt-t')
         self.assertEqual(code, 0)
-        blind = self.case_dir / 'att' / 'blind'
+        blind = self.case_dir / 'attempt-t' / 'blind'
         names = sorted(p.name for p in blind.iterdir())
         self.assertEqual(names, ['rubric-judge.md', 'trial-1-response-A.md',
                                  'trial-1-response-B.md', 'trial-1-response-C.md'])
@@ -230,7 +230,7 @@ class EvalRunnerTest(unittest.TestCase):
 
     def test_absent_budget_refuses_before_any_execution(self):
         args = ['run', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1',
-                '--trials', '1', '--attempt', 'att']
+                '--trials', '1', '--attempt', 'attempt-t']
         out, err = io.StringIO(), io.StringIO()
         with patch.object(runner.subprocess, 'run') as spawn:
             with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
@@ -238,7 +238,7 @@ class EvalRunnerTest(unittest.TestCase):
             spawn.assert_not_called()
         self.assertEqual(code, 2)
         self.assertIn('--max-usd', err.getvalue())
-        self.assertFalse((self.case_dir / 'att').exists())
+        self.assertFalse((self.case_dir / 'attempt-t').exists())
 
     def test_unpinned_model_is_refused(self):
         with self.assertRaises(ValueError):
@@ -248,7 +248,7 @@ class EvalRunnerTest(unittest.TestCase):
         code, _, err = self.call(*self.run_args(**{'--timeout-seconds': 600}), cells=[])
         self.assertEqual(code, 2)
         self.assertIn('exceeds the deadline recorded', err)
-        self.assertFalse((self.case_dir / 'att').exists())
+        self.assertFalse((self.case_dir / 'attempt-t').exists())
 
     def test_unmetered_runner_is_rejected_after_the_allowance(self):
         code, _, _ = self.call(*self.run_args(),
@@ -264,11 +264,11 @@ class EvalRunnerTest(unittest.TestCase):
 
     def test_existing_attempt_is_never_overwritten_without_resume(self):
         self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
-        before = (self.case_dir / 'att' / 'attempt.json').read_bytes()
+        before = (self.case_dir / 'attempt-t' / 'attempt.json').read_bytes()
         code, _, err = self.call(*self.run_args(), cells=[completed(payload())])
         self.assertEqual(code, 2)
         self.assertIn('--resume', err)
-        self.assertEqual((self.case_dir / 'att' / 'attempt.json').read_bytes(), before)
+        self.assertEqual((self.case_dir / 'attempt-t' / 'attempt.json').read_bytes(), before)
 
     def test_case_paths_reject_escape_and_symlinks(self):
         for bad in ('../escape', '/etc', 'cases/../../escape'):
@@ -309,7 +309,7 @@ class EvalRunnerTest(unittest.TestCase):
         self.assertTrue(entry['timed_out'])
         self.assertIsNone(entry['score'])
         self.assertEqual(entry['elapsed_seconds'], 0.5)
-        stored = self.case_dir / 'att' / entry['output_path']
+        stored = self.case_dir / 'attempt-t' / entry['output_path']
         self.assertEqual(stored.read_bytes(), b'partial answer')
         self.assertEqual(record['status'], 'indeterminate')
 
@@ -339,7 +339,7 @@ class EvalRunnerTest(unittest.TestCase):
 
     def test_resume_skips_completed_cells_and_preserves_recorded_bytes(self):
         self.call(*self.run_args(**{'--arm': 'baseline'}), cells=[completed(payload('first'))])
-        kept = (self.case_dir / 'att' / 'cell-baseline-1.out').read_bytes()
+        kept = (self.case_dir / 'attempt-t' / 'cell-baseline-1.out').read_bytes()
         before = self.record()['arms'][0]
         code, _, _ = self.call(*self.run_args(**{'--resume': True}),
                                cells=[completed(payload('second')),
@@ -347,7 +347,7 @@ class EvalRunnerTest(unittest.TestCase):
         self.assertEqual(code, 0)
         record = self.record()
         self.assertEqual(len(record['arms']), 3)
-        self.assertEqual((self.case_dir / 'att' / 'cell-baseline-1.out').read_bytes(), kept)
+        self.assertEqual((self.case_dir / 'attempt-t' / 'cell-baseline-1.out').read_bytes(), kept)
         self.assertEqual(next(e for e in record['arms'] if e['arm'] == 'baseline'), before)
 
     def test_dry_run_writes_nothing_and_pins_model_and_isolation(self):
@@ -380,14 +380,14 @@ class EvalRunnerTest(unittest.TestCase):
 
     def test_grade_refuses_partial_scores_and_leaves_the_record_untouched(self):
         self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
-        before = (self.case_dir / 'att' / 'attempt.json').read_bytes()
+        before = (self.case_dir / 'attempt-t' / 'attempt.json').read_bytes()
         scores = self.repo / 'scores.json'
         scores.write_text(json.dumps({'1': {'A': 70.0}}), encoding='utf-8')
-        code, _, err = self.call('grade', '--case', self.case, '--attempt', 'att',
+        code, _, err = self.call('grade', '--case', self.case, '--attempt', 'attempt-t',
                                  '--scores', 'scores.json')
         self.assertEqual(code, 2)
         self.assertIn('Incomplete scores', err)
-        self.assertEqual((self.case_dir / 'att' / 'attempt.json').read_bytes(), before)
+        self.assertEqual((self.case_dir / 'attempt-t' / 'attempt.json').read_bytes(), before)
 
     def test_grade_unblinds_each_score_onto_the_arm_the_permutation_names(self):
         self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
@@ -396,7 +396,7 @@ class EvalRunnerTest(unittest.TestCase):
                                       [e['arm'] for e in record['arms']])
         by_label = {'A': 10.0, 'B': 20.0, 'C': 30.0}
         (self.repo / 'scores.json').write_text(json.dumps({'1': by_label}), encoding='utf-8')
-        code, _, _ = self.call('grade', '--case', self.case, '--attempt', 'att',
+        code, _, _ = self.call('grade', '--case', self.case, '--attempt', 'attempt-t',
                                '--scores', 'scores.json', '--grader', 'tester', '--blinded')
         self.assertEqual(code, 0)
         graded = self.record()
@@ -407,6 +407,117 @@ class EvalRunnerTest(unittest.TestCase):
         self.assertTrue(graded['grading']['blinded'])
         self.assertTrue(any('project participant' in n for n in graded['limitations']))
 
+
+    # -- review 2026-09-25 findings ----------------------------------------
+
+    def test_resume_refuses_a_changed_model_and_leaves_the_record_untouched(self):
+        self.call(*self.run_args(**{'--arm': 'baseline'}), cells=[completed(payload('first'))])
+        before = (self.case_dir / 'attempt-t' / 'attempt.json').read_bytes()
+        args = self.run_args(**{'--resume': True})
+        args[args.index('pinned-1')] = 'pinned-2'
+        code, _, err = self.call(*args, cells=[])
+        self.assertEqual(code, 2)
+        self.assertIn('model', err)
+        self.assertIn('argv', err)
+        self.assertEqual((self.case_dir / 'attempt-t' / 'attempt.json').read_bytes(), before)
+
+    def test_resume_refuses_a_changed_budget_deadline_or_trial_count(self):
+        self.call(*self.run_args(**{'--arm': 'baseline'}), cells=[completed(payload('first'))])
+        for flag, value, field in (('--max-usd', 50, 'budget.max_usd'),
+                                   ('--timeout-seconds', 10, 'timeout_seconds'),
+                                   ('--trials', 2, 'plan.trials')):
+            with self.subTest(flag=flag):
+                args = self.run_args(**{'--resume': True})
+                if flag in args:
+                    args[args.index(flag) + 1] = str(value)
+                else:
+                    args.extend([flag, str(value)])
+                code, _, err = self.call(*args, cells=[])
+                self.assertEqual(code, 2)
+                self.assertIn(field, err)
+
+    def test_one_arm_run_is_indeterminate_against_the_recorded_plan(self):
+        code, out, _ = self.call(*self.run_args(**{'--arm': 'baseline'}),
+                                 cells=[completed(payload('only'))])
+        self.assertEqual(code, 1)
+        record = self.record()
+        self.assertEqual(record['plan'], {'arms': ['baseline', 'candidate', 'control'], 'trials': 1})
+        self.assertEqual(record['status'], 'indeterminate')
+        self.assertEqual(json.loads(out)['cells_planned'], 3)
+
+    def test_grade_refuses_an_output_changed_after_execution(self):
+        self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
+        (self.case_dir / 'attempt-t' / 'cell-candidate-1.out').write_bytes(payload('edited'))
+        code, _, err = self.call('grade', '--case', self.case, '--attempt', 'attempt-t')
+        self.assertEqual(code, 2)
+        self.assertIn('cell-candidate-1.out', err)
+        self.assertFalse((self.case_dir / 'attempt-t' / 'blind').exists())
+
+    def test_grade_refuses_out_of_range_scores_and_never_regrades(self):
+        self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
+        scores = self.repo / 'scores.json'
+        scores.write_text(json.dumps({'1': {'A': 101, 'B': 1, 'C': 1}}), encoding='utf-8')
+        code, _, err = self.call('grade', '--case', self.case, '--attempt', 'attempt-t',
+                                 '--scores', 'scores.json')
+        self.assertEqual(code, 2)
+        self.assertIn('between 0 and 100', err)
+        scores.write_text(json.dumps({'1': {'A': 1, 'B': 2, 'C': 3}}), encoding='utf-8')
+        self.assertEqual(self.call('grade', '--case', self.case, '--attempt', 'attempt-t',
+                                   '--scores', 'scores.json')[0], 0)
+        graded = (self.case_dir / 'attempt-t' / 'attempt.json').read_bytes()
+        code, _, err = self.call('grade', '--case', self.case, '--attempt', 'attempt-t',
+                                 '--scores', 'scores.json')
+        self.assertEqual(code, 2)
+        self.assertIn('already graded', err)
+        self.assertEqual((self.case_dir / 'attempt-t' / 'attempt.json').read_bytes(), graded)
+
+    def test_codex_jsonl_yields_the_last_agent_message_and_turn_usage(self):
+        # Event shape per openai/codex codex-rs/exec/src/exec_events.rs (main, retrieved 2026-09-25).
+        stream = '\n'.join(json.dumps(event) for event in [
+            {'type': 'thread.started', 'thread_id': 't'},
+            {'type': 'item.completed', 'item': {'id': 'i0', 'type': 'reasoning', 'text': 'thinking'}},
+            {'type': 'item.completed', 'item': {'id': 'i1', 'type': 'agent_message', 'text': 'draft'}},
+            {'type': 'item.completed', 'item': {'id': 'i2', 'type': 'agent_message', 'text': 'final'}},
+            {'type': 'turn.completed', 'usage': {'input_tokens': 7, 'output_tokens': 3}},
+        ])
+        usage, cost, response = runner.parse_payload(stream)
+        self.assertEqual(response, 'final')
+        self.assertEqual(usage, {'input_tokens': 7, 'output_tokens': 3})
+        self.assertIsNone(cost)
+
+    def test_cells_run_in_a_fresh_empty_directory_outside_the_repository(self):
+        seen = []
+        replies = [completed(payload()) for _ in range(3)]
+
+        def spawn(argv, **kwargs):
+            if argv[-1] == '--version':
+                return subprocess.CompletedProcess(argv, 0, b'2.1.272\n', b'')
+            cwd = Path(kwargs['cwd'])
+            seen.append((cwd, sorted(cwd.iterdir())))
+            return replies.pop(0)
+
+        out, err = io.StringIO(), io.StringIO()
+        with patch.object(runner.subprocess, 'run', side_effect=spawn), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = runner.main(['--repo', str(self.repo), *self.run_args()])
+        self.assertEqual(code, 0, err.getvalue())
+        self.assertEqual(len({cwd for cwd, _ in seen}), 3, 'cells shared a working directory')
+        for cwd, contents in seen:
+            self.assertEqual(contents, [])
+            self.assertNotIn(self.repo, [cwd, *cwd.parents])
+            for word in ('baseline', 'candidate', 'control', 'demo', 'eval'):
+                self.assertNotIn(word, cwd.name)
+            self.assertFalse(cwd.exists(), 'working directory was not removed')
+        self.assertNotIn(str(self.repo), json.dumps(self.record()))
+
+    def test_attempt_names_outside_the_attempt_prefix_are_refused(self):
+        for bad in ('att', 'attempt-a/b', '../attempt-x'):
+            with self.subTest(attempt=bad):
+                args = self.run_args()
+                args[args.index('attempt-t')] = bad
+                code, _, err = self.call(*args, cells=[])
+                self.assertEqual(code, 2)
+                self.assertIn('attempt-', err)
 
 if __name__ == '__main__':
     unittest.main()

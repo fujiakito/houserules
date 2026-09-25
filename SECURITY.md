@@ -28,7 +28,7 @@ in the same commit; there is no embargo process to coordinate with.
 | `check.py` (installed as `.houserules/check.py`) | Reading outside the target repository; `--fix` repairing something it does not own |
 | `.houserules/workflow.py` | Shell injection through recorded argv; escaping the `cwd`; writing state or logs outside `work/`; a stale-evidence check reporting `verified` for evidence that has changed |
 | Ownership manifests | `skills.json` / `assets.json` content causing a write to an arbitrary path |
-| `tests/eval/runner.py` (distribution-only) | Escaping the case directory; writing outside the attempt directory; recording credentials or environment into an attempt record; an isolation profile or a frozen-input check failing open, so an operator's own configuration reaches the baseline arm |
+| `tests/eval/runner.py` (distribution-only) | Escaping the case directory; writing outside the attempt directory, other than the empty per-cell temporary working directory it creates and removes; recording credentials or environment into an attempt record; an isolation profile or a frozen-input check failing open, so an operator's own configuration reaches the baseline arm |
 
 Path containment is guarded in `install.py` (`workflow_activation`, and `plan_assets` via
 `asset_path`), `check.py` (`asset_path`), `workflow.py` (`safe_path`) and
