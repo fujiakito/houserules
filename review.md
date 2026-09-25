@@ -111,3 +111,61 @@ a `-text` rule, and `--attempt` must be a single `attempt-*` name so the rule al
 passed on 3.9, 3.10 and 3.13. `python check.py` exit 0, `python install.py --check` no drift,
 `runner.py verify --case tests/workflows/skill-eval/hr-tdd-01` no drift, and `git diff --check` clean.
 Frozen `hr-tdd-01` packet bytes are unchanged.
+
+## Independent remote review — 2026-09-26
+
+Scope: `fujiakito/houserules`, `feat/eval-harness` at `4273bcb`. This pass inspected the remote
+GitHub branch, the merged commits, `review.md`, `tests/eval/runner.py`, its 33 regression tests,
+`tests/eval/README.md`, the frozen case manifest, and `.gitattributes`. No local checkout, provider
+CLI execution, or new test run was used for this pass.
+
+### Merge and fix verification
+
+The merge is present. Commit `c1296be` has parents `75771fe` (the evaluation branch) and
+`1e9ee8a` (`main`). The current `main` is still `1e9ee8a`; GitHub comparison reports this
+branch **8 commits ahead, 0 behind**. The runner fix is commit `1ec1393`, and `4273bcb` adds
+the preceding follow-up review.
+
+| Earlier finding | Independent code and test check |
+|---|---|
+| Resume mixes settings | `resume_conflicts` and `cmd_run` reject changes to runner, model, argv, timeout, budget, harness digest, and trial count. `test_resume_refuses_a_changed_model_and_leaves_the_record_untouched` and `test_resume_refuses_a_changed_budget_deadline_or_trial_count` cover representative changes. **Verified by source inspection; see CLI version gap below.** |
+| Partial arms marked complete | `new_record` stores every declared arm in `plan`; `attempt_status` checks the whole recorded plan. `test_one_arm_run_is_indeterminate_against_the_recorded_plan` covers the former failure. **Verified by source inspection.** |
+| Grading accepts changed output | `cmd_grade` re-hashes every completed output before emitting `blind/` or accepting scores; `test_grade_refuses_an_output_changed_after_execution` covers it. **Verified by source inspection.** |
+| Codex JSONL becomes raw grader input | `parse_payload` extracts the last completed `agent_message`; `test_codex_jsonl_yields_the_last_agent_message_and_turn_usage` covers the documented event shape. **Verified for the fixture, not against a live Codex CLI.** |
+| Project context, blinding, and output bytes | `run_cell` gives each cell a fresh temporary cwd, the README tells graders to receive only `blind/`, and `.gitattributes` preserves `attempt-*/**` bytes. Corresponding tests cover cwd and attempt naming. **Verified by source inspection, not by a provider run or a Git checkout on each platform.** |
+
+### Remaining runner findings
+
+**[P1] Resume can mix CLI versions and misstate the version of earlier cells.**
+`cmd_run` calls `probe_version` on every invocation and unconditionally assigns its result to
+`record['surface_version']`. `resume_conflicts` does not compare that version. A baseline run
+under CLI version A can therefore be resumed for the candidate under version B; the final record
+names B for both. This breaks the README's claim that an attempt is evidence for one named surface
+and version. Probe before resuming, refuse a changed version before any cell executes or record is
+rewritten, and add a regression test that checks both the refusal and unchanged record bytes.
+[Runner](tests/eval/runner.py) · [Tests](tests/test_eval_runner.py)
+
+**[P2] An incomplete `frozen_sha256` manifest can pass `verify` and `run`.**
+`read_case` checks that declared files exist, but does not require a recorded hash for every name
+from `frozen_names`. `frozen_drift` iterates only recorded keys, and `cmd_verify` exits 0 when
+there is no mismatch even if a declared input has no expected hash. Such an input may change
+without refusal. The shipped `hr-tdd-01` manifest does list all six declared files, so this is a
+runner validation gap rather than observed drift in that case. Require exact coverage before
+`verify`, `plan`, or `run`, with a regression test for an omitted arm hash.
+[Runner](tests/eval/runner.py) · [Case](tests/workflows/skill-eval/hr-tdd-01/case.json)
+
+**[P2] `grade` does not use the attempt lock.**
+`cmd_run` holds `.eval.lock` while it updates the record, but `cmd_grade` reads and rewrites
+`attempt.json` without it. If grading overlaps a running or resumed campaign, the blind packet
+can be built from a transient subset and the two record writes can overwrite each other. Use the
+same lock around grading's read, hash checks, packet generation, and final write; add a test for
+grading while the lock is held. [Runner](tests/eval/runner.py)
+
+### Evidence boundary
+
+The GitHub commit has no reported commit status or Actions workflow run, so this pass cannot
+independently confirm the preceding review's 109-pass claim. The tests were inspected but not
+executed here. There is still no provider-backed `hr-tdd-01` attempt establishing the skill's
+marginal benefit on a target model. The previously noted effort pin, Codex cost reporting, rubric
+headroom, and intake positioning remain open. Address the runner findings above before treating a
+new attempt record as comparison evidence.
