@@ -208,3 +208,52 @@ Still open, unchanged from the previous sections:
 The old remote branch `claude/clever-clarke-dnni5u` could not be deleted from this session: the
 push was cut off at the transport. It still points at `75771fe`, which `feat/eval-harness`
 contains. Delete it from GitHub.
+
+## Independent verification after the second runner fix — 2026-09-26
+
+Scope: the remote `fujiakito/houserules` branch `feat/eval-harness` at `e0095e9`, including
+the runner fix in `26a61af`. This was a GitHub source and test inspection, with no local checkout
+or provider CLI run. The old `claude/clever-clarke-dnni5u` ref now returns 404; the deletion
+request in the preceding section is obsolete. The branch is 11 commits ahead of, and 0 behind,
+`main` at `1e9ee8a`.
+
+| Finding from the independent remote review | Verification at this HEAD |
+|---|---|
+| CLI version changes on resume | **Fixed in the inspected code.** `cmd_run` compares the new probe with the recorded `surface_version` before rewriting the record or running a cell. The new test covers a changed version, an unavailable probe, and unchanged record bytes; another test covers a successful same-version resume. |
+| Missing `frozen_sha256` entry | **Fixed for declared inputs.** `read_case` rejects any name from `frozen_names` without a recorded hash, so all four commands pass through the check. The new test removes an arm hash and confirms `verify`, `plan`, and `run` refuse before creating an attempt. See the surplus-entry issue below. |
+| Concurrent `grade` and `run` | **Fixed in the inspected code.** `cmd_grade` acquires the same attempt lock before `grade_locked` reads or writes the record and blind packet. The new test verifies both packet emission and score ingestion refuse while the lock exists, without removing it. |
+
+The suite now contains 37 runner test methods, four more than the earlier inspected version.
+GitHub reports no commit status or Actions run for this HEAD. The workflow runs on pushes to
+`main`, pull requests, or manual dispatch, so the absence of a branch-push run is consistent with
+its trigger configuration. The 113-pass Linux result in the preceding section is a maintainer
+report, not a test run independently observed in this pass. The committed `hr-tdd-01` directory
+still contains only the case packet and no provider-backed attempt.
+
+### Additional findings
+
+**[P1] Grading can use a changed rubric while recording the old rubric hash.**
+`cmd_grade` calls `read_case`, which checks hash coverage and file existence but does not compare
+current bytes with either `case.json`'s `frozen_sha256` or the attempt's
+`input_hashes_current`. Packet generation in `grade_locked` reads the current rubric into
+`blind/rubric-judge.md`; later score ingestion writes `grading.rubric_sha256` from the attempt's
+recorded hash. If the rubric changes after a run, the grader can see different criteria while the
+record still names the original rubric.
+
+The `--scores` path also accepts scores without checking input drift. Reject frozen input drift
+against the attempt record before either grading path, and test both packet generation and score
+ingestion after a rubric edit. [Runner](tests/eval/runner.py)
+
+**[P3] Surplus recorded input hashes still pass `verify`.**
+The new `read_case` check rejects missing hashes, but does not reject keys in `frozen_sha256`
+that are not declared inputs. `frozen_drift` ignores such keys, and `cmd_verify` reports them as
+`unrecognised_recorded_names` while returning success when no other drift exists. This does not
+leave a declared input unprotected, but a successful verification can appear to cover a file it
+never checked. The previous review requested exact coverage; enforce equality between the
+declared-input set and recorded-hash keys, or make surplus keys a verification failure.
+[Runner](tests/eval/runner.py)
+
+The three targeted fixes are supported by code and regression tests. The grading-input issue
+above remains a blocker for treating a future graded attempt as revision-bound evidence. Effort
+pinning, Codex cost handling, rubric headroom, and intake positioning remain as documented in
+the preceding review.
