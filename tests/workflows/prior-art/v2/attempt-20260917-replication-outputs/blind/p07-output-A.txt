@@ -1,0 +1,13 @@
+**Disposition:** F-1 is not verified as resolved. S2 textually addresses F-1 (adds whitespace-only rejection to AC-1), but V-1's pass verdict cannot be trusted: its cited evidence file (evidence/whitespace.txt) is confirmed missing from the packet transfer manifest, and no command output or alternate evidence accompanies it. R-1's pass verdict applies only to S1 and does not carry forward to S2, since AC-1's acceptance condition changed. No implementation is in scope per S2, so "verification" here should mean confirming the spec text satisfies F-1's concern — but even that judgment can't be certified as complete without knowing what V-1 actually checked.
+
+**Evidence gaps:**
+- evidence/whitespace.txt (cited by V-1) — missing per manifest.
+- No record of what method V-1 used to verify S2 (spec-text review vs. some test execution) given "no software implementation is in scope."
+- No re-verification event postdating the fix, independent of V-1's unsupported claim.
+
+**Next action / owner:** next-reviewer should perform a fresh spec-text comparison of S2 against F-1's stated gap and AC-1, and either (a) independently confirm S2's wording resolves F-1 and record a new verification event citing that reasoning as evidence, or (b) formally flag V-1 as unverifiable due to missing evidence and request the evidence file or a re-run from whoever owns verification tooling. Release still requires project-owner approval, which remains absent regardless of outcome.
+
+**Proposed updates:**
+- Append new verification event (V-2): status = blocked/inconclusive, reason = "V-1 evidence missing, cannot substantiate pass."
+- Leave F-1 open until V-2 or equivalent is resolved.
+- Update handoff: owner=next-reviewer, action=obtain-evidence-or-reverify, do not advance to release.

@@ -1,0 +1,11 @@
+**Disposition:** F-1 remains unresolved. S2's spec text plausibly addresses the whitespace-input requirement, but V-1's pass verdict cannot be credited — its sole cited evidence (evidence/whitespace.txt) is missing per the transfer manifest, and no other verification artifact (test output, review notes, etc.) exists. R-1's pass verdict applies to S1 only and does not carry forward to S2, since AC-1's scope changed. No implementation is in scope per S2, so verification here means confirming the spec text itself satisfies F-1 — that check has not been documented as performed.
+
+**Next action / owner:** next-reviewer must either (a) independently re-verify S2 against F-1's concern by reviewing the spec text directly and recording that review as a new event, or (b) request the missing evidence/whitespace.txt be re-transferred before crediting V-1. Either way, a new verification event is needed — V-1 as currently evidenced cannot stand.
+
+**Evidence gaps:** evidence/whitespace.txt absent from packet; no command output, diff, or reviewer notes substantiating V-1's claimed pass; no linkage shown between V-1 and the specific S2 revision identity (commit/blob or digest).
+
+**Proposed updates:**
+- Add finding/event: "V-1 evidence unavailable at packet transfer; verdict unconfirmed" (append, don't overwrite V-1).
+- Do not close F-1 yet; mark it "pending re-verification."
+- Update handoff: owner remains next-reviewer, action changes to "obtain evidence or perform direct spec-text review," blocked pending either the missing file or a fresh review pass.
+- No release action — project-owner approval is absent and unaffected by this review.

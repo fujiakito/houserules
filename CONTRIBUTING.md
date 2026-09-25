@@ -34,8 +34,13 @@ type(scope): short description
 - Scope is optional. Write a short imperative description: `fix(installer): preserve user files`.
 - Keep each commit focused on one coherent change. Use the body for the reason and validation.
 - For breaking changes, add `!` before `:` and a `BREAKING CHANGE:` footer explaining migration.
-- Work on a `codex/<topic>` branch and open a PR against `main`. Use squash merge with a
-  compliant PR title; retain any breaking-change footer in the final commit message.
+- Name branches `<type>/<topic>`, reusing the types above, lowercase and kebab-case:
+  `fix/preserve-user-files`, `docs/close-evaluation`. Lead the topic with an issue number
+  when one exists: `fix/123-preserve-user-files`. Open a PR against `main` and use squash
+  merge with a compliant PR title; retain any breaking-change footer in the final commit message.
+- An agent session often opens on a generated placeholder branch such as
+  `claude/amazing-carson-mxs5dr`. Set the name when the session starts, or rename before opening
+  the PR. The branch name is the first summary a reviewer reads; a generated one says nothing.
 - Amend or rewrite published commits only when authorized; use `--force-with-lease` when pushing
   an authorized rewrite.
 
@@ -67,7 +72,8 @@ the documentation conformance test checks link targets and stage coverage.
 | A new or changed shipped skill | Canonical `templates/skills/<name>/` source, admission status/evidence, README and relevant GUIDE choices, installation/drift tests and upstream notices/THIRD-PARTY when applicable. Installer discovery is automatic; keep `check.py`'s explicit `SHIPPED_SKILL_NAMES` set in sync when names change (an installation test checks equality). Inspect installer listing/generated-page wording for assumptions about the current set. Regenerate owned copies/manifests through the installer; never hand-edit digests. |
 | A capability claim | Named surface and version for a local observation, or a source and retrieval date, or an `(unverified)` tag |
 | Installer or checker behavior | A regression test in `tests/`, and a `docs/ENFORCEMENT.md` row if it changes what a pass establishes |
-| Files under `tests/workflows/prior-art/`, and the frozen packets of any `tests/workflows/skill-eval/` case | These are frozen bytes referenced by SHA-256 records. `.gitattributes` pins their line endings. Append a new dated run; do not edit a recorded one |
+| Files under `tests/workflows/prior-art/` | Three kinds of content live here and the rule differs. **Captured observations** — the evidence files (captured outputs, harness, aggregation input) and, in an attempt record, the per-call results in `pairs` with their scores, argv, timestamps and usage, plus `input_hashes_measured` — are frozen bytes referenced by SHA-256 records; `.gitattributes` pins their line endings. Never edit them: append a new dated run instead. **Derived values and producer provenance** — `aggregate`, `evidence_file_sha256`, `derivation` — may be corrected when the derivation itself was wrong (a miscomputed statistic, a producer that changed), never to alter what was observed; the correction entry carries the previous value. **Interpretation** — `findings`, `conclusion`, `limitations` and the various notes — may be amended when a later review shows it wrong, since a record asserting something known false serves its next consumer worse than one carrying a correction. Any amendment appends an entry to the record's `corrections.amendments` array giving the date, the commit, why, and the fields changed grouped by those three kinds. Field paths are arrays of literal key segments, never dotted strings — a key may contain a dot, so a dotted path cannot be parsed back. Every changed derived or provenance field is listed in `derived_field_history` with its previous value, or marked `added` when the commit introduced it; a lookup that cannot resolve a path is an error, not an omission. `recorded_date` keeps naming the execution, not the edit |
+| The frozen packets and attempt outputs of any `tests/workflows/skill-eval/` case | Frozen bytes referenced by SHA-256 (`frozen_sha256` in `case.json`, `output_sha256` per cell); `.gitattributes` pins their line endings. Append a new attempt directory; do not edit a recorded one. An attempt record's interpretation and derived fields follow the three-kind rule in the row above |
 | A new evaluation case | A frozen packet set under `tests/workflows/skill-eval/<case>/`, where every arm is one treatment block plus the case's `task.md` verbatim; `frozen_sha256` in its `case.json`; a `-text` line per frozen file in `.gitattributes`; the same hash table and the arm design in the case README; a row in `tests/workflows/skill-eval/README.md`; and either a first attempt record or an explicit **Not run** note. `tests/test_eval_runner.py` checks the hashes, the arm suffix and the rubric's judge span |
 
 Line endings are LF everywhere via `.gitattributes`. If a checkout shows the whole tree as

@@ -1,0 +1,13 @@
+**Disposition:** Unresolved. S2 textually addresses F-1 (adds whitespace-only rejection to AC-1), but V-1's pass verdict cannot be relied upon — its sole cited evidence (evidence/whitespace.txt) is confirmed missing from the packet transfer manifest, and no other verification artifact (test output, log, command trace) was transferred. R-1's pass verdict applies to S1 only and does not carry forward to S2 given the AC-1 change. No implementation is in scope per S2, so "verification" here should mean specification-level review, not test execution — that distinction isn't clarified in V-1 as transferred.
+
+**Evidence gaps:**
+- evidence/whitespace.txt missing (manifest-confirmed).
+- No alternate corroboration of V-1's pass claim.
+- Unclear whether V-1's verification target was spec-review or an out-of-scope implementation check.
+
+**Next action / owner:** next-reviewer to request the missing evidence file (or its content digest) from whoever produced V-1 before treating S2 as verified. If unrecoverable, V-1 should be marked indeterminate/unsubstantiated rather than pass. No release action is authorized regardless (project-owner approval absent).
+
+**Proposed updates:**
+1. Append a new review event (not overwrite R-1 or V-1): "V-1 pass claim unsubstantiated — cited evidence missing at packet transfer; disposition pending evidence recovery."
+2. Leave F-1 open until substantiated verification exists against S2 identity (spec.md@S2 digest, not filename).
+3. Update handoff: action = obtain/verify evidence for V-1; owner = next-reviewer; blocker = missing evidence/whitespace.txt.

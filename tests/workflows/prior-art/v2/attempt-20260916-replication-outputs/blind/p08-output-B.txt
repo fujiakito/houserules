@@ -1,0 +1,10 @@
+**Disposition:** F-1 remains unresolved/open. S2's AC-1 text change (adding whitespace-only rejection) is a plausible fix proposal, but V-1's pass verdict cannot be credited — its sole evidence (evidence/whitespace.txt) is missing from the transfer manifest, and no command output or alternate evidence accompanied it. R-1's pass verdict applies only to S1 and does not carry forward to S2; it stays as historical record, unchanged. No implementation is in scope per S2, so this is a spec-language review only, not a behavioral test.
+
+**Next action / owner:** next-reviewer to (a) request re-transfer of evidence/whitespace.txt or equivalent verification artifact from the author, and (b) once received, independently confirm it substantiates rejection of whitespace-only input against S2's AC-1 wording before accepting V-1. Release remains blocked pending project-owner approval regardless of verification outcome — that authorization is separately absent and not this reviewer's to grant.
+
+**Evidence gaps:** missing evidence/whitespace.txt (confirmed absent per manifest); no test/command output substituting for it; no identity reference (commit/blob digest) tying V-1's claim to a specific S2 content hash — S2 is described only by revision label, not an immutable identity.
+
+**Proposed updates:**
+- Append new finding-ledger event: "F-1 / S2 review: verification unsubstantiated — evidence missing, V-1 pass not accepted."
+- Do not rewrite R-1 or V-1; append rather than overwrite.
+- Update handoff: owner=next-reviewer, action="obtain and verify evidence/whitespace.txt against S2", blocker="missing verification evidence + absent release approval."

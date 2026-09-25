@@ -11,11 +11,27 @@ tests/workflows/prior-art/v2/baseline-prompt.md -text whitespace=blank-at-eol,-b
 tests/workflows/prior-art/v2/candidate-prompt.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/prior-art/v2/rubric.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 
+# Captured execution evidence: preserve exact bytes, including the CRLF the frozen
+# v2 rubric contributes to the grader prompt. Recorded by SHA-256 in the attempt record.
+tests/workflows/prior-art/v2/attempt-20260916-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Replication evidence: preserve exact bytes of graded outputs and harness.
+# Recorded by SHA-256 in the attempt record.
+tests/workflows/prior-art/v2/attempt-20260916-replication-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Leak-free replication evidence: preserve exact bytes of graded outputs and harness.
+# Recorded by SHA-256 in the attempt record.
+tests/workflows/prior-art/v2/attempt-20260917-replication-outputs/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
 # Frozen skill-evaluation packets: the same rule, for cases under tests/workflows/skill-eval/.
-# Attempt directories are generated output and stay under the global eol=lf above.
 tests/workflows/skill-eval/hr-tdd-01/task.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/skill-eval/hr-tdd-01/rubric.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/skill-eval/hr-tdd-01/arm-baseline.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/skill-eval/hr-tdd-01/arm-candidate.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/skill-eval/hr-tdd-01/arm-control-length.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/workflows/skill-eval/hr-tdd-01/arm-one-line.md -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Skill-evaluation attempt output: captured bytes recorded by SHA-256 (output_sha256), so
+# they are preserved exactly, as the prior-art evidence above is. runner.py only writes
+# attempt directories named attempt-*.
+tests/workflows/skill-eval/*/attempt-*/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
