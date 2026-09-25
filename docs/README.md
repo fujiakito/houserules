@@ -46,7 +46,7 @@ their prose. Task acceptance, reviewer independence and authority remain explici
 | [Prior-art evaluation harnesses](../research/PRIOR-ART-EVAL-HARNESSES.md) | Maintainer designing a comparison: which arms to run, and what a runner must refuse | Revisit when an upstream harness changes or this repository records its own first attempt |
 | [Workflow reports](../tests/workflows/README.md) | Reproduce or challenge a particular result | Retain dated scope/hashes; append new results rather than silently upgrading old claims |
 | [Skill evaluation cases](../tests/workflows/skill-eval/README.md) and the [harness](../tests/eval/README.md) | Maintainer produces criterion-5 comparative evidence for a shipped skill | Append a dated attempt; never edit a recorded one. Revisit the harness when a runner flag, isolation profile or rubric changes |
-| [2026-09-25 branch review](BRANCH-REVIEW-2026-09-25.md) | Branch maintainer resolves evaluation findings before claiming a skill benefit | Revisit after runner fixes, the first attempt, or a target model/surface change |
+| [2026-09-25 branch review](../review.md) | Branch maintainer resolves evaluation findings before claiming a skill benefit | Revisit after runner fixes, the first attempt, or a target model/surface change |
 | Skill LICENSE / NOTICE files | Preserve upstream terms, revision and adaptation history | Update with imported content/revision changes |
 | [THIRD-PARTY](../THIRD-PARTY.md) | Reader checking what is original and what is adapted | Update when a skill's upstream source, revision or license changes |
 | Inventory _TEMPLATE.md | Maintainer adds another agent | Follow the inventory schema, then extend GUIDE and MATRIX |
