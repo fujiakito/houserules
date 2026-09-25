@@ -519,5 +519,58 @@ class EvalRunnerTest(unittest.TestCase):
                 self.assertEqual(code, 2)
                 self.assertIn('attempt-', err)
 
+    # -- review 2026-09-26 findings ----------------------------------------
+
+    def test_resume_refuses_a_changed_cli_version_and_leaves_the_record_untouched(self):
+        self.call(*self.run_args(**{'--arm': 'baseline'}), cells=[completed(payload('first'))],
+                  version=b'2.1.272\n')
+        before = (self.case_dir / 'attempt-t' / 'attempt.json').read_bytes()
+        for probed in (b'2.1.273\n', None):
+            with self.subTest(version=probed):
+                code, _, err = self.call(*self.run_args(**{'--resume': True}), cells=[],
+                                         version=probed)
+                self.assertEqual(code, 2)
+                self.assertIn('version changed', err)
+                self.assertEqual((self.case_dir / 'attempt-t' / 'attempt.json').read_bytes(),
+                                 before)
+
+    def test_resume_under_the_same_cli_version_proceeds(self):
+        self.call(*self.run_args(**{'--arm': 'baseline'}), cells=[completed(payload('first'))])
+        code, _, err = self.call(*self.run_args(**{'--resume': True}),
+                                 cells=[completed(payload()), completed(payload())])
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.record()['surface_version'], '2.1.272')
+
+    def test_manifest_without_a_hash_for_a_declared_input_is_refused(self):
+        manifest = self.case_dir / 'case.json'
+        case = json.loads(manifest.read_text(encoding='utf-8'))
+        del case['frozen_sha256']['arm-candidate.md']
+        manifest.write_text(json.dumps(case, indent=2), encoding='utf-8')
+        for argv in (('verify', '--case', self.case),
+                     ('plan', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1'),
+                     tuple(self.run_args())):
+            with self.subTest(action=argv[0]):
+                code, _, err = self.call(*argv, cells=[])
+                self.assertEqual(code, 2)
+                self.assertIn('arm-candidate.md', err)
+        self.assertFalse((self.case_dir / 'attempt-t').exists())
+
+    def test_grade_refuses_while_a_run_holds_the_lock(self):
+        self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
+        folder = self.case_dir / 'attempt-t'
+        before = (folder / 'attempt.json').read_bytes()
+        (folder / '.eval.lock').write_text('4242', encoding='utf-8')
+        (self.repo / 'scores.json').write_text(json.dumps({'1': {'A': 1, 'B': 2, 'C': 3}}),
+                                               encoding='utf-8')
+        for extra in ((), ('--scores', 'scores.json')):
+            with self.subTest(scores=bool(extra)):
+                code, _, err = self.call('grade', '--case', self.case, '--attempt', 'attempt-t',
+                                         *extra)
+                self.assertEqual(code, 2)
+                self.assertIn('.eval.lock', err)
+        self.assertFalse((folder / 'blind').exists())
+        self.assertEqual((folder / 'attempt.json').read_bytes(), before)
+        self.assertTrue((folder / '.eval.lock').exists(), 'grade removed a lock it did not own')
+
 if __name__ == '__main__':
     unittest.main()

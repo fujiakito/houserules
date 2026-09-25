@@ -138,6 +138,10 @@ def read_case(repo, case_dir):
     for name in frozen_names(case):
         if not safe_path(repo, f'{case_dir}/{name}').is_file():
             raise ValueError(f'Declared input is missing: {name}')
+    # Drift is checked over recorded hashes, so an input with no recorded hash could change freely.
+    unhashed = sorted(set(frozen_names(case)) - set(case['frozen_sha256']))
+    if unhashed:
+        raise ValueError(f"frozen_sha256 has no hash for declared input(s): {', '.join(unhashed)}")
     return case
 
 
@@ -477,6 +481,11 @@ def cmd_run(repo, args):
         plan = recorded_plan(record)
         cells = [cell for cell in plan if cell[0] in arms]
         version = probe_version(args.runner)
+        recorded_version = record.get('surface_version')
+        if recorded_version is not None and version != recorded_version:
+            # Checked before any write, so the record keeps naming the version its cells ran on.
+            raise ValueError(f'{args.runner} CLI version changed since this attempt '
+                             f'({recorded_version!r} -> {version!r}); start a new --attempt')
         record['surface_version'] = version
         if version is None:
             record['status'] = 'indeterminate'
@@ -569,6 +578,15 @@ def cmd_grade(repo, args):
     if not ATTEMPT_NAME.fullmatch(args.attempt):
         raise ValueError('--attempt must be a single directory name starting with attempt-')
     record_path = safe_path(repo, f'{args.case}/{args.attempt}/attempt.json')
+    if not record_path.is_file():
+        raise ValueError(f'No attempt record at {args.attempt}')
+    # The same lock run holds: a grade overlapping a campaign would read a transient cell set,
+    # and the two writers would overwrite each other's record.
+    with locked(record_path.parent):
+        return grade_locked(repo, args, case, record_path)
+
+
+def grade_locked(repo, args, case, record_path):
     folder = record_path.parent
     record = json.loads(record_path.read_text(encoding='utf-8'))
     if record.get('blinding', {}).get('revealed'):

@@ -51,7 +51,10 @@ python tests/eval/runner.py grade  --case tests/workflows/skill-eval/<case> \
 | `--timeout-seconds` above the deadline `case.json` records | Raising a deadline until the score improves is not a control |
 | An existing `attempt.json` without `--resume` | Existing work is never replaced — `workflow.py`'s posture |
 | A resume whose inputs changed since the recorded attempt | Same reason as the first row |
+| A `case.json` whose `frozen_sha256` omits a declared input (task, rubric, an arm or an extra input) | Drift is checked over recorded hashes, so an unhashed input could change without refusal. Applies to `verify`, `plan`, `run` and `grade` |
 | A resume that would change a recorded setting: runner, model, argv, deadline, `--max-usd`, `--allow-unmetered-cells`, the harness digest or `--trials` | Cells run under two configurations in one record are not one comparison, and the record would still name only the first. Start a new `--attempt` instead |
+| A resume whose probed CLI version differs from the recorded `surface_version`, or cannot be probed | The attempt is evidence for one named version. Checked before any cell runs or the record is rewritten |
+| `grade` while another process holds the attempt's `.eval.lock` | A grade overlapping a campaign would read a transient cell set, and the two writers would overwrite each other's record |
 | A resume or a second `grade --scores` on an attempt already graded | A recorded grade is not overwritten |
 | `grade` when a completed cell's output no longer hashes to its `output_sha256` | The grader would score text the record does not describe |
 | An `--attempt` that is not one directory name starting with `attempt-` | Keeps every attempt under the `-text` rule in `.gitattributes` |
