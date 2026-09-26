@@ -572,5 +572,46 @@ class EvalRunnerTest(unittest.TestCase):
         self.assertEqual((folder / 'attempt.json').read_bytes(), before)
         self.assertTrue((folder / '.eval.lock').exists(), 'grade removed a lock it did not own')
 
+    # -- review 2026-09-26 second pass -------------------------------------
+
+    def test_grade_refuses_after_a_rubric_edit_on_both_paths(self):
+        self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
+        folder = self.case_dir / 'attempt-t'
+        before = (folder / 'attempt.json').read_bytes()
+        (self.case_dir / 'rubric.md').write_text(RUBRIC.replace('60', '50'), encoding='utf-8')
+        (self.repo / 'scores.json').write_text(json.dumps({'1': {'A': 1, 'B': 2, 'C': 3}}),
+                                               encoding='utf-8')
+        for extra in ((), ('--scores', 'scores.json')):
+            with self.subTest(scores=bool(extra)):
+                code, _, err = self.call('grade', '--case', self.case, '--attempt', 'attempt-t',
+                                         *extra)
+                self.assertEqual(code, 2)
+                self.assertIn('rubric', err)
+        self.assertFalse((folder / 'blind').exists())
+        self.assertEqual((folder / 'attempt.json').read_bytes(), before)
+
+    def test_grade_refuses_when_the_manifest_is_rehashed_after_the_run(self):
+        """Re-freezing case.json to match an edit must not launder it past the attempt record."""
+        self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
+        (self.case_dir / 'rubric.md').write_text(RUBRIC.replace('60', '50'), encoding='utf-8')
+        manifest = self.case_dir / 'case.json'
+        case = json.loads(manifest.read_text(encoding='utf-8'))
+        case['frozen_sha256']['rubric.md'] = hashlib.sha256(
+            (self.case_dir / 'rubric.md').read_bytes()).hexdigest()
+        manifest.write_text(json.dumps(case, indent=2), encoding='utf-8')
+        code, _, err = self.call('grade', '--case', self.case, '--attempt', 'attempt-t')
+        self.assertEqual(code, 2)
+        self.assertIn('rubric', err)
+        self.assertFalse((self.case_dir / 'attempt-t' / 'blind').exists())
+
+    def test_manifest_hashing_an_undeclared_name_is_refused(self):
+        manifest = self.case_dir / 'case.json'
+        case = json.loads(manifest.read_text(encoding='utf-8'))
+        case['frozen_sha256']['notes.md'] = '0' * 64
+        manifest.write_text(json.dumps(case, indent=2), encoding='utf-8')
+        code, _, err = self.call('verify', '--case', self.case)
+        self.assertEqual(code, 2)
+        self.assertIn('notes.md', err)
+
 if __name__ == '__main__':
     unittest.main()

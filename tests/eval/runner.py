@@ -138,10 +138,15 @@ def read_case(repo, case_dir):
     for name in frozen_names(case):
         if not safe_path(repo, f'{case_dir}/{name}').is_file():
             raise ValueError(f'Declared input is missing: {name}')
-    # Drift is checked over recorded hashes, so an input with no recorded hash could change freely.
-    unhashed = sorted(set(frozen_names(case)) - set(case['frozen_sha256']))
-    if unhashed:
-        raise ValueError(f"frozen_sha256 has no hash for declared input(s): {', '.join(unhashed)}")
+    # Coverage must be exact. Drift is checked over recorded hashes, so an unhashed input could
+    # change freely; a surplus hash names a file no check reads, so a pass would overstate coverage.
+    declared, recorded = set(frozen_names(case)), set(case['frozen_sha256'])
+    if declared - recorded:
+        raise ValueError('frozen_sha256 has no hash for declared input(s): '
+                         f"{', '.join(sorted(declared - recorded))}")
+    if recorded - declared:
+        raise ValueError('frozen_sha256 hashes undeclared name(s): '
+                         f"{', '.join(sorted(recorded - declared))}")
     return case
 
 
@@ -368,10 +373,8 @@ def cmd_verify(repo, args):
     case = read_case(repo, args.case)
     drift = frozen_drift(repo, args.case, case, case['frozen_sha256'])
     current, marker = input_hashes(repo, args.case, case)
-    missing = sorted(set(case['frozen_sha256']) - set(current))
     print(json.dumps({'case': case['case'], 'judge_marker': marker,
-                      'drift': drift, 'unrecognised_recorded_names': missing,
-                      'hashes': current}, indent=2))
+                      'drift': drift, 'hashes': current}, indent=2))
     if drift:
         print(f"Frozen input drift: {', '.join(drift)}", file=sys.stderr)
         return 1
@@ -591,6 +594,14 @@ def grade_locked(repo, args, case, record_path):
     record = json.loads(record_path.read_text(encoding='utf-8'))
     if record.get('blinding', {}).get('revealed'):
         raise ValueError('This attempt is already graded; a recorded grade is not overwritten')
+    # Both grading paths read the current rubric or trust the recorded one, so either would grade
+    # against criteria the record does not name if an input changed after the run.
+    if not record.get('input_hashes_current'):
+        raise ValueError('The attempt record carries no input hashes to grade against')
+    drift = sorted(set(frozen_drift(repo, args.case, case, case['frozen_sha256']))
+                   | set(frozen_drift(repo, args.case, case, record['input_hashes_current'])))
+    if drift:
+        raise ValueError(f"Inputs changed since this attempt, refusing to grade: {', '.join(drift)}")
     completed = [e for e in record.get('arms', []) if e.get('status') == 'completed']
     if not completed:
         raise ValueError('No completed cell to grade')
