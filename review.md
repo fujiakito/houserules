@@ -321,3 +321,87 @@ Provider execution is expressly deferred by the maintainer; hr-tdd-01 remains No
 The documented Windows path failure remains outside this change. Native loading, effective
 isolation, actual model behavior and comparative benefit remain unverified. No installed skill,
 frozen case packet or historical attempt output was modified.
+
+## Verification of the offline pilot changes and PR #4 — 2026-09-26
+
+Reviewer: Claude Code (cloud session, Linux), on a local checkout of `feat/eval-harness` at
+`36df748`, the head of [draft PR #4](https://github.com/fujiakito/houserules/pull/4). Scope:
+commits `c3efaaf`, `115f3ad`, `ec1bf03` and `36df748`, plus the PR's checks and conversation. No
+provider cell was executed and no code change was needed.
+
+### Hosted and local results
+
+- **Hosted CI.** [Run 36220975500](https://github.com/fujiakito/houserules/actions/runs/36220975500)
+  reports `check (3.9)`, `check (3.11)` and `check (3.13)` all `success` on head `36df748`. The PR
+  has no review comments. GitHub reports it as mergeable (`clean`) against `main` at `1e9ee8a`.
+- **Local, Python 3.11.15 and 3.9 (via `uv`).** The full `python -m unittest discover -s tests`
+  ran 129 tests, all passing with no skips on either interpreter. The two historical migration
+  tests therefore executed, because this checkout has full history.
+- **Other gates.** `python check.py` exited 0, `python install.py --check` reported no drift,
+  `runner.py verify` found no drift in `hr-tdd-01`, and `git diff --check origin/main...HEAD` was
+  clean. Frozen packet bytes are unchanged.
+
+### Code checks
+
+Each new behaviour was mutation-checked: reverting it locally made its regression test fail.
+
+- **Resume.** Failed cells are not retried
+  (`test_failed_cell_is_never_retried_or_overwritten_on_resume`). A timed-out cell with no
+  reported cost counts as unmetered
+  (`test_unreported_timeout_stops_campaign_and_resume_keeps_the_observation`).
+- **Codex allowance.** The campaign stops before a cell would exceed the allowance
+  (`test_codex_stops_before_exceeding_its_known_unmetered_allowance`).
+- **Partial cost.** `spent_usd` stays `null` whenever any executed cell is unmetered
+  (`test_partial_cost_is_not_presented_as_the_campaign_total`).
+- **Effort argv.** Each surface receives its own effort flag
+  (`test_effort_uses_surface_specific_argv_and_is_recorded`).
+- **Effort on resume.** Removing the `effort` field from `resume_conflicts` is still caught,
+  because effort is also inside the recorded `argv`. The explicit field is redundant but costs
+  nothing and names the change clearly.
+
+`36df748` replaces `write_text(newline=...)` with `write_bytes`, which is correct.
+`Path.write_text` gained `newline` only in Python 3.10, and the git output it writes is already
+LF-normalised by text-mode `subprocess`.
+
+### Claims checked against sources
+
+- **Claude effort flag.** `--effort <level>` (low, medium, high, xhigh, max) appears in
+  `claude --help` on Claude Code CLI 2.1.282, read 2026-09-25. It is not verified that `--print`
+  applies it, which is consistent with `effort_source: requested-not-runtime-attested`.
+- **Codex effort override.** `-c/--config model_reasoning_effort="..."` is consistent with
+  secondary references retrieved 2026-09-26, for example
+  [DEV Community](https://dev.to/aicoding-guide/how-to-change-reasoning-effort-in-codex-cli-modelreasoningeffort-values-and-one-off-overrides-2bf4).
+  The cited primary sources (developers.openai.com, learn.chatgpt.com) are blocked by this
+  session's egress policy, so they could not be re-read here.
+- **Codex override with `--ignore-user-config`.** Whether a `--config` override still applies
+  together with `--ignore-user-config` is **(unverified)**. PILOT.md prerequisite 3 already
+  requires checking effective effort on the surface.
+- **Model IDs.** `gpt-6-sol` and `gpt-6-luna` in `pilot.json` were likewise not re-verified from
+  this session. The execution prerequisite "check model access" covers them.
+
+### Earlier open items
+
+| Item | Status at `36df748` |
+|---|---|
+| Effort pin | **Closed as far as offline work can go.** Required, recorded and resume-checked; runtime attestation stays open by design |
+| Codex cost allowance | **Closed.** Explicit allowance and a recorded reason are required before any attempt is created |
+| Rubric headroom | **Planned, not measured.** PILOT.md fixes the ceiling rule (every arm ≥ 95/100 means near-ceiling) before any outputs exist |
+| Intake positioning | **Closed as documentation.** The skill-eval README and PILOT.md state that hr-tdd-01 is a user-requested headroom check that does not satisfy criterion 1 |
+| Windows 8.3 path test | **Open.** CI runs on Linux only, so it cannot observe this |
+
+### Remaining notes (non-blocking)
+
+- **[P3] A blocked cell is permanent.** A cell that never started, for example because the CLI
+  binary vanished mid-campaign, incurred no provider turn. It can still never be retried, so the
+  attempt stays indeterminate. The README states this, and a new attempt is the remedy. Accept
+  as designed, or allow retrying `blocked` cells alone.
+- **Before merge.** `main` removed its previous completed review transcript (`ca3ec29`). If the
+  same convention applies, remove `review.md` and its `docs/README.md` row once the review
+  closes. Carry any durable conclusions into PILOT.md, the harness README or the PR description
+  first.
+- **Squash merge.** Keep the `BREAKING CHANGE:` footer from `c3efaaf` in the final commit message,
+  as CONTRIBUTING requires.
+
+Verdict: the new changes are correct as far as offline checks reach. PR #4 is green on its current
+head. No finding blocks leaving draft. Provider compatibility, effective effort and isolation, and
+any skill benefit remain unverified, as the PR itself states.
