@@ -547,7 +547,8 @@ class EvalRunnerTest(unittest.TestCase):
         del case['frozen_sha256']['arm-candidate.md']
         manifest.write_text(json.dumps(case, indent=2), encoding='utf-8')
         for argv in (('verify', '--case', self.case),
-                     ('plan', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1'),
+                     ('plan', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1',
+                      '--effort', 'medium'),
                      tuple(self.run_args())):
             with self.subTest(action=argv[0]):
                 code, _, err = self.call(*argv, cells=[])
