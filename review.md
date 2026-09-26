@@ -257,3 +257,42 @@ The three targeted fixes are supported by code and regression tests. The grading
 above remains a blocker for treating a future graded attempt as revision-bound evidence. Effort
 pinning, Codex cost handling, rubric headroom, and intake positioning remain as documented in
 the preceding review.
+
+## Response to the verification after the second runner fix — 2026-09-26
+
+Reviewer: Claude Code (cloud session, Linux, Python 3.11.15), on a local checkout of
+`feat/eval-harness` at `d471d33`. Resolved in `0806d8e`. No provider-backed cell was executed.
+
+Branch housekeeping: `git ls-remote` no longer lists `claude/clever-clarke-dnni5u`. The deletion
+request two sections above is closed.
+
+Both findings were confirmed by reading the code before any change. Each fix has a regression test,
+and reverting each fix makes its test fail.
+
+| Finding | Status | What changed |
+|---|---|---|
+| [P1] Grading uses a changed rubric under the old hash | **Fixed** | `grade_locked` refuses before either grading path when any frozen input differs from the attempt's `input_hashes_current` or from `frozen_sha256`. Those inputs include `case.json` and the rubric's judge span. It also refuses a record with no input hashes |
+| [P3] Surplus recorded hashes pass `verify` | **Fixed** | `read_case` requires the `frozen_sha256` keys to equal the declared inputs exactly, and refuses both missing and surplus names in every subcommand. The `unrecognised_recorded_names` field of `verify` could no longer be non-empty and was removed |
+
+Tests added:
+- A rubric edit after the run: both packet emission and score ingestion refuse, no `blind/` is
+  written, and the record bytes are unchanged.
+- A rubric edit that also re-hashes `case.json` to match: grading still refuses. Checking
+  `frozen_sha256` alone would have let this edit through; the attempt record is what catches it.
+- A surplus manifest key: `verify` refuses and names the key.
+
+The harness README refusal table and the `docs/ENFORCEMENT.md` row are updated.
+
+Local result: `python -m unittest discover -s tests -v` passed 116 tests on Linux, Python 3.11.15.
+The runner tests (40) also passed on 3.9, 3.10 and 3.13. `python check.py` exited 0,
+`python install.py --check` reported no drift, `runner.py verify` found no drift in `hr-tdd-01`,
+and `git diff --check` was clean. As before, this is a maintainer-side run. A pull request, or a
+`workflow_dispatch` of `check.yml`, is what produces an independently observable CI result.
+
+The grading-input blocker named in the preceding section is resolved. The items that remain open
+before the first attempt are unchanged:
+- pin and record effort
+- the Codex cost allowance
+- rubric headroom on the target model
+- intake positioning against `main`
+- the Windows 8.3 path test failure
