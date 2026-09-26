@@ -83,9 +83,9 @@ obtain a score — the runner refuses it.
 ```bash
 python tests/eval/runner.py verify --case tests/workflows/skill-eval/hr-tdd-01
 python tests/eval/runner.py plan   --case tests/workflows/skill-eval/hr-tdd-01 \
-       --runner claude --model <pinned-id> --trials 3
+       --runner claude --model <pinned-id> --effort medium --trials 3
 python tests/eval/runner.py run    --case tests/workflows/skill-eval/hr-tdd-01 \
-       --runner claude --model <pinned-id> --trials 3 --max-usd 4.00
+       --runner claude --model <pinned-id> --effort medium --trials 3 --max-usd 4.00
 ```
 
 Three trials over four arms is twelve cells on one surface with one model. That is enough to record
@@ -102,3 +102,10 @@ indeterminate. Criterion 5 asks for evidence, not for a win.
 - Prompt-only. A procedure whose value lies in iterating against a real test runner is not being
   given its best conditions here; a tool-using case is separate work.
 - The grader is a project participant. Structural blinding hides labels; it is not independence.
+
+## Runner update — 2026-09-26
+
+The command examples now include the runner's required explicit effort. Medium is an example,
+not a measured best setting. The frozen task, arms, rubric and case.json are unchanged.
+See the [model-aware pilot plan](../../../eval/PILOT.md) for the offline three-model matrix,
+headroom decision and execution prerequisites. No model cells have run.

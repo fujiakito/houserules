@@ -296,3 +296,28 @@ before the first attempt are unchanged:
 - rubric headroom on the target model
 - intake positioning against `main`
 - the Windows 8.3 path test failure
+
+## Offline pilot preparation — 2026-09-26
+
+Follow-up scope: explicit effort, cost accounting, an offline model matrix, and observable hosted
+CI. Implemented through the GitHub connector without a local checkout, starting at 5634019.
+Provider execution is expressly deferred by the maintainer; hr-tdd-01 remains Not run.
+
+- plan/run now require effort and pass it through provider-specific argv. It is recorded and
+  checked on resume, but effective runtime effort still needs a surface observation.
+- Codex execution needs a positive unmetered allowance and a recorded reason. Unknown charges
+  after failed/timed-out execution count too; partial cost is a subtotal, never a known total.
+  The reported-spend threshold is not a hard billing cap.
+- Resume preserves every attempted cell, including failed, blocked and timed-out observations.
+  It only runs never-attempted cells. Output replacement can no longer hide those outcomes.
+- [PILOT.md](tests/eval/PILOT.md) defines the three-model headroom smoke test, intake limitation,
+  shared-contract/model-specific-guidance design and the prerequisites for a tool-using case.
+  It does not satisfy criterion 1 or certify a skill benefit.
+- [Draft PR #4](https://github.com/fujiakito/houserules/pull/4) provides hosted CI rather than a
+  local pass claim. Its initial run caught a legacy plan fixture missing --effort; the follow-up
+  fixes that fixture and fetches full history so two migration tests do not silently skip.
+  Use the PR's latest commit-bound checks for the final status, not the initial failed run.
+
+The documented Windows path failure remains outside this change. Native loading, effective
+isolation, actual model behavior and comparative benefit remain unverified. No installed skill,
+frozen case packet or historical attempt output was modified.
