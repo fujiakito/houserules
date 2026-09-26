@@ -29,6 +29,17 @@ In this repository run `python check.py` and `python install.py --check` before 
 Script/test changes additionally require `python -m unittest discover -s tests -v`.
 Neither command validates work-artifact semantics, authorizes release, or proves an agent loaded a skill.
 
+## Known platform verification limit
+
+Recorded 2026-09-26 from the
+[branch review](https://github.com/fujiakito/houserules/blob/d69a5821d168f631ec498125b46c1da5d52375ec/review.md#verification-and-limits).
+The reviewer reported a Windows failure in
+`test_follow_up_command_survives_paths_containing_spaces`: a string comparison differed between
+the long and 8.3 forms of a temporary path. This was not reproduced on Linux and remains open.
+The current hosted matrix runs on Linux, so a green run does not resolve this finding or establish
+Windows compatibility. Before making that claim, reproduce the test on Windows, record the Python
+and OS versions, and distinguish equivalent path spellings from an actual command-quoting failure.
+
 ## Deferred checks and their triggers
 
 Recorded 2026-09-17. These are known gaps in the map above that are **deliberately not built yet**.

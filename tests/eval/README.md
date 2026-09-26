@@ -91,7 +91,8 @@ claim. The [pilot plan](PILOT.md) explains the initial offline matrix and execut
 Isolation is **not caller-settable**. `RUNNERS` fixes one profile per surface — `claude`:
 `--setting-sources ""`, `--strict-mcp-config`, `--tools ""`; `codex`: `--ignore-user-config`,
 `--ephemeral`, `--sandbox read-only`, `--skip-git-repo-check` — recorded verbatim in the attempt.
-The codex flags are taken from the local `codex exec --help` reported in [review.md](../../review.md)
+The codex flags are taken from the local `codex exec --help` reported in the
+[2026-09-25 review](https://github.com/fujiakito/houserules/blob/d69a5821d168f631ec498125b46c1da5d52375ec/review.md)
 (Codex CLI 0.155.0-alpha.16.4, 2026-09-25); whether each is honoured is not verified here.
 
 The flags alone do not keep project context out. On Claude Code CLI 2.1.282, `claude --help`
