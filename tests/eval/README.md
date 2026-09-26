@@ -29,9 +29,9 @@ record carries these as `limitations[]` entries rather than leaving them to a re
 ```bash
 python tests/eval/runner.py verify --case tests/workflows/skill-eval/<case>
 python tests/eval/runner.py plan   --case tests/workflows/skill-eval/<case> \
-       --runner claude --model <pinned-id> --trials 3
+       --runner claude --model <pinned-id> --effort medium --trials 3
 python tests/eval/runner.py run    --case tests/workflows/skill-eval/<case> \
-       --runner claude --model <pinned-id> --trials 3 --max-usd 4.00
+       --runner claude --model <pinned-id> --effort medium --trials 3 --max-usd 4.00
 python tests/eval/runner.py grade  --case tests/workflows/skill-eval/<case> \
        --attempt attempt-<date>-claude                 # emits blind/
 python tests/eval/runner.py grade  --case tests/workflows/skill-eval/<case> \
@@ -40,19 +40,47 @@ python tests/eval/runner.py grade  --case tests/workflows/skill-eval/<case> \
 
 `verify` and `plan` need no provider CLI and make no network call. `run` spawns one.
 
+## Explicit configuration and cost accounting
+
+New plan/run commands require --effort as well as --model. Effort is recorded separately
+and in argv; resume refuses a change. Claude receives --effort; Codex receives
+--config 'model_reasoning_effort="medium"' (with the chosen value). The runner rejects empty,
+auto and default values but does not certify that a given model/CLI supports the requested level.
+
+Flag sources, retrieved 2026-09-26:
+[Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference) and
+[Codex developer settings](https://learn.chatgpt.com/docs/developer-settings).
+These are documentation sources, not live provider verification. Record effort as requested,
+not attested; equal names across providers do not imply equal compute.
+
+Codex has no supported cost report in this adapter. run refuses it before creating an attempt
+unless a positive --allow-unmetered-cells and a nonempty --unmetered-reason are supplied.
+Any surface needs a reason when its allowance is positive; the reason is recorded and immutable
+on resume. Codex stops before dispatching a cell beyond that known unmetered allowance.
+
+Timeouts and failed processes may incur unreported charges. They count as unmetered when cost
+is unavailable; a spawn blocked before execution does not. budget.reported_cost_usd is the
+known subtotal, while budget.spent_usd stays null whenever any executed cell has unknown cost.
+Partial telemetry is labelled partial, not a complete billed total. Invalid cost values are unknown.
+
+--max-usd checks reported spend between cells, not during a cell: it is a stop threshold,
+not a hard billing cap. A cell can overshoot it; an unmetered run has no established total
+spend. Provider/account limits are separate. No price table converts raw tokens into a billed
+claim. The [pilot plan](PILOT.md) explains the initial offline matrix and execution prerequisites.
+
 ## What it refuses, and why
 
 | Refusal | Reason |
 |---|---|
 | A frozen input whose bytes no longer match `case.json`'s `frozen_sha256`, naming the file | An arm that differs from another in more than the declared variable yields a number that looks like a result and is not one. This is the failure behind this repository's R-003/F-001 finding and behind upstream ponytail's contaminated baseline |
-| A runner with no `--model` | Isolation drops the operator's saved model, so without a pin the comparison silently runs whatever the operator or the CLI release defaults to, and per-token cost varies with it |
+| A runner with no `--model` or explicit `--effort` | Isolation drops the operator's saved model, so without a pin the comparison silently runs whatever the operator or the CLI release defaults to, and per-token cost varies with it |
 | No `--max-usd` | Refusal is pre-execution; nothing is created |
-| More unmetered completed cells than `--allow-unmetered-cells` (default 0) | An unreportable cost is unknown, and unknown is not free. A matching `limitations[]` entry is appended automatically |
+| More unmetered executed cells than `--allow-unmetered-cells` (default 0) | An unreportable cost is unknown, and unknown is not free. A matching `limitations[]` entry is appended automatically |
 | `--timeout-seconds` above the deadline `case.json` records | Raising a deadline until the score improves is not a control |
 | An existing `attempt.json` without `--resume` | Existing work is never replaced — `workflow.py`'s posture |
 | A resume whose inputs changed since the recorded attempt | Same reason as the first row |
 | A `case.json` whose `frozen_sha256` keys are not exactly the declared inputs (task, rubric, arms, extra inputs) | Drift is checked over recorded hashes, so an unhashed input could change without refusal, and a surplus key would let a pass claim a file no check read. Applies to `verify`, `plan`, `run` and `grade` |
-| A resume that would change a recorded setting: runner, model, argv, deadline, `--max-usd`, `--allow-unmetered-cells`, the harness digest or `--trials` | Cells run under two configurations in one record are not one comparison, and the record would still name only the first. Start a new `--attempt` instead |
+| A resume that would change a recorded setting: runner, model, effort, argv, deadline, `--max-usd`, `--allow-unmetered-cells`, the unmetered reason, the harness digest or `--trials` | Cells run under two configurations in one record are not one comparison, and the record would still name only the first. Start a new `--attempt` instead |
 | A resume whose probed CLI version differs from the recorded `surface_version`, or cannot be probed | The attempt is evidence for one named version. Checked before any cell runs or the record is rewritten |
 | `grade` while another process holds the attempt's `.eval.lock` | A grade overlapping a campaign would read a transient cell set, and the two writers would overwrite each other's record |
 | A resume or a second `grade --scores` on an attempt already graded | A recorded grade is not overwritten |
@@ -84,6 +112,10 @@ in one invocation. An attempt is `completed` only when every planned cell comple
 else, including a run of one arm, is `indeterminate`. A timeout retains whatever partial output
 the process produced and is recorded as indeterminate, **not** as a diagnosed defect.
 
+Resume executes only never-attempted cells. Failed, timed-out and blocked observations and their
+output files are never replaced; a later investigation needs a separately named attempt with the
+reason recorded, not a silent retry until success. A completed record is still not semantic acceptance.
+
 Unknown values are `null`. Never `0` — a zero cost reads as free, and an absent cost is not free.
 
 ## Reading a record next to the older ones
@@ -96,8 +128,11 @@ harness measures itself drop the suffix (`status`, `elapsed_seconds`, `usage`, `
 spellings may appear in one corpus; that is the point, and it is what lets v1, v2 and harness
 records be read side by side under one schema.
 
+New attempts also record effort and effort_source. Old records remain historical evidence and are
+not silently assigned a default effort. Their old harness digest prevents resuming with this code.
+
 Added by this schema: `case`, `case_dir`, `harness{path,sha256}`, `isolation{profile,flags}`,
-`budget{max_usd,spent_usd,cost_source,allow_unmetered_cells}`,
+`budget{max_usd,spent_usd,cost_source,allow_unmetered_cells,unmetered_reason,reported_cost_usd,unmetered_cells}`,
 `blinding{method,group_key_template,judge_marker,revealed}`,
 `grading{grader,blinded,rubric_sha256,graded_utc}`, `plan{arms,trials}`, and per-cell `trial`,
 `output_sha256`, `cost_source`, `score_breakdown` and, when set, `workdir_left_nonempty`.

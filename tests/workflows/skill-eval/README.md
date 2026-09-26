@@ -12,6 +12,13 @@ open and no skill is promoted.
 |---|---|---|---|
 | [hr-tdd-01](hr-tdd-01/README.md) | `hr-tdd` | Does the procedure change the produced red test, the stated failure and the implementation, against no procedure, a length-matched generic procedure and a one-line instruction? | Prepared 2026-09-15, **not run** |
 
+## Current intake and pilot
+
+The [2026-09-26 pilot plan](../../eval/PILOT.md) treats hr-tdd-01 as a user-requested instrument
+headroom check, not an observed adopter failure. Criterion 1 remains open. The three model plans
+are validated offline; no paid execution or skill promotion is authorized. Real failure evidence
+and a separate tool-using protocol are required before a broader claim.
+
 ## Rules
 
 Each case freezes its inputs. `case.json` carries `frozen_sha256` for every packet and the rubric;

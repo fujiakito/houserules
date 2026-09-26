@@ -210,13 +210,23 @@ def isolation_flags(runner):
     return list(RUNNERS[runner]['isolation'])
 
 
-def build_argv(runner, model):
+def build_argv(runner, model, effort=None):
     """Assemble the exact argv. A model pin is structural, not a default."""
     spec = RUNNERS[runner]
     if not model or not str(model).strip():
         raise ValueError('An explicit --model pin is required; an unpinned model is not a control')
+    if not effort or not re.fullmatch(r'[a-z][a-z0-9_-]{0,31}', effort) or effort in ('auto', 'default'):
+        raise ValueError('An explicit --effort is required; auto/default are not controls')
+    # Syntax is provider-specific; accepted values still depend on the model and CLI build.
+    effort_args = (['--effort', effort] if runner == 'claude' else
+                   ['--config', 'model_reasoning_effort=' + json.dumps(effort)])
     return (list(spec['base']) + isolation_flags(runner)
-            + [spec['model_flag'], model] + list(spec['tail']))
+            + [spec['model_flag'], model] + effort_args + list(spec['tail']))
+
+
+def valid_cost(value):
+    return (not isinstance(value, bool) and isinstance(value, (int, float))
+            and math.isfinite(value) and value >= 0)
 
 
 def parse_payload(text):
@@ -233,7 +243,7 @@ def parse_payload(text):
         usage = payload.get('usage') if isinstance(payload.get('usage'), dict) else None
         cost = payload.get('total_cost_usd')
         response = payload.get('result') if isinstance(payload.get('result'), str) else None
-        return usage, cost if isinstance(cost, (int, float)) else None, response
+        return usage, cost if valid_cost(cost) else None, response
     events = []
     for line in text.splitlines():
         try:
@@ -245,7 +255,7 @@ def parse_payload(text):
     for event in events:
         if isinstance(event.get('usage'), dict):
             usage = event['usage']
-        if isinstance(event.get('total_cost_usd'), (int, float)):
+        if valid_cost(event.get('total_cost_usd')):
             cost = event['total_cost_usd']
         # codex exec --json: {"type": "item.completed", "item": {"type": "agent_message",
         # "text": ...}}. The last agent message is the answer; reasoning and tool items are not.
@@ -273,10 +283,12 @@ def resume_conflicts(record, expected):
     recorded = {
         'surface': record.get('surface'),
         'model': record.get('model'),
+        'effort': record.get('effort'),
         'argv': record.get('argv'),
         'timeout_seconds': record.get('timeout_seconds'),
         'budget.max_usd': (record.get('budget') or {}).get('max_usd'),
         'budget.allow_unmetered_cells': (record.get('budget') or {}).get('allow_unmetered_cells'),
+        'budget.unmetered_reason': (record.get('budget') or {}).get('unmetered_reason'),
         'harness.sha256': (record.get('harness') or {}).get('sha256'),
         'plan.trials': (record.get('plan') or {}).get('trials'),
     }
@@ -284,9 +296,9 @@ def resume_conflicts(record, expected):
 
 
 def pending_cells(record, cells):
-    done = {(entry['arm'], entry['trial']) for entry in record.get('arms', [])
-            if entry.get('status') == 'completed'}
-    return [cell for cell in cells if cell not in done]
+    # A timeout/failed response is an observation, not a pending slot to overwrite on resume.
+    attempted = {(entry['arm'], entry['trial']) for entry in record.get('arms', [])}
+    return [cell for cell in cells if cell not in attempted]
 
 
 def attempt_status(record, cells):
@@ -324,7 +336,7 @@ def probe_version(runner):
 
 
 def new_record(case, case_dir, runner, model, timeout_seconds, budget, hashes, marker, argv,
-               harness_sha, trials):
+               harness_sha, trials, effort):
     return {
         'schema_version': SCHEMA_VERSION,
         'status': 'indeterminate',
@@ -338,6 +350,8 @@ def new_record(case, case_dir, runner, model, timeout_seconds, budget, hashes, m
         'surface_version': None,
         'surface_version_source': 'measured',
         'model': model,
+        'effort': effort,
+        'effort_source': 'requested-not-runtime-attested',
         'provider': None,
         'utc_start': None,
         'utc_end': None,
@@ -362,6 +376,11 @@ def new_record(case, case_dir, runner, model, timeout_seconds, budget, hashes, m
             'Isolation flags are recorded as passed, not verified as honoured. No offline check '
             'can prove the provider CLI applied them.',
             'Bounded attempts, deadlines and spend are usage control, not a sandbox.',
+            'Effort is explicitly requested in argv, not attested by the provider. Identical '
+            'effort names across models do not imply equal compute.',
+            'max_usd stops subsequent cells after reported spend reaches the threshold; it is '
+            'not a hard billing cap and a running cell may exceed the remaining amount.',
+            'Cells run in fixed arm order within each trial; order effects are not controlled.',
             'Each cell runs in an empty temporary directory, so no project context file is '
             'discovered. User-level context (for example a user memory file) is not proven '
             'excluded by the recorded flags.',
@@ -385,10 +404,11 @@ def cmd_plan(repo, args):
     case = read_case(repo, args.case)
     arms = resolve_arms(case, args.arm)
     cells = planned_cells(case, arms, args.trials)
-    argv = build_argv(args.runner, args.model)
+    argv = build_argv(args.runner, args.model, args.effort)
     hashes, marker = input_hashes(repo, args.case, case)
     print(json.dumps({
         'case': case['case'], 'runner': args.runner, 'model': args.model,
+        'effort': args.effort,
         'isolation': {'profile': RUNNERS[args.runner]['profile'],
                       'flags': isolation_flags(args.runner)},
         'argv': argv, 'judge_marker': marker,
@@ -399,7 +419,7 @@ def cmd_plan(repo, args):
         'frozen_drift': frozen_drift(repo, args.case, case, case['frozen_sha256']),
         'input_hashes': hashes,
     }, indent=2))
-    return 0
+    return 1 if frozen_drift(repo, args.case, case, case['frozen_sha256']) else 0
 
 
 def group_key(case, trial, runner, model):
@@ -428,13 +448,22 @@ def cmd_run(repo, args):
         raise ValueError(
             f"--timeout-seconds {timeout_seconds:g} exceeds the deadline recorded for this case "
             f"({case['timeout_seconds']:g}); raising a deadline to obtain a score is not a control")
-    argv = build_argv(args.runner, args.model)
+    argv = build_argv(args.runner, args.model, args.effort)
     drift = frozen_drift(repo, args.case, case, case['frozen_sha256'])
     if drift:
         raise ValueError(f"Frozen input drift, refusing to run: {', '.join(drift)}")
     reason = budget_gate(None, args.max_usd, 0, args.allow_unmetered_cells)
     if reason:
         raise ValueError(reason)
+
+    reason_text = (args.unmetered_reason or '').strip()
+    if args.allow_unmetered_cells and not reason_text:
+        raise ValueError('--allow-unmetered-cells requires --unmetered-reason')
+    if reason_text and not args.allow_unmetered_cells:
+        raise ValueError('--unmetered-reason requires a positive --allow-unmetered-cells')
+    if args.runner == 'codex' and not args.allow_unmetered_cells:
+        raise ValueError('Codex has no supported cost report; explicitly set '
+                         '--allow-unmetered-cells and --unmetered-reason before execution')
 
     hashes, marker = input_hashes(repo, args.case, case)
     attempt_dir = args.attempt or f"attempt-{time.strftime('%Y%m%d', time.gmtime())}-{args.runner}"
@@ -447,6 +476,7 @@ def cmd_run(repo, args):
         print(json.dumps({'dry_run': True, 'argv': argv, 'attempt_dir': attempt_dir,
                           'cells': [{'arm': a, 'trial': t} for a, t in cells],
                           'isolation': isolation_flags(args.runner),
+                          'effort': args.effort,
                           'timeout_seconds': timeout_seconds,
                           'input_hashes': hashes}, indent=2))
         return 0
@@ -464,9 +494,10 @@ def cmd_run(repo, args):
             if stale:
                 raise ValueError(f"Inputs changed since this attempt: {', '.join(stale)}")
             conflicts = resume_conflicts(record, {
-                'surface': args.runner, 'model': args.model, 'argv': argv,
+                'surface': args.runner, 'model': args.model, 'effort': args.effort, 'argv': argv,
                 'timeout_seconds': timeout_seconds, 'budget.max_usd': args.max_usd,
                 'budget.allow_unmetered_cells': args.allow_unmetered_cells,
+                'budget.unmetered_reason': reason_text or None,
                 'harness.sha256': harness_sha, 'plan.trials': args.trials})
             if conflicts:
                 raise ValueError('Resume would change what this attempt recorded: '
@@ -475,9 +506,15 @@ def cmd_run(repo, args):
                 raise ValueError('This attempt is already graded; start a new --attempt')
         else:
             budget = {'max_usd': args.max_usd, 'spent_usd': None, 'cost_source': None,
-                      'allow_unmetered_cells': args.allow_unmetered_cells}
+                      'reported_cost_usd': None, 'unmetered_cells': 0,
+                      'allow_unmetered_cells': args.allow_unmetered_cells,
+                      'unmetered_reason': reason_text or None}
             record = new_record(case, args.case, args.runner, args.model, timeout_seconds,
-                                budget, hashes, marker, argv, harness_sha, args.trials)
+                                budget, hashes, marker, argv, harness_sha, args.trials, args.effort)
+            if reason_text:
+                record['limitations'].append(
+                    'Unmetered cells explicitly allowed: ' + reason_text
+                    + '. Total spend cannot be established from the available reports.')
             record['utc_start'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
             write_record(record_path, record)
 
@@ -499,26 +536,30 @@ def cmd_run(repo, args):
                               'reason': f'{args.runner} CLI unavailable'}, indent=2))
             return 1
 
-        spent = record['budget'].get('spent_usd')
-        # Only a completed cell can have failed to report a cost. A blocked or timed-out cell
-        # produced no billable turn, so counting it would refuse a campaign for the wrong reason.
+        spent = record['budget'].get('reported_cost_usd')
+        # Timeout and failed processes can incur charges without emitting a final cost report.
         unmetered = sum(1 for e in record['arms']
-                        if e.get('status') == 'completed' and e.get('cost_source') == 'unavailable')
+                        if e.get('status') != 'blocked' and e.get('billed_cost') is None)
         for arm, trial in pending_cells(record, cells):
             reason = budget_gate(spent, args.max_usd, unmetered, args.allow_unmetered_cells)
+            if (args.runner == 'codex' and unmetered >= args.allow_unmetered_cells
+                    and not reason):
+                reason = 'Codex unmetered allowance exhausted before the next cell'
             if reason:
                 record['limitations'].append(f'Campaign stopped before all cells ran: {reason}')
                 break
             entry = run_cell(repo, args, case, folder, arm, trial, argv, timeout_seconds)
-            record['arms'] = [e for e in record['arms']
-                              if (e['arm'], e['trial']) != (arm, trial)] + [entry]
+            record['arms'].append(entry)
             record['arms'].sort(key=lambda e: (e['trial'], e['arm']))
             if entry.get('billed_cost') is not None:
                 spent = (spent or 0) + entry['billed_cost']
-            elif entry.get('status') == 'completed':
+            elif entry.get('status') != 'blocked':
                 unmetered += 1
-            record['budget']['spent_usd'] = spent
-            record['budget']['cost_source'] = 'unavailable' if spent is None else 'reported'
+            record['budget']['reported_cost_usd'] = spent
+            record['budget']['unmetered_cells'] = unmetered
+            record['budget']['spent_usd'] = None if unmetered else spent
+            record['budget']['cost_source'] = ('partial' if unmetered and spent is not None else
+                                              'unavailable' if spent is None else 'reported')
             record['status'] = attempt_status(record, plan)
             record['utc_end'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
             write_record(record_path, record)
@@ -529,7 +570,8 @@ def cmd_run(repo, args):
 
     print(json.dumps({'status': record['status'], 'attempt': attempt_dir,
                       'cells_recorded': len(record['arms']), 'cells_planned': len(plan),
-                      'spent_usd': record['budget']['spent_usd']}, indent=2))
+                      'spent_usd': record['budget']['spent_usd'],
+                      'reported_cost_usd': record['budget']['reported_cost_usd']}, indent=2))
     return 0 if record['status'] == 'completed' else 1
 
 
@@ -681,6 +723,7 @@ def command_parser():
     plan.add_argument('--case', required=True)
     plan.add_argument('--runner', required=True, choices=sorted(RUNNERS))
     plan.add_argument('--model', required=True)
+    plan.add_argument('--effort', required=True)
     plan.add_argument('--arm', action='append')
     plan.add_argument('--trials', type=int, default=3)
 
@@ -688,12 +731,14 @@ def command_parser():
     run.add_argument('--case', required=True)
     run.add_argument('--runner', required=True, choices=sorted(RUNNERS))
     run.add_argument('--model', required=True)
+    run.add_argument('--effort', required=True)
     run.add_argument('--attempt')
     run.add_argument('--arm', action='append')
     run.add_argument('--trials', type=int, default=3)
     run.add_argument('--timeout-seconds', type=positive)
     run.add_argument('--max-usd', type=positive)
     run.add_argument('--allow-unmetered-cells', type=int, default=0)
+    run.add_argument('--unmetered-reason')
     run.add_argument('--resume', action='store_true')
     run.add_argument('--dry-run', action='store_true')
 

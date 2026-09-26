@@ -119,7 +119,7 @@ class EvalRunnerTest(unittest.TestCase):
         return code, out.getvalue(), err.getvalue()
 
     def run_args(self, **over):
-        base = ['run', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1',
+        base = ['run', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1', '--effort', 'medium',
                 '--trials', '1', '--attempt', 'attempt-t', '--max-usd', '5']
         for flag, value in over.items():
             base.extend([flag] if value is True else [flag, str(value)])
@@ -229,7 +229,7 @@ class EvalRunnerTest(unittest.TestCase):
     # -- refusals --------------------------------------------------------
 
     def test_absent_budget_refuses_before_any_execution(self):
-        args = ['run', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1',
+        args = ['run', '--case', self.case, '--runner', 'claude', '--model', 'pinned-1', '--effort', 'medium',
                 '--trials', '1', '--attempt', 'attempt-t']
         out, err = io.StringIO(), io.StringIO()
         with patch.object(runner.subprocess, 'run') as spawn:
@@ -367,7 +367,7 @@ class EvalRunnerTest(unittest.TestCase):
         before = sorted(p.name for p in self.case_dir.iterdir())
         with patch.object(runner.subprocess, 'run') as spawn:
             code, out, _ = self.call('plan', '--case', self.case, '--runner', 'claude',
-                                     '--model', 'pinned-1', '--trials', '2')
+                                     '--model', 'pinned-1', '--effort', 'medium', '--trials', '2')
             spawn.assert_not_called()
         self.assertEqual(code, 0)
         printed = json.loads(out)
@@ -612,6 +612,153 @@ class EvalRunnerTest(unittest.TestCase):
         code, _, err = self.call('verify', '--case', self.case)
         self.assertEqual(code, 2)
         self.assertIn('notes.md', err)
+
+
+    # -- explicit configuration and honest campaign accounting ------------
+
+    def test_effort_is_required_and_cannot_select_an_implicit_default(self):
+        for effort in (None, '', 'auto', 'default', 'medium extra'):
+            with self.subTest(effort=effort), self.assertRaises(ValueError):
+                runner.build_argv('claude', 'pinned-1', effort)
+        args = self.run_args()
+        index = args.index('--effort')
+        del args[index:index + 2]
+        with patch.object(runner.subprocess, 'run') as spawn:
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as exc:
+                runner.main(['--repo', str(self.repo), *args])
+            self.assertEqual(exc.exception.code, 2)
+            spawn.assert_not_called()
+        self.assertFalse((self.case_dir / 'attempt-t').exists())
+
+    def test_effort_uses_surface_specific_argv_and_is_recorded(self):
+        claude = runner.build_argv('claude', 'pinned-1', 'medium')
+        self.assertEqual(claude[claude.index('--effort') + 1], 'medium')
+        codex = runner.build_argv('codex', 'gpt-6-sol', 'high')
+        self.assertEqual(codex[codex.index('--config') + 1], 'model_reasoning_effort="high"')
+        self.assertEqual(codex[-1], '-')
+        self.call(*self.run_args(), cells=[completed(payload()) for _ in range(3)])
+        self.assertEqual(self.record()['effort'], 'medium')
+        self.assertEqual(self.record()['effort_source'], 'requested-not-runtime-attested')
+
+    def test_resume_refuses_a_changed_effort_before_rewriting_evidence(self):
+        self.call(*self.run_args(**{'--arm': 'baseline'}), cells=[completed(payload())])
+        before = (self.case_dir / 'attempt-t' / 'attempt.json').read_bytes()
+        code, _, err = self.call(*self.run_args(**{'--resume': True, '--effort': 'high'}),
+                                 cells=[])
+        self.assertEqual(code, 2)
+        self.assertIn('effort', err)
+        self.assertEqual((self.case_dir / 'attempt-t' / 'attempt.json').read_bytes(), before)
+
+    def test_unmetered_permission_needs_a_reason_before_creating_an_attempt(self):
+        code, _, err = self.call(*self.run_args(**{'--allow-unmetered-cells': 3}), cells=[])
+        self.assertEqual(code, 2)
+        self.assertIn('--unmetered-reason', err)
+        self.assertFalse((self.case_dir / 'attempt-t').exists())
+
+    def test_codex_refuses_without_explicit_cost_permission_before_spawning(self):
+        args = self.run_args()
+        args[args.index('claude')] = 'codex'
+        with patch.object(runner.subprocess, 'run') as spawn:
+            code, _, err = self.call(*args)
+            spawn.assert_not_called()
+        self.assertEqual(code, 2)
+        self.assertIn('Codex has no supported cost report', err)
+        self.assertFalse((self.case_dir / 'attempt-t').exists())
+
+    def test_codex_stops_before_exceeding_its_known_unmetered_allowance(self):
+        args = self.run_args(**{'--allow-unmetered-cells': 1,
+                                '--unmetered-reason': 'approved token-only pilot'})
+        args[args.index('claude')] = 'codex'
+        code, _, _ = self.call(*args, cells=[completed(payload(cost=None))])
+        self.assertEqual(code, 1)
+        self.assertEqual(len(self.record()['arms']), 1)
+        self.assertEqual(self.record()['budget']['unmetered_cells'], 1)
+        self.assertEqual(self.record()['budget']['unmetered_reason'], 'approved token-only pilot')
+
+    def test_partial_cost_is_not_presented_as_the_campaign_total(self):
+        code, _, _ = self.call(*self.run_args(**{'--allow-unmetered-cells': 1,
+                                                '--unmetered-reason': 'known telemetry gap'}),
+                               cells=[completed(payload(cost=0.2)),
+                                      completed(payload(cost=None)), completed(payload(cost=0.3))])
+        self.assertEqual(code, 0)
+        budget = self.record()['budget']
+        self.assertIsNone(budget['spent_usd'])
+        self.assertAlmostEqual(budget['reported_cost_usd'], 0.5)
+        self.assertEqual(budget['cost_source'], 'partial')
+        before = (self.case_dir / 'attempt-t' / 'attempt.json').read_bytes()
+        code, _, err = self.call(*self.run_args(**{
+            '--resume': True, '--allow-unmetered-cells': 1, '--unmetered-reason': 'different'}),
+            cells=[])
+        self.assertEqual(code, 2)
+        self.assertIn('budget.unmetered_reason', err)
+        self.assertEqual((self.case_dir / 'attempt-t' / 'attempt.json').read_bytes(), before)
+
+    def test_unreported_timeout_stops_campaign_and_resume_keeps_the_observation(self):
+        expired = subprocess.TimeoutExpired(['claude'], 300, output=b'partial', stderr=b'')
+        code, _, _ = self.call(*self.run_args(), cells=[expired])
+        self.assertEqual(code, 1)
+        self.assertEqual(len(self.record()['arms']), 1)
+        self.assertEqual(self.record()['budget']['unmetered_cells'], 1)
+        entry = self.record()['arms'][0]
+        before = (self.case_dir / 'attempt-t' / entry['output_path']).read_bytes()
+        code, _, _ = self.call(*self.run_args(**{'--resume': True}), cells=[])
+        self.assertEqual(code, 1)
+        self.assertEqual(self.record()['arms'][0], entry)
+        self.assertEqual((self.case_dir / 'attempt-t' / entry['output_path']).read_bytes(), before)
+
+    def test_failed_cell_is_never_retried_or_overwritten_on_resume(self):
+        self.call(*self.run_args(**{'--arm': 'baseline'}),
+                  cells=[completed(payload('failed observation'), code=1)])
+        entry = self.record()['arms'][0]
+        before = (self.case_dir / 'attempt-t' / entry['output_path']).read_bytes()
+        code, _, _ = self.call(*self.run_args(**{'--resume': True}),
+                               cells=[completed(payload()), completed(payload())])
+        self.assertEqual(code, 1)
+        self.assertEqual(next(e for e in self.record()['arms'] if e['arm'] == 'baseline'), entry)
+        self.assertEqual((self.case_dir / 'attempt-t' / entry['output_path']).read_bytes(), before)
+
+    def test_reported_spend_stops_subsequent_cells_not_the_running_cell(self):
+        code, _, _ = self.call(*self.run_args(**{'--max-usd': 0.1}),
+                               cells=[completed(payload(cost=0.2))])
+        self.assertEqual(code, 1)
+        self.assertEqual(len(self.record()['arms']), 1)
+        self.assertEqual(self.record()['budget']['spent_usd'], 0.2)
+
+    def test_invalid_cost_is_unknown_not_a_free_or_negative_charge(self):
+        for cost in (-1, True, float('nan'), float('inf')):
+            with self.subTest(cost=cost):
+                self.assertIsNone(runner.parse_payload(payload(cost=cost).decode())[1])
+        self.assertEqual(runner.parse_payload(payload(cost=0).decode())[1], 0)
+
+    def test_plan_reports_drift_with_a_nonzero_exit(self):
+        (self.case_dir / 'task.md').write_text('changed', encoding='utf-8')
+        with patch.object(runner.subprocess, 'run') as spawn:
+            code, out, _ = self.call('plan', '--case', self.case, '--runner', 'claude',
+                                     '--model', 'pinned-1', '--effort', 'medium')
+            spawn.assert_not_called()
+        self.assertEqual(code, 1)
+        self.assertIn('task.md', json.loads(out)['frozen_drift'])
+
+    def test_pilot_matrix_plans_offline_without_creating_attempts(self):
+        pilot = json.loads((ROOT / 'tests/eval/pilot.json').read_text(encoding='utf-8'))
+        self.assertFalse(pilot['execution_authorized'])
+        case_dir = ROOT / pilot['case']
+        before = sorted(p.name for p in case_dir.iterdir())
+        for profile in pilot['profiles']:
+            out = io.StringIO()
+            with self.subTest(profile=profile['id']), patch.object(runner.subprocess, 'run') as spawn:
+                with contextlib.redirect_stdout(out):
+                    code = runner.main(['--repo', str(ROOT), 'plan', '--case', pilot['case'],
+                                        '--runner', profile['runner'], '--model', profile['model'],
+                                        '--effort', profile['effort'],
+                                        '--trials', str(pilot['trials'])])
+                spawn.assert_not_called()
+                self.assertEqual(code, 0)
+                plan = json.loads(out.getvalue())
+                self.assertEqual(len(plan['cells']), 4)
+                self.assertEqual(plan['effort'], profile['effort'])
+                self.assertEqual(plan['frozen_drift'], [])
+        self.assertEqual(sorted(p.name for p in case_dir.iterdir()), before)
 
 if __name__ == '__main__':
     unittest.main()
