@@ -95,15 +95,47 @@ The codex flags are taken from the local `codex exec --help` reported in the
 [2026-09-25 review](https://github.com/fujiakito/houserules/blob/d69a5821d168f631ec498125b46c1da5d52375ec/review.md)
 (Codex CLI 0.155.0-alpha.16.4, 2026-09-25); whether each is honoured is not verified here.
 
-The flags alone do not keep project context out. On Claude Code CLI 2.1.282, `claude --help`
-(read 2026-09-25) describes `--setting-sources` as selecting *settings* files; `CLAUDE.md`
-auto-discovery is a separate behaviour, switched off only by `--bare` (which accepts API-key auth
-only) or `--safe-mode`. This repository's own `CLAUDE.md` imports `AGENTS.md`, so a cell run from
-the repository would load it into every arm, baseline included. Each cell therefore runs in a
-**fresh, empty, system-named temporary directory** outside the repository, removed afterwards; the
-record states the policy, not the path. The name matters too: the headless CLI shows the model its
-working directory, which is how the 2026-09-16 prior-art runs leaked arm names. User-level context
-(a user memory file, for example) is not proven excluded, and a `limitations[]` entry says so.
+Each cell runs in a **fresh, empty, system-named temporary directory** outside the repository,
+removed afterwards; the record states the policy, not the path. The name matters: the headless CLI
+shows the model its working directory, which is how the 2026-09-16 prior-art runs leaked arm names.
+The empty directory also keeps this repository's `CLAUDE.md` (which imports `AGENTS.md`) out of
+every arm whether or not a flag does.
+
+### Isolation smoke test — Claude Code CLI 2.1.283, 2026-09-26
+
+Surface: a Claude Code cloud session on Linux, OAuth sign-in managed by the host, invoking the
+runner's own `build_argv('claude', 'claude-opus-5-5', 'medium')`. Before each call, a random
+canary was written to the user memory file `~/.claude/CLAUDE.md`, and the file was removed
+afterwards. The prompt asked the model to list every `CANARY-…` string in its context, its working
+directory, its tools and any context files.
+
+| Call | cwd | Flags | Canaries reported | Context tokens | Reported cost |
+|---|---|---|---|---:|---:|
+| Cell | empty temp dir | runner profile | none | 2,521 | $0.0182 |
+| Control | temp dir with a canary `CLAUDE.md` | runner profile | none | 2,515 | $0.0114 |
+| Positive control | temp dir with a canary `CLAUDE.md` | runner profile **minus** `--setting-sources ""` | user and project canaries, both files named | 2,733 | $0.0150 |
+
+All three calls exited 0, and all reported `"tools": []` and their own `/tmp/tmp…` working
+directory.
+
+What this shows on this surface and version:
+- **User and project `CLAUDE.md` are excluded.** `--setting-sources ""` kept both out. The positive
+  control shows that the probe detects them when they load. This corrects an earlier reading of
+  the 2.1.282 `--help` text, which suggested that only `--bare` or `--safe-mode` suppress
+  `CLAUDE.md` discovery: tested, not cited.
+- **Tools are off.** `--tools ""` disabled every tool.
+- **Effort and cost.** `--effort medium` was accepted, though not attested. The JSON carries
+  `total_cost_usd` and `modelUsage` naming `claude-opus-5-5`. Under a subscription sign-in, the
+  reported cost is the CLI's figure, not a verified charge.
+
+Not established:
+- other surfaces, CLI builds and sign-in routes
+- other context sources, such as auto-memory or managed policy
+- that the recorded flags suffice on Codex
+
+The CLI also updated itself from 2.1.282 to 2.1.283 within one day of this session. Resume
+refuses a changed version, but a fresh attempt should pin the build or disable auto-update before
+it starts.
 
 ## Outcomes
 

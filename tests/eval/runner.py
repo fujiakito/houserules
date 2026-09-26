@@ -382,8 +382,8 @@ def new_record(case, case_dir, runner, model, timeout_seconds, budget, hashes, m
             'not a hard billing cap and a running cell may exceed the remaining amount.',
             'Cells run in fixed arm order within each trial; order effects are not controlled.',
             'Each cell runs in an empty temporary directory, so no project context file is '
-            'discovered. User-level context (for example a user memory file) is not proven '
-            'excluded by the recorded flags.',
+            'discovered. Exclusion of user-level context by the recorded flags is observed only '
+            'where tests/eval/README.md records a smoke test for this surface and version.',
         ],
     }
 

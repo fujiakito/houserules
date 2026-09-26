@@ -40,8 +40,11 @@ passes effort to the runner, creates no attempt directory and never spawns a pro
 2. Pin the CLI build and capture its version. Confirm model access and effort support; do not
    silently fall back to another model, default effort or a different authentication route.
 3. Verify effective isolation on that surface. Fresh cwd and flags are only requested controls.
-   User memory/configuration is not proven excluded. Codex read-only sandbox is not equivalent
-   to disabling every tool; confirm no tools ran in this prompt-only case.
+   The [2026-09-26 canary smoke test](README.md#isolation-smoke-test--claude-code-cli-21283-2026-09-26)
+   covers Claude Code CLI 2.1.283 in a cloud session: user and project `CLAUDE.md` excluded,
+   no tools, effort accepted. Repeat it on any other surface or build. Codex is untested; its
+   read-only sandbox is not equivalent to disabling every tool, so confirm no tools ran in this
+   prompt-only case.
 4. For Codex, explicitly approve an unmetered allowance and record its reason. Raw tokens can
    be retained, but they are not an observed billed total. If a hard spend bound is required,
    do not run until the provider/account offers a suitable enforced limit.
