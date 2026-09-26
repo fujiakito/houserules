@@ -43,7 +43,10 @@ their prose. Task acceptance, reviewer independence and authority remain explici
 | [PORTABILITY](../research/PORTABILITY.md) | Decide which behavior belongs in the shared layer | Apply admission criteria to a proposed fallback; revise when evidence changes |
 | [Matt Pocock study](../research/MATT-POCOCK-SKILLS.md) and [skill design](../research/SKILL-DESIGN.md) | Preserve rationale/provenance for skill decisions | Historical evidence; add corrections when reused, not periodic full rereads |
 | [Superpowers study](../research/SUPERPOWERS-SKILLS.md) | Maintainer selects a stage-specific fallback candidate and comparison baseline | Revisit when the selected upstream procedure, host adapter or target model changes |
+| [Prior-art evaluation harnesses](../research/PRIOR-ART-EVAL-HARNESSES.md) | Maintainer designing a comparison: which arms to run, and what a runner must refuse | Revisit when an upstream harness changes or this repository records its own first attempt |
 | [Workflow reports](../tests/workflows/README.md) | Reproduce or challenge a particular result | Retain dated scope/hashes; append new results rather than silently upgrading old claims |
+| [Skill evaluation cases](../tests/workflows/skill-eval/README.md) and the [harness](../tests/eval/README.md) | Maintainer produces criterion-5 comparative evidence for a shipped skill | Append a dated attempt; never edit a recorded one. Revisit the harness when a runner flag, isolation profile or rubric changes |
+| [Model-aware pilot plan](../tests/eval/PILOT.md) | Maintainer checks headroom, model-specific guidance hypotheses and execution prerequisites | Revisit after an observed failure, model/CLI change or completed pilot; offline matrix in pilot.json |
 | Skill LICENSE / NOTICE files | Preserve upstream terms, revision and adaptation history | Update with imported content/revision changes |
 | [THIRD-PARTY](../THIRD-PARTY.md) | Reader checking what is original and what is adapted | Update when a skill's upstream source, revision or license changes |
 | Inventory _TEMPLATE.md | Maintainer adds another agent | Follow the inventory schema, then extend GUIDE and MATRIX |

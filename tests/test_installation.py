@@ -250,7 +250,7 @@ class InstallationTests(unittest.TestCase):
                               capture_output=True, encoding="utf-8", errors="replace")
         if show.returncode != 0:
             self.skipTest("pre-move checker revision 8ae9d31 is not reachable here")
-        old.write_text(show.stdout, encoding="utf-8", newline="\n")
+        old.write_bytes(show.stdout.encode("utf-8"))  # Preserve LF on Python 3.9 too.
         self.install_ok("--agents", "codex")
         result = subprocess.run([sys.executable, str(old), "--repo", str(self.repo)],
                                 capture_output=True, text=True, encoding="utf-8",

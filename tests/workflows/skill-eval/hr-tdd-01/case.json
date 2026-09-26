@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "case": "hr-tdd-01",
+  "skill": "hr-tdd",
+  "task": "task.md",
+  "rubric": "rubric.md",
+  "arms": {
+    "baseline": "arm-baseline.md",
+    "candidate": "arm-candidate.md",
+    "control-length": "arm-control-length.md",
+    "one-line": "arm-one-line.md"
+  },
+  "score_max": 100,
+  "timeout_seconds": 300,
+  "frozen_sha256": {
+    "arm-baseline.md": "cfd03f6b88e38ef4c11c7b138c3f6d338d8b30c7ee9ce23467a34cbc173988b7",
+    "arm-candidate.md": "6caf1f2b5aa7182d8a9b4aa093c874bd8928e425145429268547c8d089c7c441",
+    "arm-control-length.md": "810d20223138213e17b4d58e9e5d1f1282af26ec5e11da3d99f589a11012477b",
+    "arm-one-line.md": "ba8b782c2f34cef43b397222e86ba690be9648513fcbfe08df559aacf6a56400",
+    "rubric.md": "5263d08157dac0f5df32c556b3a7a245309ff767fa6cd0bb73471f3a34430bdd",
+    "task.md": "cfd03f6b88e38ef4c11c7b138c3f6d338d8b30c7ee9ce23467a34cbc173988b7"
+  }
+}

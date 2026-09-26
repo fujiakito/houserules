@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "prepared_date": "2026-09-26",
+  "execution_authorized": false,
+  "purpose": "Headroom smoke test only; not promotion evidence",
+  "case": "tests/workflows/skill-eval/hr-tdd-01",
+  "trials": 1,
+  "profiles": [
+    {
+      "id": "sol-medium",
+      "runner": "codex",
+      "model": "gpt-6-sol",
+      "effort": "medium"
+    },
+    {
+      "id": "luna-medium",
+      "runner": "codex",
+      "model": "gpt-6-luna",
+      "effort": "medium"
+    },
+    {
+      "id": "opus55-medium",
+      "runner": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "medium"
+    }
+  ],
+  "limits": {
+    "timeout_seconds_per_cell": 300,
+    "total_planned_cells": 12,
+    "max_usd": null
+  },
+  "required_before_execution": [
+    "Approve provider use and budget separately",
+    "Pin and probe each CLI version; check model access",
+    "Verify effective effort, tool availability and isolation on the target surface",
+    "Explicitly acknowledge unmetered Codex cells; do not report unknown total cost as zero"
+  ]
+}

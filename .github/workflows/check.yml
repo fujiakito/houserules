@@ -30,6 +30,9 @@ jobs:
         python-version: ['3.9', '3.11', '3.13']
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Migration regressions read the historical pre-move checker revision.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v7
         with:
